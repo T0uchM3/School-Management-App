@@ -44,7 +44,10 @@ import com.example.schoolmanagementsystem.script.navbar.Screen
 fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
     val name = navCtr?.previousBackStackEntry?.arguments?.getString("name")
     val user = sharedViewModel?.user
-
+    //resetting tab focus
+    if (sharedViewModel != null) {
+        sharedViewModel.defineUsersFocus(false)
+    }
 
 
 ////    val navController2 = rememberNavController()

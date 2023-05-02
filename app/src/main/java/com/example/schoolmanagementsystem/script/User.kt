@@ -6,22 +6,22 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 class User(
-    val id: Long? = null,
-    val name: String? = "",
-    val email: String? = "",
-    val email_verified_at: String? = "",
-    val cin: String? = "",
-    val sex: String? = "",
-    val date_naiss: String? = "",
-    val adresse: String? = "",
-    val tel: String? = "",
-    val role: String? = "",
-    val photo: String? = "",
-    val poste: String? = "",
-    val bank: String? = "",
-    val rib: String? = "",
-    val created_at: String? = "",
-    val updated_at: String? = "",
+    var id: Long? = null,
+    var name: String? = "",
+    var email: String? = "",
+    var email_verified_at: String? = "",
+    var cin: String? = "",
+    var sex: String? = "",
+    var date_naiss: String? = "",
+    var adresse: String? = "",
+    var tel: String? = "",
+    var role: String? = "",
+    var photo: String? = "",
+    var poste: String? = "",
+    var bank: String? = "",
+    var rib: String? = "",
+//    val created_at: String? = "",
+//    val updated_at: String? = "",
 ) : Parcelable
 
 

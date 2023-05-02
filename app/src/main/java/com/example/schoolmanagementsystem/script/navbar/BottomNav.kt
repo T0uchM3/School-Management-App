@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -36,75 +37,76 @@ import com.example.schoolmanagementsystem.ui.theme.Purple500
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun BottomNav(navController: NavHostController?,sharedViewModel: SharedViewModel?) {
+fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewModel?) {
     val navController2 = rememberNavController()
     if (sharedViewModel != null) {
-        LaunchedEffect(key1 = Unit){
-
+        LaunchedEffect(key1 = Unit) {
         }
-
         Scaffold(
-            bottomBar = { BottomBar(navController = navController2) }
-//            ,modifier = Modifier.fillMaxSize().background(Color.Black)
-
+            bottomBar = { BottomBar(navController = navController2, sharedViewModel) }
         ) {
-//            NavGraph2(navController = navController2, sharedViewModel = sharedViewModel),
-//                innerPadding ->Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(paddingValues = innerPadding) // padding applied here
-//            ) {
-                // all content should be here
             NavGraph2(navController = navController2, sharedViewModel = sharedViewModel)
-//            }
         }
-//        LaunchedEffect(key1 = Unit) {
-//            navController.navigate(Screen.Home.route)
-//        }
     }
 }
 
+//var state = false
+
 @Composable
-fun BottomBar(navController: NavHostController) {
+fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel) {
     val screens = listOf(
         Screen.Home,
         Screen.Users,
         Screen.Students,
-        Screen.Profile
+        Screen.Profile,
     )
-
+//    state = sharedViewModel.state
     val navStackBackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navStackBackEntry?.destination
 
     Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
 //            .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp)
+            .clip(shape = RoundedCornerShape(topEnd =  20.dp, topStart =  20.dp))
             .background(Color.Red)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxWidth()
+
     ) {
+
         screens.forEach { screen ->
             AddItem(
                 screen = screen,
                 currentDestination = currentDestination,
-                navController = navController
+                navController = navController,
+                sharedViewModel
             )
         }
     }
 
+
 }
+
+val selected2 = false
 
 @Composable
 fun RowScope.AddItem(
     screen: Screen,
     currentDestination: NavDestination?,
-    navController: NavHostController
+    navController: NavHostController,
+    sharedViewModel: SharedViewModel
 ) {
-    val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+//    val selected = remember { mutableStateOf<Boolean>(false) }.value
+    var selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
 
+    println("ROUTE= " + screen.route)
+    if (sharedViewModel.usersFocus && screen.route == "Users") {
+        selected = true
+    }
     val background =
         if (selected) Purple500.copy(alpha = 0.6f) else Color.Transparent
+
 
     val contentColor =
         if (selected) Color.White else Color.Black

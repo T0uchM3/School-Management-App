@@ -17,4 +17,10 @@ class SharedViewModel : ViewModel() {
     fun defineUserList(newList: List<User>?){
         userList = newList
     }
+    var usersFocus by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineUsersFocus(newState: Boolean) {
+        usersFocus = newState
+    }
 }

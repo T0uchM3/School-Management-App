@@ -44,6 +44,7 @@ import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.Pages
 import androidx.compose.ui.draw.scale
+import com.example.schoolmanagementsystem.script.navbar.Screen
 
 //fun Float.dp(): Float = this * density + 0.5f
 
@@ -55,7 +56,7 @@ var userRole = ""
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
-fun HomeScreen2(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
+fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     LaunchedEffect(key1 = Unit) {
         usersAPI(navCtr = navCtr, sharedViewModel = sharedViewModel)
     }
@@ -72,7 +73,7 @@ fun HomeScreen2(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         ) {
             Button(
                 onClick = {
-//            loginAPI(navCtr, sharedViewModel)
+
                 },
                 modifier = Modifier
 //                    .align(alignment = Alignment.End)
@@ -85,7 +86,8 @@ fun HomeScreen2(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             }
             Button(
                 onClick = {
-//            loginAPI(navCtr, sharedViewModel)
+                    sharedViewModel.defineUsersFocus(true)
+                    navCtr.navigate(Screen.ManageUser.route)
                 },
                 modifier = Modifier
 //            .align(Alignment.BottomCenter)
@@ -97,9 +99,7 @@ fun HomeScreen2(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 Text(text = "+")
             }
         }
-        println("fffffffffffffffffffffffffffffffffffffffff")
         if (sharedViewModel.userList != null) {
-            println("ssssssssssssssssssssssssssssssssssssssss")
             LazyColumn {
                 items(items = sharedViewModel.userList!!) { user ->
 //                    Text(user.name.toString(), modifier = Modifier.padding(15.dp))
@@ -107,40 +107,46 @@ fun HomeScreen2(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                     userId = user.id.toString()
                     userRole = user.role.toString()
                     SwipeableBoxPreview(
-                        Modifier.padding()
+                        navCtr, Modifier.padding(), sharedViewModel
                     )
                     Divider()
                 }
             }
         }
-//        SwipeableBoxPreview(
-//            Modifier.padding()
-//        )
     }
-
-
-//    val model: CardsScreenViewModel = viewModel()
-//    CardsScreen(model)
 
 }
 
 @Composable
-private fun SwipeableBoxPreview(modifier: Modifier = Modifier) {
+private fun SwipeableBoxPreview(
+    navCtr: NavHostController, modifier: Modifier = Modifier, sharedViewModel: SharedViewModel
+) {
     var isSnoozed by rememberSaveable { mutableStateOf(false) }
     var isArchived by rememberSaveable { mutableStateOf(false) }
 
+    var isActive by rememberSaveable { mutableStateOf(false) }
     val editUser = SwipeAction(
         icon = rememberVectorPainter(Icons.TwoTone.Edit),
         background = Color.Perfume,
-        onSwipe = { println("Reply swiped") },
+        onSwipe = {
+            println("Reply swiped")
+            sharedViewModel.defineUsersFocus(true)
+            navCtr.navigate(Screen.ManageUser.route)
+        },
         isUndo = false,
     )
     val editContract = SwipeAction(
         icon = rememberVectorPainter(Icons.TwoTone.Pages),
         background = Color.Fern,
-        onSwipe = { isArchived = !isArchived },
+        onSwipe = {
+            isArchived = !isArchived
+            sharedViewModel.defineUsersFocus(true)
+            navCtr.navigate(Screen.Contract.route)
+        },
         isUndo = isArchived,
     )
+//    if (isActive)
+
     val remove = SwipeAction(
         icon = rememberVectorPainter(Icons.TwoTone.Delete),
         background = Color.SeaBuckthorn,
@@ -155,16 +161,17 @@ private fun SwipeableBoxPreview(modifier: Modifier = Modifier) {
         swipeThreshold = 40.dp,
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp)
     ) {
-        BatmanIpsumItem(
+        SwipeItem(
             isSnoozed = isSnoozed
         )
     }
+
+
 }
 
 @Composable
-private fun BatmanIpsumItem(
-    modifier: Modifier = Modifier,
-    isSnoozed: Boolean
+private fun SwipeItem(
+    modifier: Modifier = Modifier, isSnoozed: Boolean
 ) {
     Row(
         modifier
@@ -184,8 +191,7 @@ private fun BatmanIpsumItem(
 
         Column(Modifier.padding(horizontal = 16.dp)) {
             Text(
-                text = userName,
-                style = MaterialTheme.typography.titleMedium
+                text = userName, style = MaterialTheme.typography.titleMedium
             )
             Text(
                 modifier = Modifier.padding(top = 4.dp),
@@ -215,5 +221,5 @@ val Color.Companion.Perfume get() = Color(0xFFD0BCFF)
 @Preview
 @Composable
 fun Preview22() {
-    HomeScreen2(TODO(), TODO())
+    UsersTab(TODO(), TODO())
 }

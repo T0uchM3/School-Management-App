@@ -53,6 +53,10 @@ interface APIService {
 
     @GET("/api/users")
     suspend fun getUsers(): Response<UserResults>
+
+    @Headers("Accept: application/json")
+    @POST("/api/add")
+    suspend fun addUser(@Body params: User): Response<String>
 }
 
 
@@ -134,6 +138,23 @@ fun usersAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
 
                     println(user.name)
                 }
+            }
+        }
+    }
+}
+
+fun addUserAPI(user: User){
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.addUser(user)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+//                val users = response.body()
+//                sharedViewModel.defineUserList(users?.results)
+                println("USER ADDED")
+//                users?.results?.forEach { user ->
+//
+//                    println(user.name)
+//                }
             }
         }
     }

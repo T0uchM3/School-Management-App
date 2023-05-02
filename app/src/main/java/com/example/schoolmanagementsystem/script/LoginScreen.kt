@@ -1,4 +1,4 @@
-package com.example.schoolmanagementsystem.ui.theme
+package com.example.schoolmanagementsystem.script
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -31,8 +31,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.schoolmanagementsystem.script.SharedViewModel
-import com.example.schoolmanagementsystem.script.loginAPI
 import com.example.schoolmanagementsystem.script.navbar.Screen
 
 

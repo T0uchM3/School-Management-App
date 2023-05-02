@@ -1,4 +1,4 @@
-package com.example.schoolmanagementsystem.ui.theme
+package com.example.schoolmanagementsystem.script
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

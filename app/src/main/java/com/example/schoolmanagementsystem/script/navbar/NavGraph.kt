@@ -7,12 +7,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.example.schoolmanagementsystem.script.ContractUser
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.ui.theme.HomeScreen1
-import com.example.schoolmanagementsystem.ui.theme.HomeScreen2
-import com.example.schoolmanagementsystem.ui.theme.HomeScreen3
-import com.example.schoolmanagementsystem.ui.theme.HomeScreen4
-import com.example.schoolmanagementsystem.ui.theme.LoginScreen
+import com.example.schoolmanagementsystem.ui.theme.UsersTab
+import com.example.schoolmanagementsystem.script.HomeScreen4
+import com.example.schoolmanagementsystem.script.ManageUser
+import com.example.schoolmanagementsystem.script.LoginScreen
 
 
 @Composable
@@ -53,7 +54,7 @@ fun NavGraph2(
 //    val sharedViewModel: SharedViewModel = viewModel()
     NavHost(
         navController = navController,
-        route  = Graph.HOME,
+        route = Graph.HOME,
         startDestination = Screen.Home.route
     ) {
         composable(route = Screen.Home.route)
@@ -63,22 +64,34 @@ fun NavGraph2(
         }
         composable(route = Screen.Users.route)
         {
-            HomeScreen2(navCtr = navController, sharedViewModel = sharedViewModel)
+            UsersTab(navCtr = navController, sharedViewModel = sharedViewModel)
         }
         composable(route = Screen.Students.route)
         {
-            HomeScreen3()
+            ManageUser(navController, sharedViewModel)
+
         }
         composable(route = Screen.Profile.route)
         {
             HomeScreen4()
         }
+        composable(route = Screen.ManageUser.route)
+        {
+            ManageUser(navController, sharedViewModel)
+        }
+        composable(route = Screen.Contract.route)
+        {
+            ContractUser(navController, sharedViewModel)
+        }
     }
 }
+
 
 object Graph {
     const val ROOT = "root_graph"
     const val AUTHENTICATION = "auth_graph"
     const val HOME = "home_graph"
-    const val DETAILS = "details_graph"
+
+    //    const val DETAILS = "details_graph"
+    const val EDITUSER = "edit_user"
 }

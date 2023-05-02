@@ -25,6 +25,7 @@ sealed class Screen(
         icon = R.drawable.plus,
         icon_focused = R.drawable.wrench
     )
+
     object Students : Screen(
         route = "Students",
         title = "Students",
@@ -34,20 +35,35 @@ sealed class Screen(
 
     // for 3333
     object Profile : Screen(
-        route = "profile",
+        route = "Profile",
         title = "Profile",
         icon = R.drawable.plus,
         icon_focused = R.drawable.wrench
     )
+
     object Login : Screen(
         route = "login",
         title = "login",
         icon = 0,
         icon_focused = 0
     )
+
     object NavBar : Screen(
         route = "navBar",
         title = "navBar",
+        icon = 0,
+        icon_focused = 0
+    )
+
+    object ManageUser : Screen(
+        route = "ManageUser",
+        title = "",
+        icon = 0,
+        icon_focused = 0
+    )
+    object Contract : Screen(
+        route = "Contract",
+        title = "",
         icon = 0,
         icon_focused = 0
     )
