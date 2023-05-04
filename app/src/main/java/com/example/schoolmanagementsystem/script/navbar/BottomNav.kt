@@ -2,6 +2,7 @@ package com.example.schoolmanagementsystem.script.navbar
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,18 +35,20 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.ui.theme.Purple500
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
+@OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewModel?) {
-    val navController2 = rememberNavController()
+    val navController2 = rememberAnimatedNavController()
     if (sharedViewModel != null) {
         LaunchedEffect(key1 = Unit) {
         }
         Scaffold(
             bottomBar = { BottomBar(navController = navController2, sharedViewModel) }
         ) {
-            NavGraph2(navController = navController2, sharedViewModel = sharedViewModel)
+            AnimatedApp(navController = navController2, sharedViewModel = sharedViewModel)
         }
     }
 }
@@ -149,3 +152,43 @@ fun RowScope.AddItem(
 fun BottomNavPreview() {
     BottomNav(null, null)
 }
+
+
+
+
+
+
+
+////    NavHost(
+////        navController = navController,
+////        route = Graph.HOME,
+////        startDestination = Screen.Home.route
+////    ) {
+////
+////        composable(route = Screen.Home.route)
+////        {
+////            HomeScreen1(navCtr = navController, sharedViewModel = sharedViewModel)
+//////            println()
+////        }
+////        composable(route = Screen.Users.route)
+////        {
+////            UsersTab(navCtr = navController, sharedViewModel = sharedViewModel)
+////        }
+////        composable(route = Screen.Students.route)
+////        {
+////            ManageUser(navController, sharedViewModel)
+////
+////        }
+////        composable(route = Screen.Profile.route)
+////        {
+////            HomeScreen4()
+////        }
+////        composable(route = Screen.ManageUser.route)
+////        {
+////            ManageUser(navController, sharedViewModel)
+////        }
+////        composable(route = Screen.Contract.route)
+////        {
+////            ContractUser(navController, sharedViewModel)
+////        }
+////    }

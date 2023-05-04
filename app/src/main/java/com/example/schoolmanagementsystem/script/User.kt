@@ -6,7 +6,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 class User(
-    var id: Long? = null,
+    var id: Long = 0,
     var name: String? = "",
     var email: String? = "",
     var email_verified_at: String? = "",

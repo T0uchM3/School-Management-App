@@ -97,7 +97,6 @@ fun ManageUser(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         }
         Button(
             onClick = {
-               println("ssssss ")
                 val user = User()
                 user.name = nameInput.value.text
                 user.cin = cinInput.value.text
@@ -106,12 +105,14 @@ fun ManageUser(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 user.sex = genderInput.value.text
                 user.role = roleInput.value.text
                 addUserAPI(user)
-                nameInput.value= TextFieldValue("")
-                cinInput.value= TextFieldValue("")
-                dnInput.value= TextFieldValue("")
-                emailInput.value= TextFieldValue("")
-                genderInput.value= TextFieldValue("")
-                roleInput.value= TextFieldValue("")
+
+                //resets all fields
+                nameInput.value = TextFieldValue("")
+                cinInput.value = TextFieldValue("")
+                dnInput.value = TextFieldValue("")
+                emailInput.value = TextFieldValue("")
+                genderInput.value = TextFieldValue("")
+                roleInput.value = TextFieldValue("")
             },
             modifier = Modifier
 //                .align(Alignment.BottomCenter)

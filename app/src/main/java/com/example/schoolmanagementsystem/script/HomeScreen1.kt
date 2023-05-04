@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,15 +17,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,17 +46,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.schoolmanagementsystem.script.SharedViewModel
 //import com.example.schoolmanagmentsystem.script.navbar.NavGraph
 import com.example.schoolmanagementsystem.script.navbar.Screen
+import java.lang.Math.abs
 
 
+@OptIn(ExperimentalMaterialApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
     val name = navCtr?.previousBackStackEntry?.arguments?.getString("name")
     val user = sharedViewModel?.user
     //resetting tab focus
-    if (sharedViewModel != null) {
-        sharedViewModel.defineUsersFocus(false)
-    }
+    sharedViewModel?.defineUsersFocus(false)
 
 
 ////    val navController2 = rememberNavController()
@@ -61,18 +70,54 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
 //    }
 
 
+    LaunchedEffect(key1 = user) {
 
-LaunchedEffect(key1 = user){
-
-    println(user?.name +"+++++++++++++++++++++")
-}
-    println(user?.name +"----------------------")
+        println(user?.name + "+++++++++++++++++++++")
+    }
+    println(user?.name + "----------------------")
     val id = navCtr?.previousBackStackEntry?.arguments?.getString("id")
     val role = navCtr?.previousBackStackEntry?.arguments?.getString("role")
+    val swipeState = rememberSwipeableState(0)
+    var offsetX by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableStateOf(0f) }
+    val minSwipeOffset by remember { mutableStateOf(300f) }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
+//            .swipeable(
+//                state = swipeState,
+//                anchors = mapOf(0f to 0,300f to 1),
+//                orientation = Orientation.Horizontal
+//            )
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        val (x, y) = dragAmount
+                        offsetX += dragAmount.x
+
+                    },
+                    onDragEnd = {
+
+                        when {
+                            (offsetX < 0F && abs(offsetX) > minSwipeOffset) -> {
+                                println(" SwipeDirection.Left")
+                                navCtr?.navigate(Screen.Users.route)
+                            }
+
+                            (offsetX > 0 && abs(offsetX) > minSwipeOffset) -> {
+                                println(" SwipeDirection.Right")
+                            }
+
+                            else -> null
+
+                        }
+                        offsetX = 0F
+                    }
+                )
+            }
+
 //            .padding(vertical = 10.dp, horizontal = 50.dp)
     ) {
         Row(
@@ -90,7 +135,7 @@ LaunchedEffect(key1 = user){
                     .fillMaxHeight()
             ) {
                 Text(
-                    text =user?.name.toString(),
+                    text = user?.name.toString(),
                     color = Color.DarkGray,
                     fontSize = 30.sp,
                     maxLines = 1,
@@ -144,85 +189,10 @@ LaunchedEffect(key1 = user){
     }
 
 }
-@Composable
-fun BottomBar(navController: NavHostController) {
-    val screens = listOf(
-        Screen.Home,
-        Screen.Users,
-        Screen.Students,
-        Screen.Profile
-    )
 
-    val navStackBackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navStackBackEntry?.destination
 
-    Row(
-        modifier = Modifier
-            .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp)
-            .background(Color.White)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        screens.forEach { screen ->
-            AddItem(
-                screen = screen,
-                currentDestination = currentDestination,
-                navController = navController
-            )
-        }
-    }
-
-}
-
-@Composable
-fun RowScope.AddItem(
-    screen: Screen,
-    currentDestination: NavDestination?,
-    navController: NavHostController
-) {
-    val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
-
-    val background =
-        if (selected) Purple500.copy(alpha = 0.6f) else Color.Transparent
-
-    val contentColor =
-        if (selected) Color.White else Color.Black
-
-    Box(
-        modifier = Modifier
-            .height(40.dp)
-            .clip(CircleShape)
-            .background(background)
-            .clickable(onClick = {
-                navController.navigate(screen.route) {
-                    popUpTo(navController.graph.findStartDestination().id)
-                    launchSingleTop = true
-                }
-            })
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = if (selected) screen.icon_focused else screen.icon),
-                contentDescription = "icon",
-                tint = contentColor
-            )
-            AnimatedVisibility(visible = selected) {
-                Text(
-                    text = screen.title,
-                    color = contentColor
-                )
-            }
-        }
-    }
-}
 @Preview
 @Composable
 fun Preview1() {
-    HomeScreen1(null,null)
+    HomeScreen1(null, null)
 }

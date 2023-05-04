@@ -20,6 +20,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 
 @JsonClass(generateAdapter = true)
@@ -57,6 +58,10 @@ interface APIService {
     @Headers("Accept: application/json")
     @POST("/api/add")
     suspend fun addUser(@Body params: User): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/delete/{id}")
+    suspend fun deleteUser(@Path("id") id: Int): Response<String>
 }
 
 
@@ -79,7 +84,6 @@ fun loginAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
                     val user = response.body()
 
                     if (user != null) {
-                        println("//////////////////////////////////////")
                         sharedViewModel?.defineUser(user)
                         if (user.role == "teacher") {
 
@@ -133,7 +137,6 @@ fun usersAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
             if (response.isSuccessful) {
                 val users = response.body()
                 sharedViewModel.defineUserList(users?.results)
-                println("//////////////////////////////////////")
                 users?.results?.forEach { user ->
 
                     println(user.name)
@@ -143,18 +146,23 @@ fun usersAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
     }
 }
 
-fun addUserAPI(user: User){
+fun addUserAPI(user: User) {
     CoroutineScope(Dispatchers.IO).launch {
         val response = backendApi.addUser(user)
         withContext(Dispatchers.Main) {
             if (response.isSuccessful) {
-//                val users = response.body()
-//                sharedViewModel.defineUserList(users?.results)
                 println("USER ADDED")
-//                users?.results?.forEach { user ->
-//
-//                    println(user.name)
-//                }
+            }
+        }
+    }
+}
+
+fun deleteUserAPI(id: Int) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.deleteUser(id)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("USER DELETED")
             }
         }
     }

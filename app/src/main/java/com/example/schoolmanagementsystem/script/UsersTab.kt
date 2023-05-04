@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.theme
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,8 +22,11 @@ import com.example.schoolmanagementsystem.script.usersAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -44,12 +48,12 @@ import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.Pages
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.input.pointer.pointerInput
+import com.example.schoolmanagementsystem.script.User
+import com.example.schoolmanagementsystem.script.deleteUserAPI
 import com.example.schoolmanagementsystem.script.navbar.Screen
 
-//fun Float.dp(): Float = this * density + 0.5f
 
-//val density: Float
-//    get() = Resources.getSystem().displayMetrics.density
 var userName = ""
 var userId = ""
 var userRole = ""
@@ -57,6 +61,9 @@ var userRole = ""
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
+    val minSwipeOffset by remember { mutableStateOf(300f) }
+    var offsetX by remember { mutableStateOf(0f) }
+
     LaunchedEffect(key1 = Unit) {
         usersAPI(navCtr = navCtr, sharedViewModel = sharedViewModel)
     }
@@ -65,8 +72,36 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color.DarkGray)
 //            .padding(vertical = 50.dp, horizontal = 50.dp)
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        val (x, y) = dragAmount
+                        offsetX += dragAmount.x
+
+                    },
+                    onDragEnd = {
+
+                        when {
+                            (offsetX < 0F && Math.abs(offsetX) > minSwipeOffset) -> {
+                                println(" SwipeDirection.Left")
+
+                            }
+
+                            (offsetX > 0 && Math.abs(offsetX) > minSwipeOffset) -> {
+                                println(" SwipeDirection.Right")
+                                navCtr.navigate(Screen.Home.route)
+                            }
+
+                            else -> null
+
+                        }
+                        offsetX = 0F
+                    }
+                )
+            }
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()
@@ -100,16 +135,17 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             }
         }
         if (sharedViewModel.userList != null) {
-            LazyColumn {
-                items(items = sharedViewModel.userList!!) { user ->
-//                    Text(user.name.toString(), modifier = Modifier.padding(15.dp))
+            LazyColumn(state = rememberLazyListState()) {
+                items(sharedViewModel.userList!!) { user ->
                     userName = user.name.toString()
                     userId = user.id.toString()
                     userRole = user.role.toString()
                     SwipeableBoxPreview(
-                        navCtr, Modifier.padding(), sharedViewModel
+                        navCtr, Modifier.padding(), sharedViewModel, user
                     )
+                    Spacer(Modifier.height(1.dp))
                     Divider()
+                    Spacer(Modifier.height(1.dp))
                 }
             }
         }
@@ -119,7 +155,10 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
 @Composable
 private fun SwipeableBoxPreview(
-    navCtr: NavHostController, modifier: Modifier = Modifier, sharedViewModel: SharedViewModel
+    navCtr: NavHostController,
+    modifier: Modifier = Modifier,
+    sharedViewModel: SharedViewModel,
+    user: User
 ) {
     var isSnoozed by rememberSaveable { mutableStateOf(false) }
     var isArchived by rememberSaveable { mutableStateOf(false) }
@@ -150,7 +189,11 @@ private fun SwipeableBoxPreview(
     val remove = SwipeAction(
         icon = rememberVectorPainter(Icons.TwoTone.Delete),
         background = Color.SeaBuckthorn,
-        onSwipe = { isSnoozed = !isSnoozed },
+        onSwipe = {
+            isSnoozed = !isSnoozed
+            println("IDDDD" + user.id)
+//            deleteUserAPI(19)
+        },
         isUndo = isSnoozed,
     )
 
