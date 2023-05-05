@@ -136,7 +136,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         }
         if (sharedViewModel.userList != null) {
             LazyColumn(state = rememberLazyListState()) {
-                items(sharedViewModel.userList!!) { user ->
+                items(sharedViewModel.userList) { user ->
                     userName = user.name.toString()
                     userId = user.id.toString()
                     userRole = user.role.toString()
@@ -146,6 +146,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                     Spacer(Modifier.height(1.dp))
                     Divider()
                     Spacer(Modifier.height(1.dp))
+
                 }
             }
         }
@@ -190,9 +191,10 @@ private fun SwipeableBoxPreview(
         icon = rememberVectorPainter(Icons.TwoTone.Delete),
         background = Color.SeaBuckthorn,
         onSwipe = {
-            isSnoozed = !isSnoozed
+//            isSnoozed = !isSnoozed
             println("IDDDD" + user.id)
-//            deleteUserAPI(19)
+//            deleteUserAPI(user.id.toInt())
+            sharedViewModel.userList.remove(user)
         },
         isUndo = isSnoozed,
     )
