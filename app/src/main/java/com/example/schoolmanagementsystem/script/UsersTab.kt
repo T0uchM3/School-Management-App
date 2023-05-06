@@ -2,6 +2,7 @@ package com.example.schoolmanagementsystem.ui.theme
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -19,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.script.usersAPI
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -49,8 +49,8 @@ import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.Pages
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.schoolmanagementsystem.script.User
-import com.example.schoolmanagementsystem.script.deleteUserAPI
 import com.example.schoolmanagementsystem.script.navbar.Screen
 
 
@@ -58,7 +58,8 @@ var userName = ""
 var userId = ""
 var userRole = ""
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalFoundationApi::class)
+@ExperimentalFoundationApi
 @Composable
 fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     val minSwipeOffset by remember { mutableStateOf(300f) }
@@ -136,13 +137,18 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         }
         if (sharedViewModel.userList != null) {
             LazyColumn(state = rememberLazyListState()) {
-                items(sharedViewModel.userList) { user ->
+                items(sharedViewModel.userList, key = { item -> item.id }) { user ->
                     userName = user.name.toString()
                     userId = user.id.toString()
                     userRole = user.role.toString()
-                    SwipeableBoxPreview(
-                        navCtr, Modifier.padding(), sharedViewModel, user
-                    )
+                    Box(modifier = Modifier.animateItemPlacement()) {
+                        SwipeableBoxPreview(
+                            navCtr, Modifier.padding(), sharedViewModel, user, onRemoveClicked = {
+                                sharedViewModel.userList.remove(user)
+                            }
+                        )
+                    }
+
                     Spacer(Modifier.height(1.dp))
                     Divider()
                     Spacer(Modifier.height(1.dp))
@@ -154,12 +160,14 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SwipeableBoxPreview(
     navCtr: NavHostController,
     modifier: Modifier = Modifier,
     sharedViewModel: SharedViewModel,
-    user: User
+    user: User,
+    onRemoveClicked: (user: User) -> Unit
 ) {
     var isSnoozed by rememberSaveable { mutableStateOf(false) }
     var isArchived by rememberSaveable { mutableStateOf(false) }
@@ -194,7 +202,8 @@ private fun SwipeableBoxPreview(
 //            isSnoozed = !isSnoozed
             println("IDDDD" + user.id)
 //            deleteUserAPI(user.id.toInt())
-            sharedViewModel.userList.remove(user)
+            onRemoveClicked(user)
+//            sharedViewModel.userList.remove(user)
         },
         isUndo = isSnoozed,
     )
@@ -204,7 +213,7 @@ private fun SwipeableBoxPreview(
         startActions = listOf(editUser, editContract),
         endActions = listOf(remove),
         swipeThreshold = 40.dp,
-        backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp)
+        backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp),
     ) {
         SwipeItem(
             isSnoozed = isSnoozed
@@ -214,6 +223,7 @@ private fun SwipeableBoxPreview(
 
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SwipeItem(
     modifier: Modifier = Modifier, isSnoozed: Boolean
@@ -263,6 +273,7 @@ val Color.Companion.Fern get() = Color(0xFF66BB6A)
 val Color.Companion.Perfume get() = Color(0xFFD0BCFF)
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 fun Preview22() {
