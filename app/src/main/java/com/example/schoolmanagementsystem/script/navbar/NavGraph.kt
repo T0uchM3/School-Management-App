@@ -153,6 +153,23 @@ fun AnimatedApp(
                 AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
             )
         }) {   ManageUser(navController, sharedViewModel) }
+        c2(Screen.Contract.route, enterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }, popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }) {   ContractUser(navController, sharedViewModel) }
 //        composable(route = Screen.Users.route)
 //        {
 //            UsersTab(navCtr = navController, sharedViewModel = sharedViewModel)
@@ -167,9 +184,9 @@ fun AnimatedApp(
 //        composable(route = Screen.ManageUser.route) {
 //            ManageUser(navController, sharedViewModel)
 //        }
-        composable(route = Screen.Contract.route) {
-            ContractUser(navController, sharedViewModel)
-        }
+//        composable(route = Screen.Contract.route) {
+//            ContractUser(navController, sharedViewModel)
+//        }
     }
 }
 

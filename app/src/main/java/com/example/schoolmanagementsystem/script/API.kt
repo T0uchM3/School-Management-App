@@ -62,6 +62,31 @@ interface APIService {
     @Headers("Accept: application/json")
     @POST("/api/delete/{id}")
     suspend fun deleteUser(@Path("id") id: Int): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/updateUser/{id}")
+    suspend fun updateUser(@Path("id") id: Int, @Body params: User): Response<User>
+
+    @Headers("Accept: application/json")
+    @POST("/api/addContract")
+    suspend fun addContract(@Body params: Contract): Response<Contract>
+
+    @Headers("Accept: application/json")
+    @GET("/api/contract/{id}")
+    suspend fun getContracts(@Path("id") id: Int): Response<List<Contract>>
+
+    @Headers("Accept: application/json")
+    @POST("/api/deleteContract/{id}")
+    suspend fun deleteContract(@Path("id") id: Int): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/updateContract/{id}")
+    suspend fun updateContract(@Path("id") id: Int, @Body params: String): Response<Contract>
+
+    @Headers("Accept: application/json")
+    @POST("/api/invalidContract/{id}")
+    suspend fun invalidContract(@Path("id") id: Int): Response<String>
+
 }
 
 
@@ -84,7 +109,7 @@ fun loginAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
                     val user = response.body()
 
                     if (user != null) {
-                        sharedViewModel?.defineUser(user)
+                        sharedViewModel.defineUser(user)
                         if (user.role == "teacher") {
 
                             println("TEACHER ")
@@ -163,6 +188,78 @@ fun deleteUserAPI(id: Int) {
         withContext(Dispatchers.Main) {
             if (response.isSuccessful) {
                 println("USER DELETED")
+            }
+        }
+    }
+}
+
+fun updateUser(id: Int, user: User) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.updateUser(id, user)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("user updated")
+            }
+        }
+    }
+}
+fun getUserContract(id: Int, sharedViewModel: SharedViewModel) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.getContracts(id)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                val contracts = response.body()
+                sharedViewModel.defineContractList(contracts)
+                println("userContractAPI")
+                contracts?.forEach { contract ->
+
+                    println(contract.id)
+                }
+            }
+        }
+    }
+}
+
+
+fun deleteContract(id: Int) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.deleteContract(id)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("contract DELETED")
+            }
+        }
+    }
+}
+
+fun updateContract(id: Int, period: String) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.updateContract(id, period)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("contract updated")
+            }
+        }
+    }
+}
+
+fun invalidContract(id: Int) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.invalidContract(id)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("contract invalidated")
+            }
+        }
+    }
+}
+
+fun addContract(contract: Contract) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.addContract(contract)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("Contract ADDED")
             }
         }
     }

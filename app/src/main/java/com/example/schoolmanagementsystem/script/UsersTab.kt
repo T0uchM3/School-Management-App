@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.theme
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import com.example.schoolmanagementsystem.script.usersAPI
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
@@ -47,10 +49,14 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.Pages
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.vector.VectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.schoolmanagementsystem.script.User
+import com.example.schoolmanagementsystem.script.getUserContract
 import com.example.schoolmanagementsystem.script.navbar.Screen
 
 
@@ -66,6 +72,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     var offsetX by remember { mutableStateOf(0f) }
 
     LaunchedEffect(key1 = Unit) {
+        sharedViewModel.userList.clear()
         usersAPI(navCtr = navCtr, sharedViewModel = sharedViewModel)
     }
     val users = remember { sharedViewModel.userList }
@@ -123,6 +130,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             Button(
                 onClick = {
                     sharedViewModel.defineUsersFocus(true)
+                    sharedViewModel.defineIsNewUser(true)
                     navCtr.navigate(Screen.ManageUser.route)
                 },
                 modifier = Modifier
@@ -135,25 +143,26 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 Text(text = "+")
             }
         }
-        if (sharedViewModel.userList != null) {
-            LazyColumn(state = rememberLazyListState()) {
-                items(sharedViewModel.userList, key = { item -> item.id }) { user ->
-                    userName = user.name.toString()
-                    userId = user.id.toString()
-                    userRole = user.role.toString()
-                    Box(modifier = Modifier.animateItemPlacement()) {
-                        SwipeableBoxPreview(
-                            navCtr, Modifier.padding(), sharedViewModel, user, onRemoveClicked = {
-                                sharedViewModel.userList.remove(user)
-                            }
-                        )
-                    }
-
-                    Spacer(Modifier.height(1.dp))
-                    Divider()
-                    Spacer(Modifier.height(1.dp))
-
+        LazyColumn(
+            state = rememberLazyListState(),
+            modifier = Modifier.padding(bottom = 40.dp)
+        ) {
+            items(sharedViewModel.userList, key = { item -> item.id }) { user ->
+                userName = user.name.toString()
+                userId = user.id.toString()
+                userRole = user.role.toString()
+                Box(modifier = Modifier.animateItemPlacement()) {
+                    SwipeableBoxPreview(
+                        navCtr, Modifier.padding(), sharedViewModel, user, onRemoveClicked = {
+                            sharedViewModel.userList.remove(user)
+                        }
+                    )
                 }
+
+                Spacer(Modifier.height(1.dp))
+                Divider()
+                Spacer(Modifier.height(1.dp))
+
             }
         }
     }
@@ -162,7 +171,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun SwipeableBoxPreview(
+fun SwipeableBoxPreview(
     navCtr: NavHostController,
     modifier: Modifier = Modifier,
     sharedViewModel: SharedViewModel,
@@ -177,7 +186,8 @@ private fun SwipeableBoxPreview(
         icon = rememberVectorPainter(Icons.TwoTone.Edit),
         background = Color.Perfume,
         onSwipe = {
-            println("Reply swiped")
+            sharedViewModel.defineSelectedUserId(user.id.toString())
+            sharedViewModel.defineIsNewUser(false)
             sharedViewModel.defineUsersFocus(true)
             navCtr.navigate(Screen.ManageUser.route)
         },
@@ -188,7 +198,10 @@ private fun SwipeableBoxPreview(
         background = Color.Fern,
         onSwipe = {
             isArchived = !isArchived
+            sharedViewModel.defineSelectedUserId(user.id.toString())
             sharedViewModel.defineUsersFocus(true)
+            getUserContract(user.id.toInt(), sharedViewModel)
+            println("Contra swiped")
             navCtr.navigate(Screen.Contract.route)
         },
         isUndo = isArchived,
@@ -196,7 +209,16 @@ private fun SwipeableBoxPreview(
 //    if (isActive)
 
     val remove = SwipeAction(
-        icon = rememberVectorPainter(Icons.TwoTone.Delete),
+//        icon = rememberVectorPainter(Icons.TwoTone.Delete),
+        icon =
+//        Image(
+//            imageVector = Icons.TwoTone.Delete,
+//            contentDescription = "",
+//            Modifier
+//                .size(50.dp)
+//                .fillMaxHeight()
+//        ),
+        rememberVectorPainter(Icons.TwoTone.Delete),
         background = Color.SeaBuckthorn,
         onSwipe = {
 //            isSnoozed = !isSnoozed
@@ -212,7 +234,7 @@ private fun SwipeableBoxPreview(
         modifier = modifier,
         startActions = listOf(editUser, editContract),
         endActions = listOf(remove),
-        swipeThreshold = 40.dp,
+        swipeThreshold = 100.dp,
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp),
     ) {
         SwipeItem(

@@ -30,27 +30,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 
+var selectedUser: User? = null
+var nameInput: MutableState<TextFieldValue>? = null
+var cinInput: MutableState<TextFieldValue>? = null
+var dnInput: MutableState<TextFieldValue>? = null
+var emailInput: MutableState<TextFieldValue>? = null
+var genderInput: MutableState<TextFieldValue>? = null
+var roleInput: MutableState<TextFieldValue>? = null
 
 @Composable
 fun ManageUser(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
-    val nameInput = remember {
-        mutableStateOf(TextFieldValue(""))
+    //searching through the users list for user that got selected in the previous (userTab)
+    var selectedUser: User? = null
+    for (user in sharedViewModel.userList) {
+        if (user.id.toString() == sharedViewModel.selectedUserId)
+            selectedUser = user
     }
-    val cinInput = remember {
-        mutableStateOf(TextFieldValue(""))
+    nameInput = remember {
+        mutableStateOf(TextFieldValue(selectedUser?.name.toString()))
     }
-    val dnInput = remember {
-        mutableStateOf(TextFieldValue(""))
+    cinInput = remember {
+        mutableStateOf(TextFieldValue(selectedUser?.cin.toString()))
     }
-    val emailInput = remember {
-        mutableStateOf(TextFieldValue(""))
+    dnInput = remember {
+        mutableStateOf(TextFieldValue(selectedUser?.date_naiss.toString()))
     }
-    val genderInput = remember {
-        mutableStateOf(TextFieldValue(""))
+    emailInput = remember {
+        mutableStateOf(TextFieldValue(selectedUser?.email.toString()))
     }
-    val roleInput = remember {
-        mutableStateOf(TextFieldValue(""))
+    genderInput = remember {
+        mutableStateOf(TextFieldValue(selectedUser?.sex.toString()))
     }
+    roleInput = remember {
+        mutableStateOf(TextFieldValue(selectedUser?.role.toString()))
+    }
+    if (sharedViewModel.isNewUser)
+        resetAllFields()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -63,34 +78,34 @@ fun ManageUser(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 //                .backgrouEnd(Color.Blue)
         ) {
 
-            OutlinedTextField(value = nameInput.value,
+            OutlinedTextField(value = nameInput!!.value,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { nameInput.value = it },
+                onValueChange = { nameInput!!.value = it },
                 singleLine = true,
                 label = { Text("name") })
-            OutlinedTextField(value = cinInput.value,
+            OutlinedTextField(value = cinInput!!.value,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { cinInput.value = it },
+                onValueChange = { cinInput!!.value = it },
                 singleLine = true,
                 label = { Text("cin") })
-            OutlinedTextField(value = dnInput.value,
+            OutlinedTextField(value = dnInput!!.value,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { dnInput.value = it },
+                onValueChange = { dnInput!!.value = it },
                 singleLine = true,
                 label = { Text("date_naiss") })
-            OutlinedTextField(value = emailInput.value,
+            OutlinedTextField(value = emailInput!!.value,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { emailInput.value = it },
+                onValueChange = { emailInput!!.value = it },
                 singleLine = true,
                 label = { Text("email") })
-            OutlinedTextField(value = genderInput.value,
+            OutlinedTextField(value = genderInput!!.value,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { genderInput.value = it },
+                onValueChange = { genderInput!!.value = it },
                 singleLine = true,
                 label = { Text("gender") })
-            OutlinedTextField(value = roleInput.value,
+            OutlinedTextField(value = roleInput!!.value,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { roleInput.value = it },
+                onValueChange = { roleInput!!.value = it },
                 singleLine = true,
                 label = { Text("role") })
 //        }
@@ -98,21 +113,19 @@ fun ManageUser(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         Button(
             onClick = {
                 val user = User()
-                user.name = nameInput.value.text
-                user.cin = cinInput.value.text
-                user.date_naiss = dnInput.value.text
-                user.email = emailInput.value.text
-                user.sex = genderInput.value.text
-                user.role = roleInput.value.text
-                addUserAPI(user)
+                user.name = nameInput!!.value.text
+                user.cin = cinInput!!.value.text
+                user.date_naiss = dnInput!!.value.text
+                user.email = emailInput!!.value.text
+                user.sex = genderInput!!.value.text
+                user.role = roleInput!!.value.text
 
-                //resets all fields
-                nameInput.value = TextFieldValue("")
-                cinInput.value = TextFieldValue("")
-                dnInput.value = TextFieldValue("")
-                emailInput.value = TextFieldValue("")
-                genderInput.value = TextFieldValue("")
-                roleInput.value = TextFieldValue("")
+                if (sharedViewModel.isNewUser)
+                    addUserAPI(user)
+                else
+                    updateUser(sharedViewModel.selectedUserId.toInt(), user)
+
+
             },
             modifier = Modifier
 //                .align(Alignment.BottomCenter)
@@ -121,9 +134,23 @@ fun ManageUser(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.DarkGray)
 
         ) {
-            Text(text = "Create")
+            if (sharedViewModel.isNewUser)
+                Text(text = "Add")
+            else
+                Text(text = "Update")
+
         }
     }
+}
+
+fun resetAllFields() {
+    //resets all fields
+    nameInput?.value = TextFieldValue("")
+    cinInput?.value = TextFieldValue("")
+    dnInput?.value = TextFieldValue("")
+    emailInput?.value = TextFieldValue("")
+    genderInput?.value = TextFieldValue("")
+    roleInput?.value = TextFieldValue("")
 }
 
 @Preview
