@@ -67,4 +67,10 @@ sealed class Screen(
         icon = 0,
         icon_focused = 0
     )
+    object Payment : Screen(
+        route = "Payment",
+        title = "",
+        icon = 0,
+        icon_focused = 0
+    )
 }

@@ -58,11 +58,28 @@ class SharedViewModel : ViewModel() {
         }
     }
 
+    var paymentList = SnapshotStateList<Payment>()
+        private set
+
+    fun definePaymentList(newList: List<Payment>?) {
+        if (newList != null) {
+            for (payment in newList)
+                paymentList.add(payment)
+        }
+    }
+
     var selectedUserId by mutableStateOf<String>("")
         private set
 
     fun defineSelectedUserId(id: String) {
         selectedUserId = id
+    }
+
+    var selectedContractId by mutableStateOf<String>("")
+        private set
+
+    fun defineSelectedContractId(id: String) {
+        selectedContractId = id
     }
 
     /**

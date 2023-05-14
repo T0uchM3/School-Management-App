@@ -8,6 +8,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -76,6 +77,10 @@ interface APIService {
     suspend fun getContracts(@Path("id") id: Int): Response<List<Contract>>
 
     @Headers("Accept: application/json")
+    @GET("/api/contracts")
+    suspend fun getAllContracts(): Response<ContractResults>
+
+    @Headers("Accept: application/json")
     @POST("/api/deleteContract/{id}")
     suspend fun deleteContract(@Path("id") id: Int): Response<String>
 
@@ -86,6 +91,19 @@ interface APIService {
     @Headers("Accept: application/json")
     @POST("/api/invalidContract/{id}")
     suspend fun invalidContract(@Path("id") id: Int): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/addPayment")
+    suspend fun addPayment(@Body params: Payment): Response<Payment>
+
+    @Headers("Accept: application/json")
+    @POST("/api/deletePayment/{id}")
+    suspend fun deletePayment(@Path("id") id: Int): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/updatePayment/{id}")
+    suspend fun updatePayment(@Path("id") id: Int, @Body params: Payment): Response<String>
+
 
 }
 
@@ -157,16 +175,16 @@ fun loginAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
 
 fun usersAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
     CoroutineScope(Dispatchers.IO).launch {
-        val response = backendApi.getUsers()
-        withContext(Dispatchers.Main) {
-            if (response.isSuccessful) {
-                val users = response.body()
-                sharedViewModel.defineUserList(users?.results)
-                users?.results?.forEach { user ->
+        val result = async { backendApi.getUsers() }
+        val response = result.await()
+        if (response.isSuccessful) {
+            val users = response.body()
+            sharedViewModel.defineUserList(users?.results)
+            users?.results?.forEach { user ->
 
-                    println(user.name)
-                }
+                println(user.name)
             }
+            getContractAndPayment(sharedViewModel = sharedViewModel)
         }
     }
 }
@@ -203,6 +221,7 @@ fun updateUser(id: Int, user: User) {
         }
     }
 }
+
 fun getUserContract(id: Int, sharedViewModel: SharedViewModel) {
     CoroutineScope(Dispatchers.IO).launch {
         val response = backendApi.getContracts(id)
@@ -220,6 +239,23 @@ fun getUserContract(id: Int, sharedViewModel: SharedViewModel) {
     }
 }
 
+fun getContractAndPayment(sharedViewModel: SharedViewModel) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.getAllContracts()
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                val contracts = response.body()
+                sharedViewModel.defineContractList(contracts?.resultsC)
+                sharedViewModel.definePaymentList(contracts?.resultsP)
+                println("userContractAPI")
+//                contracts?.results?.forEach { contract ->
+//
+//                    println(contract.id)
+//                }
+            }
+        }
+    }
+}
 
 fun deleteContract(id: Int) {
     CoroutineScope(Dispatchers.IO).launch {
@@ -254,13 +290,56 @@ fun invalidContract(id: Int) {
     }
 }
 
-fun addContract(contract: Contract) {
+fun addContract(
+    contract: Contract,
+    sharedViewModel: SharedViewModel,
+    triggerSecondCall: Boolean? = false
+) {
     CoroutineScope(Dispatchers.IO).launch {
-        val response = backendApi.addContract(contract)
+        val result = async { backendApi.addContract(contract) }
+        val response = result.await()
+        if (response.isSuccessful) {
+            println("Contract ADDED")
+            if (triggerSecondCall == true)
+                getContractAndPayment(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+fun addPayment(
+    payment: Payment, sharedViewModel: SharedViewModel,
+    triggerSecondCall: Boolean? = false
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.addPayment(payment) }
+        val response = result.await()
+        if (response.isSuccessful) {
+            println("payment ADDED")
+            if (triggerSecondCall == true)
+                getContractAndPayment(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+fun deletePayment(id: Int) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.deletePayment(id)
         withContext(Dispatchers.Main) {
             if (response.isSuccessful) {
-                println("Contract ADDED")
+                println("payment DELETED")
             }
         }
     }
 }
+
+fun updatePayment(id: Int, payment: Payment) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.updatePayment(id, payment)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("payment updated")
+            }
+        }
+    }
+}
+

@@ -1,7 +1,9 @@
 package com.example.schoolmanagementsystem.script
 
+import android.media.Image
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,11 +32,24 @@ import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.LineAxis
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.ShapeLine
+import androidx.compose.material.icons.outlined.South
 import androidx.compose.material.icons.twotone.Block
+import androidx.compose.material.icons.twotone.Circle
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.DisabledByDefault
 import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.Pages
+import androidx.compose.material.icons.twotone.Radio
+import androidx.compose.material.icons.twotone.RadioButtonChecked
+import androidx.compose.material.icons.twotone.ReplayCircleFilled
+import androidx.compose.material.icons.twotone.South
+import androidx.compose.material.icons.twotone.Straight
+import androidx.compose.material.icons.twotone.Timeline
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -45,14 +61,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
+import androidx.compose.ui.Alignment.Companion.End
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.VectorPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -61,27 +89,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.example.schoolmanagementsystem.ui.theme.Fern
 import com.example.schoolmanagementsystem.ui.theme.Perfume
 import com.example.schoolmanagementsystem.ui.theme.SeaBuckthorn
-import com.example.schoolmanagementsystem.ui.theme.userId
-import com.example.schoolmanagementsystem.ui.theme.userName
-import com.example.schoolmanagementsystem.ui.theme.userRole
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
-
-var sDate = ""
-var eDate = ""
-var period = ""
-var salary = ""
-var valid = true
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -89,9 +110,16 @@ fun ContractUser(
     navCtr: NavHostController,
     sharedViewModel: SharedViewModel,
 ) {
-    val showDialog = remember { mutableStateOf(false) }
-    LaunchedEffect(key1 = Unit) {
-        sharedViewModel.contractList.clear()
+    val showAddDialog = remember { mutableStateOf(false) }
+    val contracts = remember { SnapshotStateList<Contract>() }
+
+    LaunchedEffect(key1 = sharedViewModel.contractList.size) {
+        contracts.clear()
+        for (contract in sharedViewModel.contractList) {
+            if (contract.user_id.toString() == sharedViewModel.selectedUserId) {
+                contracts.add(contract)
+            }
+        }
     }
     Column(Modifier.fillMaxSize()) {
         Row(
@@ -100,12 +128,13 @@ fun ContractUser(
                 .fillMaxWidth()
         ) {
             Button(onClick = {
-                showDialog.value = true
+                showAddDialog.value = true
             }) {
                 Text(text = "Add a Contract")
             }
         }
-
+        for (cont in sharedViewModel.contractList)
+            println("LIST " + cont.id)
         if (sharedViewModel.contractList.isEmpty()) {
             Text(
                 text = "This employee has no contracts!",
@@ -114,36 +143,34 @@ fun ContractUser(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-        }
-        LazyColumn(
-            state = rememberLazyListState(), modifier = Modifier.padding(bottom = 40.dp)
-        ) {
-            items(sharedViewModel.contractList, key = { item -> item.id }) { contract ->
-                sDate = contract.date_debut.toString()
-                eDate = contract.date_fin.toString()
-                period = contract.periode.toString()
-                salary = contract.salaire.toString()
-                valid = contract.valide.toBoolean()
-                Box(modifier = Modifier.animateItemPlacement()) {
-                    SwipeableBoxPreview(navCtr,
-                        Modifier.padding(),
-                        sharedViewModel,
-                        contract,
-                        onRemoveClicked = {
-                            sharedViewModel.contractList.remove(contract)
-                        })
-                }
+        } else {
 
-                Spacer(Modifier.height(1.dp))
+            LazyColumn(
+                state = rememberLazyListState(), modifier = Modifier.padding(bottom = 40.dp)
+            ) {
+                items(contracts, key = { item -> item.id }) { contract ->
+                    Box(modifier = Modifier.animateItemPlacement()) {
+                        SwipeableBoxPreview(navCtr,
+                            Modifier.padding(),
+                            sharedViewModel,
+                            contract,
+                            onRemoveClicked = {
+                                contracts.remove(contract)
+                                sharedViewModel.contractList.remove(contract)
+                            })
+                    }
+
+                    Spacer(Modifier.height(1.dp))
 //            Divider()
-                Spacer(Modifier.height(1.dp))
+                    Spacer(Modifier.height(1.dp))
 
+                }
             }
         }
     }
-    if (showDialog.value)
-        CustomDialog(value = "", setShowDialog = {
-            showDialog.value = it
+    if (showAddDialog.value)
+        AddContractDialog(value = "", setShowDialog = {
+            showAddDialog.value = it
         }, sharedViewModel)
 }
 
@@ -156,89 +183,87 @@ private fun SwipeableBoxPreview(
     contract: Contract,
     onRemoveClicked: (contract: Contract) -> Unit
 ) {
-    val isSnoozed by rememberSaveable { mutableStateOf(false) }
+    var isValid by rememberSaveable { mutableStateOf(true) }
+    isValid = contract.valide == "1"
     val isArchived by rememberSaveable { mutableStateOf(false) }
+    var showEditDialog = remember { mutableStateOf(false) }
 
     var isActive by rememberSaveable { mutableStateOf(false) }
     val editContract = SwipeAction(
         icon = rememberVectorPainter(Icons.TwoTone.Edit),
         background = Color.Perfume,
         onSwipe = {
-
-//            sharedViewModel.defineUsersFocus(true)
-//            navCtr.navigate(Screen.ManageUser.route)
+            showEditDialog.value = true
         },
         isUndo = false,
     )
-    val payments = SwipeAction(
-        icon = rememberVectorPainter(Icons.TwoTone.Pages),
-        background = Color.Fern,
-        onSwipe = {
-//            isArchived = !isArchived
-//            sharedViewModel.defineUsersFocus(true)
-//            userContractAPI(user.id.toInt(), sharedViewModel)
-            println("Contra swiped")
-//            navCtr.navigate(Screen.Contract.route)
-        },
-        isUndo = isArchived,
-    )
-//    if (isActive)
 
-    val remove = SwipeAction(
-//        icon = rememberVectorPainter(Icons.TwoTone.Delete),
-        icon = { testSide() },
+    val removeOrDisable = SwipeAction(
+        icon = {
+            if (contract.valide == "0")//not valid
+                Image(
+                    imageVector = Icons.TwoTone.Delete,
+                    contentDescription = ""
+                )
+            else
+                Image(
+                    imageVector = Icons.TwoTone.Block,
+                    contentDescription = ""
+                )
+        },
         background = MaterialTheme.colorScheme.error,
         onSwipe = {
-//            isSnoozed = !isSnoozed
-//            println("IDDDD" + user.id)
-//            deleteUserAPI(user.id.toInt())
-            deleteContract(contract.id.toInt())
-            onRemoveClicked(contract)
-//            sharedViewModel.userList.remove(user)
+            if (contract.valide == "0") {//only delete when the contract is invalid
+                println("11111111+1")
+                deleteContract(contract.id.toInt())
+                onRemoveClicked(contract)
+            } else {
+                invalidContract(contract.id.toInt())
+                println("2222222+2")
+                contract.valide = "0"
+                isValid = false
+            }
         },
 
-        isUndo = isSnoozed,
-    )
-    val invalid = SwipeAction(
-        icon = rememberVectorPainter(Icons.TwoTone.Block),
-        background = Color.SeaBuckthorn,
-        onSwipe = {
-//            isSnoozed = !isSnoozed
-//            println("IDDDD" + user.id)
-//            deleteUserAPI(user.id.toInt())
-//            onRemoveClicked(user)
-//            sharedViewModel.userList.remove(user)
-        },
-
-        isUndo = isSnoozed,
+        isUndo = isValid,
     )
     SwipeableActionsBox(
         modifier = modifier,
-        startActions = listOf(payments, editContract),
-        endActions = listOf(invalid, remove),
+        startActions = listOf(editContract),
+        endActions = listOf(removeOrDisable),
         swipeThreshold = 40.dp,
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp),
     ) {
         SwipeItem(
-            sharedViewModel
+            sharedViewModel, navCtr = navCtr, contract = contract, valid = isValid
         )
     }
-
-
-}
-
-@Composable
-fun testSide() {
-    Text("Snooze")
-    Text("Blooooze")
+    if (showEditDialog.value)
+        EditContractDialog(value = "", setShowDialog = {
+            showEditDialog.value = it
+        }, sharedViewModel, contract)
 
 }
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SwipeItem(
-    sharedViewModel: SharedViewModel
+    sharedViewModel: SharedViewModel? = null,
+    navCtr: NavHostController? = null,
+    contract: Contract? = null,
+    valid: Boolean? = null
 ) {
+    println("VVVVVVVVVVVVVVVVVVVVVVValide " + valid)
+//    if (sharedViewModel != null && navCtr != null && contract != null)
+    var nbrPayments: Int = 0
+    for (payment in sharedViewModel!!.paymentList) {
+//            println(sharedViewModel.selectedContractId + " payment id " + payment.contrat_id)
+        if (payment.contrat_id == contract?.id.toString()) {
+            nbrPayments++
+            println("found one")
+        }
+    }
     Row(
         modifier = Modifier
             .clip(shape = RoundedCornerShape(10.dp))
@@ -247,69 +272,185 @@ private fun SwipeItem(
             .clickable(
                 onClick = {
                     println("clicked")
-                })
-            .background(MaterialTheme.colorScheme.primaryContainer),
+                    sharedViewModel?.defineSelectedContractId(contract?.id.toString())
+                    navCtr?.navigate(Screen.Payment.route)
 
-        Arrangement.SpaceEvenly
+                })
+
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(start = 10.dp),
+
+//        Arrangement.SpaceEvenly
 
     ) {
+        Column(
+            Modifier
+                .width(IntrinsicSize.Min)
+                .padding(vertical = 12.dp)
+        ) {
+            Image(
+                imageVector = Icons.Filled.RadioButtonChecked,
+                contentDescription = "",
+                Modifier
+                    .fillMaxWidth()
+                    .size(13.dp)
+                    .offset(y = 4.dp)
+                    .scale(1.5f)
+                    .zIndex(1f)
+            )
+            Column(
+                Modifier
+                    .weight(2f)
+                    .fillMaxWidth()
+
+            ) {
+
+                Divider(
+                    color = Color.Black,
+                    modifier = Modifier
+                        .weight(2f)
+                        .width(1.5.dp)
+                        .offset(x = 6.dp, y = 5.dp)
+                        .zIndex(1f)
+                )
+                Image(
+                    imageVector = Icons.Outlined.ExpandMore,
+                    contentDescription = "",
+                    modifier = Modifier
+                        .scale(1.4f)
+                        .fillMaxWidth()
+                        .height(10.dp)
+                        .aspectRatio(1f)
+                        .offset(y = 1.dp),
+                    colorFilter = ColorFilter.tint(Color.Black)
+                )
+            }
+            Image(
+                imageVector = Icons.Filled.Circle,
+                contentDescription = "",
+                Modifier
+                    .fillMaxWidth()
+                    .size(13.dp)
+                    .offset(y = -2.dp)
+                    .scale(0.9f)
+                    .zIndex(1f)
+            )
+        }
 
         Column(
             Modifier
                 .fillMaxHeight()
                 .background(Color.Transparent)
-                .padding(vertical = 16.dp, horizontal = 15.dp)
+                .padding(vertical = 12.dp, horizontal = 5.dp)
+                .padding(end = 5.dp)
                 .animateContentSize()
 
         ) {
             Text(
-                text = "Start Date     ${sDate}",
+                text = "Start:  ${contract?.date_debut}",
                 color = Color.Black,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(bottom = 10.dp)
+                fontSize = 17.sp,
+                modifier = Modifier
+                    .padding(bottom = 10.dp)
+                    .weight(1f)
             )
             Text(
-                text = "End Date       ${eDate}", color = Color.Black, fontSize = 20.sp
+                text = "End:    ${contract?.date_fin}",
+                color = Color.Black,
+                fontSize = 17.sp
             )
         }
         Divider(
             color = Color.DarkGray,
             modifier = Modifier
                 .fillMaxHeight()
-                .width(1.dp)
-                .padding(vertical = 10.dp)
+                .width(2.dp)
+                .padding(vertical = 25.dp)
         )
 
         Column(
             Modifier
                 .fillMaxHeight()
+                .padding(start = 10.dp)
+
 //                        .fillMaxWidth()
 //                        .weight(1f)
 //                        .shadow(1.dp)
-                .background(Color.Transparent)
-                .padding(vertical = 16.dp, horizontal = 15.dp)
+//                .background(Color.Red)
                 .animateContentSize()
+                .weight(1f)
 
         ) {
-            Text(
-                text = "Period ${period} ",
-                color = Color.Black,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(bottom = 10.dp)
-            )
+            Row(Modifier.fillMaxWidth()) {
+                Spacer(modifier = Modifier.weight(1f))
+                if (valid == true)
+                    Text(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.tertiaryContainer,
+                                RoundedCornerShape(bottomStart = 8.dp)
+                            )
+                            .padding(horizontal = 0.dp, vertical = 4.dp),
+                        text = " valid ",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                else
+                    Text(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.outline,
+                                RoundedCornerShape(bottomStart = 8.dp)
+                            )
+                            .padding(horizontal = 0.dp, vertical = 4.dp),
+                        text = " Invalid ",
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+            }
+            Row(
+                Modifier.width(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically
+            ) {
 
-            Text(
-                text = "Salary ${salary}", color = Color.Black, fontSize = 20.sp
-            )
+                Text(
+                    text = "Salary: ",
+                    color = Color.Black,
+                    fontSize = 13.sp,
+                    modifier = Modifier
+                )
+                Text(
+                    text = "${contract?.salaire} ",
+                    color = Color.Black,
+                    fontSize = 20.sp,
+//                    modifier = Modifier.padding(bottom = 10.dp),
+                    style = MaterialTheme.typography.labelLarge
+
+                )
+            }
+            Row(Modifier.fillMaxWidth()) {
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    modifier = Modifier
+                        .background(
+                            MaterialTheme.colorScheme.outline,
+                            RoundedCornerShape(topStart = 8.dp)
+                        )
+                        .padding(horizontal = 0.dp, vertical = 4.dp),
+                    text = " Payments: $nbrPayments ",
+                    fontSize = 15.sp,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
         }
     }
-//            Spacer(Modifier.height(2.dp))
 }
 
 @Composable
-fun CustomDialog(
-    value: String, setShowDialog: (Boolean) -> Unit, sharedViewModel: SharedViewModel
+fun AddContractDialog(
+    value: String? = null,
+    setShowDialog: (Boolean) -> Unit,
+    sharedViewModel: SharedViewModel? = null
 ) {
+
     val sDate = remember {
         mutableStateOf(TextFieldValue("2023-08-17"))
     }
@@ -318,6 +459,94 @@ fun CustomDialog(
     }
     val salary = remember {
         mutableStateOf(TextFieldValue("199"))
+    }
+    if (value != null && sharedViewModel != null)
+        Dialog(onDismissRequest = { setShowDialog(false) }) {
+            Surface(
+                shape = RoundedCornerShape(16.dp), color = Color.White
+            ) {
+                Column() {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                    ) {
+                        OutlinedTextField(value = sDate.value,
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            onValueChange = { sDate.value = it },
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    text = "Start Date",
+                                    fontSize = 15.sp,
+                                )
+                            })
+
+                        OutlinedTextField(value = periode.value,
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            onValueChange = { periode.value = it },
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    text = "period",
+                                    fontSize = 15.sp,
+                                )
+                            })
+
+                        OutlinedTextField(value = salary.value,
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            onValueChange = { salary.value = it },
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    text = "salary",
+                                    fontSize = 15.sp,
+                                )
+                            })
+                    }
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(y = 6.dp)
+                            .height(50.dp),
+                        onClick = {
+                            val contract = Contract()
+                            contract.date_debut = sDate.value.text
+                            contract.periode = periode.value.text
+                            contract.salaire = salary.value.text
+                            contract.user_id = sharedViewModel.selectedUserId
+                            //clearing lists to avoid lazycol parsing error
+                            sharedViewModel.contractList.clear()
+                            sharedViewModel.paymentList.clear()
+                            //api call
+                            addContract(contract, sharedViewModel, true)
+                            //resets all fields
+                            sDate.value = TextFieldValue("")
+                            periode.value = TextFieldValue("")
+                            salary.value = TextFieldValue("")
+
+                            //close dialog
+                            setShowDialog(false)
+                        }) {
+                        Text(text = "Create")
+                    }
+                }
+            }
+        }
+}
+
+@Composable
+fun EditContractDialog(
+    value: String,
+    setShowDialog: (Boolean) -> Unit,
+    sharedViewModel: SharedViewModel,
+    contract: Contract
+) {
+    val period = remember {
+        mutableStateOf(TextFieldValue(contract.periode.toString()))
     }
     Dialog(onDismissRequest = { setShowDialog(false) }) {
         Surface(
@@ -329,22 +558,11 @@ fun CustomDialog(
                         .fillMaxWidth()
                         .padding(10.dp)
                 ) {
-                    OutlinedTextField(value = sDate.value,
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        onValueChange = { sDate.value = it },
-                        singleLine = true,
-                        label = {
-                            Text(
-                                text = "Start Date",
-                                fontSize = 15.sp,
-                            )
-                        })
 
-                    OutlinedTextField(value = periode.value,
+                    OutlinedTextField(value = period.value,
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        onValueChange = { periode.value = it },
+                        onValueChange = { period.value = it },
                         singleLine = true,
                         label = {
                             Text(
@@ -353,17 +571,6 @@ fun CustomDialog(
                             )
                         })
 
-                    OutlinedTextField(value = salary.value,
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        onValueChange = { salary.value = it },
-                        singleLine = true,
-                        label = {
-                            Text(
-                                text = "salary",
-                                fontSize = 15.sp,
-                            )
-                        })
                 }
                 Button(
                     modifier = Modifier
@@ -371,22 +578,15 @@ fun CustomDialog(
                         .offset(y = 6.dp)
                         .height(50.dp),
                     onClick = {
-                        val contract = Contract()
-                        contract.date_debut = sDate.value.text
-                        contract.periode = periode.value.text
-                        contract.salaire = salary.value.text
-                        contract.user_id = sharedViewModel.selectedUserId
-                        addContract(contract)
+                        updateContract(contract.id.toInt(), period.value.text)
 
                         //resets all fields
-                        sDate.value = TextFieldValue("")
-                        periode.value = TextFieldValue("")
-                        salary.value = TextFieldValue("")
+                        period.value = TextFieldValue("")
 
                         //close dialog
                         setShowDialog(false)
                     }) {
-                    Text(text = "Create")
+                    Text(text = "Update")
                 }
             }
         }
@@ -396,5 +596,5 @@ fun CustomDialog(
 @Preview
 @Composable
 fun ContractUserPreview() {
-    ManageUser(TODO(), TODO())
+    SwipeItem()
 }

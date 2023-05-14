@@ -3,8 +3,8 @@ package com.example.schoolmanagementsystem.ui.theme
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,7 +24,6 @@ import com.example.schoolmanagementsystem.script.usersAPI
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
@@ -49,20 +48,13 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.Pages
-import androidx.compose.ui.draw.rotate
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.vector.VectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.schoolmanagementsystem.script.User
 import com.example.schoolmanagementsystem.script.getUserContract
 import com.example.schoolmanagementsystem.script.navbar.Screen
 
-
-var userName = ""
-var userId = ""
-var userRole = ""
 
 @OptIn(ExperimentalFoundationApi::class)
 @ExperimentalFoundationApi
@@ -72,8 +64,12 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     var offsetX by remember { mutableStateOf(0f) }
 
     LaunchedEffect(key1 = Unit) {
+        println("/////////////////////CLLLEAARRRR")
         sharedViewModel.userList.clear()
+        sharedViewModel.contractList.clear()
+        sharedViewModel.paymentList.clear()
         usersAPI(navCtr = navCtr, sharedViewModel = sharedViewModel)
+//        getAllContracts(sharedViewModel = sharedViewModel)
     }
     val users = remember { sharedViewModel.userList }
 
@@ -148,9 +144,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             modifier = Modifier.padding(bottom = 40.dp)
         ) {
             items(sharedViewModel.userList, key = { item -> item.id }) { user ->
-                userName = user.name.toString()
-                userId = user.id.toString()
-                userRole = user.role.toString()
                 Box(modifier = Modifier.animateItemPlacement()) {
                     SwipeableBoxPreview(
                         navCtr, Modifier.padding(), sharedViewModel, user, onRemoveClicked = {
@@ -232,13 +225,13 @@ fun SwipeableBoxPreview(
 
     SwipeableActionsBox(
         modifier = modifier,
-        startActions = listOf(editUser, editContract),
+        startActions = listOf(editUser),
         endActions = listOf(remove),
         swipeThreshold = 100.dp,
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp),
     ) {
         SwipeItem(
-            isSnoozed = isSnoozed
+            isSnoozed = isSnoozed, sharedViewModel = sharedViewModel, navCtr = navCtr, user = user
         )
     }
 
@@ -248,14 +241,32 @@ fun SwipeableBoxPreview(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SwipeItem(
-    modifier: Modifier = Modifier, isSnoozed: Boolean
+    modifier: Modifier = Modifier,
+    isSnoozed: Boolean,
+    sharedViewModel: SharedViewModel,
+    navCtr: NavHostController,
+    user: User
 ) {
+    var nbrContracts: Int = 0
+    for (contract in sharedViewModel.contractList) {
+        if (contract.user_id == user.id.toString())
+            nbrContracts++
+    }
     Row(
         modifier
+            .clickable(
+                onClick = {
+                    sharedViewModel.defineSelectedUserId(user.id.toString())
+                    sharedViewModel.defineUsersFocus(true)
+//                    getUserContract(user.id.toInt(), sharedViewModel)
+                    println("Contra swiped")
+                    navCtr.navigate(Screen.Contract.route)
+                })
             .fillMaxWidth()
             .shadow(1.dp)
             .background(MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp))
             .padding(vertical = 16.dp, horizontal = 20.dp)
+
             .animateContentSize()
 
     ) {
@@ -268,11 +279,11 @@ private fun SwipeItem(
 
         Column(Modifier.padding(horizontal = 16.dp)) {
             Text(
-                text = userName, style = MaterialTheme.typography.titleMedium
+                text = user.name.toString(), style = MaterialTheme.typography.titleMedium
             )
             Text(
                 modifier = Modifier.padding(top = 4.dp),
-                text = "ID: $userId | Role: $userRole",
+                text = "ID: ${user.id} | Role: ${user.role} | Contracts: $nbrContracts",
                 style = MaterialTheme.typography.bodyMedium
             )
 

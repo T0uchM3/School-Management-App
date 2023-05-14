@@ -19,3 +19,12 @@ class Contract(
     var enseignant: String? = "",
     var employe: String? = "",
 ) : Parcelable
+
+
+@Parcelize
+data class ContractResults(
+    @Json(name = "contracts")
+    val resultsC: List<Contract>,
+    @Json(name = "versements")
+    val resultsP: List<Payment>
+) : Parcelable

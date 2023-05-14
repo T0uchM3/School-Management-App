@@ -32,7 +32,6 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.ui.theme.Purple500
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -48,7 +47,7 @@ fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewMode
         Scaffold(
             bottomBar = { BottomBar(navController = navController2, sharedViewModel) }
         ) {
-            AnimatedApp(navController = navController2, sharedViewModel = sharedViewModel)
+            AnimatedGraph(navController = navController2, sharedViewModel = sharedViewModel)
         }
     }
 }
@@ -72,7 +71,7 @@ fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
 //            .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp)
-            .clip(shape = RoundedCornerShape(topEnd =  20.dp, topStart =  20.dp))
+            .clip(shape = RoundedCornerShape(topEnd = 20.dp, topStart = 20.dp))
             .background(Color.Red)
             .fillMaxWidth()
 
@@ -114,34 +113,47 @@ fun RowScope.AddItem(
     val contentColor =
         if (selected) Color.White else Color.Black
 
-    Box(
-        modifier = Modifier
-            .height(40.dp)
-            .clip(CircleShape)
-            .background(background)
-            .clickable(onClick = {
-                navController.navigate(screen.route) {
-                    popUpTo(navController.graph.findStartDestination().id)
-                    launchSingleTop = true
-                }
-            })
-    ) {
-        Row(
+    val screens = listOf(
+        Screen.Home,
+        Screen.Users,
+        Screen.Students,
+        Screen.Profile,
+        Screen.Contract
+    )
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination2 = navBackStackEntry?.destination
+    val bottomBarDestination = screens.any { it.route == currentDestination2?.route }
+    if (bottomBarDestination){
+
+        Box(
             modifier = Modifier
-                .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                .height(40.dp)
+                .clip(CircleShape)
+                .background(background)
+                .clickable(onClick = {
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id)
+                        launchSingleTop = true
+                    }
+                })
         ) {
-            Icon(
-                painter = painterResource(id = if (selected) screen.icon_focused else screen.icon),
-                contentDescription = "icon",
-                tint = contentColor
-            )
-            AnimatedVisibility(visible = selected) {
-                Text(
-                    text = screen.title,
-                    color = contentColor
+            Row(
+                modifier = Modifier
+                    .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = if (selected) screen.icon_focused else screen.icon),
+                    contentDescription = "icon",
+                    tint = contentColor
                 )
+                AnimatedVisibility(visible = selected) {
+                    Text(
+                        text = screen.title,
+                        color = contentColor
+                    )
+                }
             }
         }
     }

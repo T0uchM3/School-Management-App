@@ -6,8 +6,6 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.IntOffset
@@ -24,10 +22,9 @@ import com.example.schoolmanagementsystem.ui.theme.UsersTab
 import com.example.schoolmanagementsystem.script.HomeScreen4
 import com.example.schoolmanagementsystem.script.ManageUser
 import com.example.schoolmanagementsystem.script.LoginScreen
+import com.example.schoolmanagementsystem.script.PaymentScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable as c2
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import com.google.accompanist.navigation.animation.navigation
 
 //import com.google.accompanist.navigation.animation.composable
 @Composable
@@ -52,6 +49,7 @@ fun NavGraphBuilder.authNavGraph(
         composable(route = Screen.Login.route) {
             LoginScreen(navCtr = navController, sharedViewModel = sharedViewModel)
         }
+
     }
 }
 
@@ -97,7 +95,7 @@ val tweenSpec =
 @OptIn(ExperimentalFoundationApi::class)
 @ExperimentalAnimationApi
 @Composable
-fun AnimatedApp(
+fun AnimatedGraph(
     navController: NavHostController, sharedViewModel: SharedViewModel
 ) {
 //    val navController = rememberAnimatedNavController()
@@ -152,7 +150,7 @@ fun AnimatedApp(
             slideOutOfContainer(
                 AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
             )
-        }) {   ManageUser(navController, sharedViewModel) }
+        }) { ManageUser(navController, sharedViewModel) }
         c2(Screen.Contract.route, enterTransition = {
             slideIntoContainer(
                 AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
@@ -169,17 +167,34 @@ fun AnimatedApp(
             slideOutOfContainer(
                 AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
             )
-        }) {   ContractUser(navController, sharedViewModel) }
+        }) { ContractUser(navController, sharedViewModel) }
 //        composable(route = Screen.Users.route)
 //        {
 //            UsersTab(navCtr = navController, sharedViewModel = sharedViewModel)
 //        }
+        c2(Screen.Payment.route, enterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }, popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }) { PaymentScreen(navController, sharedViewModel) }
         composable(route = Screen.Students.route) {
-            ManageUser(navController, sharedViewModel)
+            HomeScreen4(navController, sharedViewModel)
 
         }
         composable(route = Screen.Profile.route) {
-            HomeScreen4()
+            HomeScreen4(navController, sharedViewModel)
         }
 //        composable(route = Screen.ManageUser.route) {
 //            ManageUser(navController, sharedViewModel)
