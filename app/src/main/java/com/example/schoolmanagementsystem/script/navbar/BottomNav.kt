@@ -3,6 +3,8 @@ package com.example.schoolmanagementsystem.script.navbar
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,11 +14,17 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Scaffold
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,7 +32,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
@@ -32,24 +43,50 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.ui.theme.Purple500
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
-@OptIn(ExperimentalAnimationApi::class)
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(
+    ExperimentalAnimationApi::class, ExperimentalMaterialApi::class,
+)
 @Composable
 fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewModel?) {
+
     val navController2 = rememberAnimatedNavController()
-    if (sharedViewModel != null) {
-        LaunchedEffect(key1 = Unit) {
+
+//    if (sharedViewModel != null) {
+//        LaunchedEffect(key1 = Unit) {
+//        }
+
+    Scaffold(
+        bottomBar = { BottomBar(navController = navController2, sharedViewModel!!) },
+        floatingActionButton = {
+            Box(
+                modifier = Modifier
+                    .width(56.0.dp)
+                    .height(56.0.dp)
+            ) {
+                AnimatedVisibility(
+                    visible = sharedViewModel!!.fabVisible, enter = scaleIn(),
+                    exit = scaleOut(),
+                ) {
+                    FloatingActionButton(onClick = sharedViewModel!!.fabOnClick) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                    }
+                }
+            }
+        },
+        content = {
+
+            AnimatedGraph(navController = navController2, sharedViewModel = sharedViewModel!!)
         }
-        Scaffold(
-            bottomBar = { BottomBar(navController = navController2, sharedViewModel) }
-        ) {
-            AnimatedGraph(navController = navController2, sharedViewModel = sharedViewModel)
-        }
-    }
+
+
+    )
+//    }
 }
 
 //var state = false
@@ -70,10 +107,10 @@ fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-//            .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp)
             .clip(shape = RoundedCornerShape(topEnd = 20.dp, topStart = 20.dp))
-            .background(Color.Red)
+            .background(MaterialTheme.colorScheme.inverseSurface)
             .fillMaxWidth()
+            .padding(vertical = 5.dp)
 
     ) {
 
@@ -90,10 +127,9 @@ fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel
 
 }
 
-val selected2 = false
 
 @Composable
-fun RowScope.AddItem(
+fun AddItem(
     screen: Screen,
     currentDestination: NavDestination?,
     navController: NavHostController,
@@ -107,7 +143,8 @@ fun RowScope.AddItem(
         selected = true
     }
     val background =
-        if (selected) Purple500.copy(alpha = 0.6f) else Color.Transparent
+        if (selected) MaterialTheme.colorScheme.surfaceTint
+        else Color.Transparent
 
 
     val contentColor =
@@ -123,7 +160,7 @@ fun RowScope.AddItem(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination2 = navBackStackEntry?.destination
     val bottomBarDestination = screens.any { it.route == currentDestination2?.route }
-    if (bottomBarDestination){
+    if (bottomBarDestination) {
 
         Box(
             modifier = Modifier
@@ -143,15 +180,22 @@ fun RowScope.AddItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                val emptyIcon = ImageVector.Builder(
+                    defaultHeight = 0.dp,
+                    defaultWidth = 0.dp,
+                    viewportHeight = 0f,
+                    viewportWidth = 0f
+                ).build()
+
                 Icon(
-                    painter = painterResource(id = if (selected) screen.icon_focused else screen.icon),
-                    contentDescription = "icon",
-                    tint = contentColor
+                    imageVector = if (selected) emptyIcon else screen.icon!!,
+                    contentDescription = ""
                 )
                 AnimatedVisibility(visible = selected) {
                     Text(
                         text = screen.title,
-                        color = contentColor
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             }

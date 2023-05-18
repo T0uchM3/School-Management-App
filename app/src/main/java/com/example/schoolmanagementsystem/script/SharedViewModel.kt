@@ -1,5 +1,8 @@
 package com.example.schoolmanagementsystem.script
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -93,4 +96,25 @@ class SharedViewModel : ViewModel() {
         isNewUser = newState
     }
 
+    var fabVisible by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineFabVisible(newState: Boolean) {
+        fabVisible = newState
+    }
+
+    var fabOnClick by mutableStateOf<() -> Unit>({})
+        private set
+
+    fun defineFabClick(newState: () -> Unit) {
+        fabOnClick = newState
+    }
+
+
+//    var textFieldColor: TextFieldColors = OutlinedTextFieldDefaults.colors(
+//        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+//        focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+//        cursorColor = MaterialTheme.colorScheme.onPrimary,
+//    )
 }

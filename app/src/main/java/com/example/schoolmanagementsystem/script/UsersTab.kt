@@ -7,72 +7,125 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import com.example.schoolmanagementsystem.script.SharedViewModel
-import com.example.schoolmanagementsystem.script.usersAPI
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Divider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import me.saket.swipe.SwipeAction
-import me.saket.swipe.SwipeableActionsBox
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.Pages
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.example.schoolmanagementsystem.script.ManageUser
+import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.script.User
 import com.example.schoolmanagementsystem.script.getUserContract
 import com.example.schoolmanagementsystem.script.navbar.Screen
+import com.example.schoolmanagementsystem.script.usersAPI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import me.saket.swipe.SwipeAction
+import me.saket.swipe.SwipeableActionsBox
 
+var scope: CoroutineScope? = null
 
-@OptIn(ExperimentalFoundationApi::class)
-@ExperimentalFoundationApi
+@OptIn(ExperimentalMaterial3Api::class)
+var sheetState: SheetState? = null
+
+@OptIn(
+    ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+)
 @Composable
 fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     val minSwipeOffset by remember { mutableStateOf(300f) }
     var offsetX by remember { mutableStateOf(0f) }
 
+    sheetState =
+        remember {
+            SheetState(
+                skipHiddenState = false,
+                skipPartiallyExpanded = false,
+                initialValue = SheetValue.Hidden
+            )
+        }
+    scope = rememberCoroutineScope()
+    if (sheetState?.isVisible == true) {
+        ModalBottomSheet(
+            sheetState = sheetState!!,
+            dragHandle = null,
+            shape = RoundedCornerShape(
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp,
+                topStart = 12.dp,
+                topEnd = 12.dp
+            ),
+            onDismissRequest = {
+                scope?.launch {
+                    sheetState?.hide()
+                }
+            },
+            content = {
+                ManageUser(sharedViewModel = sharedViewModel, scope = scope, state = sheetState)
+
+            }
+        )
+    }
+
+
     LaunchedEffect(key1 = Unit) {
         println("/////////////////////CLLLEAARRRR")
+        sharedViewModel.defineFabVisible(true)
+        sharedViewModel.defineFabClick {
+            sharedViewModel.defineIsNewUser(true)
+            scope?.launch {
+                sheetState?.show()
+            }
+//            sharedViewModel.defineIsNewUser(true)
+//            sharedViewModel.defineFabVisible(false)
+//            navCtr.navigate(Screen.ManageUser.route)
+        }
         sharedViewModel.userList.clear()
         sharedViewModel.contractList.clear()
         sharedViewModel.paymentList.clear()
         usersAPI(navCtr = navCtr, sharedViewModel = sharedViewModel)
-//        getAllContracts(sharedViewModel = sharedViewModel)
     }
+//    return
     val users = remember { sharedViewModel.userList }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -112,7 +165,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         ) {
             Button(
                 onClick = {
-
                 },
                 modifier = Modifier
 //                    .align(alignment = Alignment.End)
@@ -122,21 +174,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
             ) {
                 Text(text = "search")
-            }
-            Button(
-                onClick = {
-                    sharedViewModel.defineUsersFocus(true)
-                    sharedViewModel.defineIsNewUser(true)
-                    navCtr.navigate(Screen.ManageUser.route)
-                },
-                modifier = Modifier
-//            .align(Alignment.BottomCenter)
-                    .scale(1.2f),
-                border = BorderStroke(1.dp, Color.Gray),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.DarkGray)
-
-            ) {
-                Text(text = "+")
             }
         }
         LazyColumn(
@@ -162,7 +199,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeableBoxPreview(
     navCtr: NavHostController,
@@ -182,7 +219,10 @@ fun SwipeableBoxPreview(
             sharedViewModel.defineSelectedUserId(user.id.toString())
             sharedViewModel.defineIsNewUser(false)
             sharedViewModel.defineUsersFocus(true)
-            navCtr.navigate(Screen.ManageUser.route)
+            scope?.launch {
+                sheetState?.expand()
+            }
+//            navCtr.navigate(Screen.ManageUser.route)
         },
         isUndo = false,
     )

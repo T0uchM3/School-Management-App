@@ -71,7 +71,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
 
 
     LaunchedEffect(key1 = user) {
-
+        sharedViewModel?.defineFabVisible(false)
         println(user?.name + "+++++++++++++++++++++")
     }
     println(user?.name + "----------------------")

@@ -76,7 +76,6 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             println(sharedViewModel.selectedContractId + " payment id " + payment.contrat_id)
             if (payment.contrat_id.toString() == sharedViewModel.selectedContractId) {
                 payments.add(payment)
-                println("found one")
             }
         }
     }

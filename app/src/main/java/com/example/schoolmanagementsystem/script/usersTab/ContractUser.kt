@@ -1,6 +1,8 @@
 package com.example.schoolmanagementsystem.script
 
+import android.annotation.SuppressLint
 import android.media.Image
+import android.widget.ImageButton
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -29,15 +31,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.LineAxis
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.ShapeLine
 import androidx.compose.material.icons.outlined.South
+import androidx.compose.material.icons.rounded.MyLocation
+import androidx.compose.material.icons.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Block
 import androidx.compose.material.icons.twotone.Circle
 import androidx.compose.material.icons.twotone.Delete
@@ -51,7 +58,13 @@ import androidx.compose.material.icons.twotone.South
 import androidx.compose.material.icons.twotone.Straight
 import androidx.compose.material.icons.twotone.Timeline
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -104,38 +117,61 @@ import me.saket.swipe.SwipeableActionsBox
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ContractUser(
-    navCtr: NavHostController,
-    sharedViewModel: SharedViewModel,
+    navCtr: NavHostController? = null,
+    sharedViewModel: SharedViewModel? = null,
 ) {
     val showAddDialog = remember { mutableStateOf(false) }
     val contracts = remember { SnapshotStateList<Contract>() }
+    val userName = remember { mutableStateOf("Admin") }
 
-    LaunchedEffect(key1 = sharedViewModel.contractList.size) {
+    LaunchedEffect(key1 = sharedViewModel?.contractList?.size) {
         contracts.clear()
-        for (contract in sharedViewModel.contractList) {
+        //search through contract list, and save to new list any contract
+        //that it's user id match the one we selected in the previous view.
+        for (contract in sharedViewModel!!.contractList) {
             if (contract.user_id.toString() == sharedViewModel.selectedUserId) {
                 contracts.add(contract)
             }
         }
+        userName.value =
+            sharedViewModel.userList.find { it.id.toString() == sharedViewModel.selectedUserId }?.name.toString()
     }
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+
         Row(
             Modifier
-                .background(Color.Red)
+//                .background(Color.Red)
                 .fillMaxWidth()
-        ) {
+                .shadow(1.dp),
+            verticalAlignment = Alignment.CenterVertically,
+
+            ) {
+            IconButton(onClick = { navCtr?.popBackStack() }) {
+                Icon(Icons.TwoTone.ArrowBack, "")
+            }
+//            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = userName.value.toString(), fontSize = 20.sp,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(start = 10.dp)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+
             Button(onClick = {
                 showAddDialog.value = true
             }) {
-                Text(text = "Add a Contract")
+                Text(text = "Add Contract")
             }
         }
-        for (cont in sharedViewModel.contractList)
-            println("LIST " + cont.id)
-        if (sharedViewModel.contractList.isEmpty()) {
+//        return
+        if (sharedViewModel?.contractList!!.isEmpty()) {
             Text(
                 text = "This employee has no contracts!",
                 color = Color.Black,
@@ -177,7 +213,7 @@ fun ContractUser(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SwipeableBoxPreview(
-    navCtr: NavHostController,
+    navCtr: NavHostController?,
     modifier: Modifier = Modifier,
     sharedViewModel: SharedViewModel,
     contract: Contract,
@@ -596,5 +632,6 @@ fun EditContractDialog(
 @Preview
 @Composable
 fun ContractUserPreview() {
-    SwipeItem()
+    ContractUser()
+//    SwipeItem()
 }
