@@ -121,12 +121,12 @@ fun AppTheme(
         SideEffect {
 //        val window = (view.context as Activity).window
 //            window.statusBarColor = colorScheme.primary.toArgb()
+//            systemUiController.setSystemBarsColor(
+//                color = colorScheme.primary,
+//                darkIcons = useDarkIcons,
+//            )
             systemUiController.setSystemBarsColor(
-                color = colorScheme.primary,
-                darkIcons = useDarkIcons,
-            )
-            systemUiController.setSystemBarsColor(
-                color = colorScheme.primary, darkIcons = useDarkIcons
+                color = colorScheme.surface, darkIcons = useDarkIcons
             )
 //        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }

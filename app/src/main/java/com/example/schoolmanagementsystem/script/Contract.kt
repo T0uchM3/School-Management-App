@@ -28,3 +28,8 @@ data class ContractResults(
     @Json(name = "versements")
     val resultsP: List<Payment>
 ) : Parcelable
+
+@Parcelize
+data class PeriodHolder(
+    var periode: String? = ""
+) : Parcelable

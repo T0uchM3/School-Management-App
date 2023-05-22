@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,13 +49,15 @@ fun ManageUser(
     state: SheetState? = null
 ) {
     //searching through the users list for user that got selected in the previous (userTab)
-    var selectedUser: User? = null
+//     selectedUser: User? = null
     for (user in sharedViewModel.userList) {
         if (user.id.toString() == sharedViewModel.selectedUserId)
             selectedUser = user
     }
+    println(sharedViewModel.isNewUser.toString()+"  USER ID!::: " + selectedUser?.id)
+
     nameInput = remember {
-        mutableStateOf(TextFieldValue(selectedUser?.name.toString()))
+        mutableStateOf(TextFieldValue( selectedUser?.name.toString() ))
     }
     cinInput = remember {
         mutableStateOf(TextFieldValue(selectedUser?.cin.toString()))
@@ -71,13 +74,16 @@ fun ManageUser(
     roleInput = remember {
         mutableStateOf(TextFieldValue(selectedUser?.role.toString()))
     }
+
     if (sharedViewModel.isNewUser) {
+        //this will get recomposed, so better to trigger it once per fap pres
+        sharedViewModel.defineIsNewUser(false)
         resetAllFields()
     }
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+//            .background(Color.White)
     ) {
 
         Column(
@@ -104,21 +110,29 @@ fun ManageUser(
                         user.email = emailInput!!.value.text
                         user.sex = genderInput!!.value.text
                         user.role = roleInput!!.value.text
+                        //clearing lists to avoid lazycol parsing error
+                        sharedViewModel.userList.clear()
+                        sharedViewModel.contractList.clear()
 
                         if (sharedViewModel.isNewUser) {
-                            addUserAPI(user)
+                            addUserAPI(user, sharedViewModel, true)
                             scope?.launch { state?.hide() }
                         } else {
-                            updateUser(sharedViewModel.selectedUserId.toInt(), user)
+                            updateUser(
+                                sharedViewModel.selectedUserId.toInt(),
+                                user,
+                                sharedViewModel,
+                                true
+                            )
                             scope?.launch { state?.hide() }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
                 ) {
                     if (sharedViewModel.isNewUser)
-                        Text(text = "Create", fontSize = 17.sp)
+                        Text(text = "Create", fontSize = 17.sp, color = Color(0xff386A1F))
                     else
-                        Text(text = "Update", fontSize = 17.sp)
+                        Text(text = "Update", fontSize = 17.sp, color = Color(0xff386A1F))
                 }
             }
             Column(
@@ -131,42 +145,49 @@ fun ManageUser(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     onValueChange = { nameInput!!.value = it },
                     singleLine = true,
-                    label = { Text("name") }, modifier = Modifier.fillMaxWidth()
-                )
+                    label = { Text("name") }, modifier = Modifier.fillMaxWidth(),
+                    colors = sharedViewModel.tFColors(),
+
+                    )
                 OutlinedTextField(
                     value = cinInput!!.value,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     onValueChange = { cinInput!!.value = it },
                     singleLine = true,
-                    label = { Text("cin") }, modifier = Modifier.fillMaxWidth()
+                    label = { Text("cin") }, modifier = Modifier.fillMaxWidth(),
+                    colors = sharedViewModel.tFColors(),
                 )
                 OutlinedTextField(
                     value = dnInput!!.value,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     onValueChange = { dnInput!!.value = it },
                     singleLine = true,
-                    label = { Text("date_naiss") }, modifier = Modifier.fillMaxWidth()
+                    label = { Text("date_naiss") }, modifier = Modifier.fillMaxWidth(),
+                    colors = sharedViewModel.tFColors(),
                 )
                 OutlinedTextField(
                     value = emailInput!!.value,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     onValueChange = { emailInput!!.value = it },
                     singleLine = true,
-                    label = { Text("email") }, modifier = Modifier.fillMaxWidth()
+                    label = { Text("email") }, modifier = Modifier.fillMaxWidth(),
+                    colors = sharedViewModel.tFColors(),
                 )
                 OutlinedTextField(
                     value = genderInput!!.value,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     onValueChange = { genderInput!!.value = it },
                     singleLine = true,
-                    label = { Text("gender") }, modifier = Modifier.fillMaxWidth()
+                    label = { Text("gender") }, modifier = Modifier.fillMaxWidth(),
+                    colors = sharedViewModel.tFColors(),
                 )
                 OutlinedTextField(
                     value = roleInput!!.value,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     onValueChange = { roleInput!!.value = it },
                     singleLine = true,
-                    label = { Text("role") }, modifier = Modifier.fillMaxWidth()
+                    label = { Text("role") }, modifier = Modifier.fillMaxWidth(),
+                    colors = sharedViewModel.tFColors(),
                 )
             }
         }
@@ -183,6 +204,7 @@ fun resetAllFields() {
     genderInput?.value = TextFieldValue("")
     roleInput?.value = TextFieldValue("")
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview

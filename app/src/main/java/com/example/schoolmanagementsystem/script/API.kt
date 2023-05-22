@@ -86,7 +86,7 @@ interface APIService {
 
     @Headers("Accept: application/json")
     @POST("/api/updateContract/{id}")
-    suspend fun updateContract(@Path("id") id: Int, @Body params: String): Response<Contract>
+    suspend fun updateContract(@Path("id") id: Int, @Body params: PeriodHolder): Response<Contract>
 
     @Headers("Accept: application/json")
     @POST("/api/invalidContract/{id}")
@@ -173,7 +173,7 @@ fun loginAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
 
 }
 
-fun usersAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
+fun usersAPI(sharedViewModel: SharedViewModel) {
     CoroutineScope(Dispatchers.IO).launch {
         val result = async { backendApi.getUsers() }
         val response = result.await()
@@ -189,13 +189,18 @@ fun usersAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
     }
 }
 
-fun addUserAPI(user: User) {
+fun addUserAPI(
+    user: User,
+    sharedViewModel: SharedViewModel,
+    triggerSecondCall: Boolean? = false
+) {
     CoroutineScope(Dispatchers.IO).launch {
-        val response = backendApi.addUser(user)
-        withContext(Dispatchers.Main) {
-            if (response.isSuccessful) {
-                println("USER ADDED")
-            }
+        val result = async { backendApi.addUser(user) }
+        val response = result.await()
+        if (response.isSuccessful) {
+            println("USER ADDED")
+            if (triggerSecondCall == true)
+                usersAPI(sharedViewModel = sharedViewModel)
         }
     }
 }
@@ -211,13 +216,18 @@ fun deleteUserAPI(id: Int) {
     }
 }
 
-fun updateUser(id: Int, user: User) {
+fun updateUser(
+    id: Int, user: User,
+    sharedViewModel: SharedViewModel,
+    triggerSecondCall: Boolean? = false
+) {
     CoroutineScope(Dispatchers.IO).launch {
-        val response = backendApi.updateUser(id, user)
-        withContext(Dispatchers.Main) {
-            if (response.isSuccessful) {
-                println("user updated")
-            }
+        val result = async { backendApi.updateUser(id, user) }
+        val response = result.await()
+        if (response.isSuccessful) {
+            println("USER updated")
+            if (triggerSecondCall == true)
+                usersAPI(sharedViewModel = sharedViewModel)
         }
     }
 }
@@ -268,13 +278,13 @@ fun deleteContract(id: Int) {
     }
 }
 
-fun updateContract(id: Int, period: String) {
+fun updateContract(id: Int, period: PeriodHolder, sharedViewModel: SharedViewModel) {
     CoroutineScope(Dispatchers.IO).launch {
-        val response = backendApi.updateContract(id, period)
-        withContext(Dispatchers.Main) {
-            if (response.isSuccessful) {
-                println("contract updated")
-            }
+        val result = async { backendApi.updateContract(id, period) }
+        val response = result.await()
+        if (response.isSuccessful) {
+            println("Contract updated")
+            getContractAndPayment(sharedViewModel = sharedViewModel)
         }
     }
 }

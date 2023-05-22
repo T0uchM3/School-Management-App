@@ -1,6 +1,11 @@
 package com.example.schoolmanagementsystem.script.navbar
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Group
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.twotone.AccountCircle
 import androidx.compose.material.icons.twotone.Group
 import androidx.compose.material.icons.twotone.Home
 import androidx.compose.material.icons.twotone.Person
@@ -19,7 +24,7 @@ sealed class Screen(
     object Home : Screen(
         route = "home",
         title = "Home",
-        icon = Icons.TwoTone.Home,
+        icon = Icons.Outlined.Home,
         icon_focused = null,
     )
 
@@ -27,14 +32,14 @@ sealed class Screen(
     object Users : Screen(
         route = "Users",
         title = "Users",
-        icon = Icons.TwoTone.Group,
+        icon = Icons.Outlined.Group,
         icon_focused = null,
     )
 
     object Students : Screen(
         route = "Students",
         title = "Students",
-        icon = Icons.TwoTone.Person,
+        icon = Icons.Outlined.Person,
         icon_focused = null,
     )
 
@@ -42,7 +47,7 @@ sealed class Screen(
     object Profile : Screen(
         route = "Profile",
         title = "Profile",
-        icon = Icons.TwoTone.Person,
+        icon = Icons.Outlined.AccountCircle,
         icon_focused = null,
     )
 

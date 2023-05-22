@@ -18,7 +18,7 @@ val Typography = Typography(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        color = lightColorScheme().onPrimary
+        color = lightColorScheme().error
     )
     /* Other default text styles to override
 button = TextStyle(
@@ -26,12 +26,14 @@ button = TextStyle(
     fontWeight = FontWeight.W500,
     fontSize = 14.sp
 ),
-caption = TextStyle(
+
+*/
+
+)
+val caption = TextStyle(
     fontFamily = FontFamily.Default,
     fontWeight = FontWeight.Normal,
     fontSize = 12.sp
-)
-*/
 )
 val InterMedium = FontFamily(
     Font(R.font.inter),

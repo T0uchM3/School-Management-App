@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.script
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextFieldColors
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -110,11 +111,18 @@ class SharedViewModel : ViewModel() {
         fabOnClick = newState
     }
 
+    @Composable
+    fun tFColors() =
+        OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.secondary,
+            focusedLabelColor = MaterialTheme.colorScheme.secondary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+            cursorColor = MaterialTheme.colorScheme.onPrimary,
+        )
+    var selectedSalary by mutableStateOf<String>("")
+        private set
 
-//    var textFieldColor: TextFieldColors = OutlinedTextFieldDefaults.colors(
-//        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-//        focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-//        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-//        cursorColor = MaterialTheme.colorScheme.onPrimary,
-//    )
+    fun defineSelectedSalary(salary: String) {
+        selectedSalary = salary
+    }
 }

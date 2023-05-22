@@ -38,6 +38,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -57,9 +58,6 @@ fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewMode
 
     val navController2 = rememberAnimatedNavController()
 
-//    if (sharedViewModel != null) {
-//        LaunchedEffect(key1 = Unit) {
-//        }
 
     Scaffold(
         bottomBar = { BottomBar(navController = navController2, sharedViewModel!!) },
@@ -73,7 +71,10 @@ fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewMode
                     visible = sharedViewModel!!.fabVisible, enter = scaleIn(),
                     exit = scaleOut(),
                 ) {
-                    FloatingActionButton(onClick = sharedViewModel!!.fabOnClick) {
+                    FloatingActionButton(
+                        onClick = sharedViewModel.fabOnClick,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                     }
                 }
@@ -93,36 +94,46 @@ fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewMode
 
 @Composable
 fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel) {
+    //screens to appear in bottom bar
     val screens = listOf(
         Screen.Home,
         Screen.Users,
         Screen.Students,
         Screen.Profile,
     )
-//    state = sharedViewModel.state
+    //screens to show bottom bar in, making sure no bottom bar in payment screen
+    val navBarScreen = listOf(
+        Screen.Home,
+        Screen.Users,
+        Screen.Students,
+        Screen.Profile,
+        Screen.Contract
+    )
     val navStackBackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navStackBackEntry?.destination
 
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clip(shape = RoundedCornerShape(topEnd = 20.dp, topStart = 20.dp))
-            .background(MaterialTheme.colorScheme.inverseSurface)
-            .fillMaxWidth()
-            .padding(vertical = 5.dp)
+    val bottomBarDestination = navBarScreen.any { it.route == currentDestination?.route }
+    if (bottomBarDestination)
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(shape = RoundedCornerShape(topEnd = 20.dp, topStart = 20.dp))
+                .background(MaterialTheme.colorScheme.inverseSurface)
+                .fillMaxWidth()
+                .padding(vertical = 6.dp)
 
-    ) {
+        ) {
 
-        screens.forEach { screen ->
-            AddItem(
-                screen = screen,
-                currentDestination = currentDestination,
-                navController = navController,
-                sharedViewModel
-            )
+            screens.forEach { screen ->
+                AddItem(
+                    screen = screen,
+                    currentDestination = currentDestination,
+                    navController = navController,
+                    sharedViewModel
+                )
+            }
         }
-    }
 
 
 }
@@ -146,61 +157,47 @@ fun AddItem(
         if (selected) MaterialTheme.colorScheme.surfaceTint
         else Color.Transparent
 
-
-    val contentColor =
-        if (selected) Color.White else Color.Black
-
-    val screens = listOf(
-        Screen.Home,
-        Screen.Users,
-        Screen.Students,
-        Screen.Profile,
-        Screen.Contract
-    )
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination2 = navBackStackEntry?.destination
-    val bottomBarDestination = screens.any { it.route == currentDestination2?.route }
-    if (bottomBarDestination) {
-
-        Box(
-            modifier = Modifier
-                .height(40.dp)
-                .clip(CircleShape)
-                .background(background)
-                .clickable(onClick = {
-                    navController.navigate(screen.route) {
-                        popUpTo(navController.graph.findStartDestination().id)
-                        launchSingleTop = true
-                    }
-                })
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                val emptyIcon = ImageVector.Builder(
-                    defaultHeight = 0.dp,
-                    defaultWidth = 0.dp,
-                    viewportHeight = 0f,
-                    viewportWidth = 0f
-                ).build()
-
-                Icon(
-                    imageVector = if (selected) emptyIcon else screen.icon!!,
-                    contentDescription = ""
-                )
-                AnimatedVisibility(visible = selected) {
-                    Text(
-                        text = screen.title,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                    )
+    Box(
+        modifier = Modifier
+            .height(40.dp)
+            .clip(CircleShape)
+            .background(background)
+            .clickable(onClick = {
+                navController.navigate(screen.route) {
+                    popUpTo(navController.graph.findStartDestination().id)
+                    launchSingleTop = true
                 }
+            })
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            //hack to only show tab's name when focused
+            val emptyIcon = ImageVector.Builder(
+                defaultHeight = 0.dp,
+                defaultWidth = 0.dp,
+                viewportHeight = 0f,
+                viewportWidth = 0f
+            ).build()
+
+            Icon(
+                imageVector = if (selected) emptyIcon else screen.icon!!,
+                contentDescription = ""
+            )
+            AnimatedVisibility(visible = selected) {
+                Text(
+                    text = screen.title,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }
+//    }
 }
 
 @Composable

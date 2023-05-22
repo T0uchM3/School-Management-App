@@ -1,50 +1,34 @@
 package com.example.schoolmanagementsystem.ui.theme
 
+//import com.example.schoolmanagmentsystem.script.navbar.NavGraph
 import android.annotation.SuppressLint
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.rememberSwipeableState
-import androidx.compose.material.swipeable
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.schoolmanagementsystem.script.SharedViewModel
-//import com.example.schoolmanagmentsystem.script.navbar.NavGraph
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import java.lang.Math.abs
 
@@ -84,7 +68,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
 //            .swipeable(
 //                state = swipeState,
 //                anchors = mapOf(0f to 0,300f to 1),
@@ -123,14 +107,14 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
         Row(
             modifier = Modifier
                 .padding(horizontal = 15.dp, vertical = 10.dp)
-                .background(Color.LightGray)
+//                .background(Color.LightGray)
                 .fillMaxWidth()
                 .fillMaxHeight(0.1f)
 
         ) {
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+//                    .background(Color.White)
                     .fillMaxWidth(0.6f)
                     .fillMaxHeight()
             ) {
@@ -171,7 +155,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
         }
         Row(
             modifier = Modifier
-                .background(Color.DarkGray)
+//                .background(Color.DarkGray)
                 .fillMaxWidth()
                 .fillMaxHeight(0.10f)
         ) {
@@ -179,7 +163,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
         Row(
             modifier = Modifier
 //                .padding(vertical = 1.dp, horizontal = 50.dp)
-                .background(Color.Gray)
+//                .background(Color.Gray)
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
