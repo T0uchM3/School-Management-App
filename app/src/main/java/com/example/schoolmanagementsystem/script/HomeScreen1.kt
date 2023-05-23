@@ -1,6 +1,5 @@
 package com.example.schoolmanagementsystem.ui.theme
 
-//import com.example.schoolmanagmentsystem.script.navbar.NavGraph
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -43,17 +42,6 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
     sharedViewModel?.defineUsersFocus(false)
 
 
-////    val navController2 = rememberNavController()
-//    Scaffold(
-//        bottomBar = {BottomBar(navController = navCtr) }
-//    ) {
-//        NavGraph(navController = navCtr)
-//    }
-//    LaunchedEffect(key1 = Unit) {
-//        navController.navigate(Screen.Home.route)
-//    }
-
-
     LaunchedEffect(key1 = user) {
         sharedViewModel?.defineFabVisible(false)
         println(user?.name + "+++++++++++++++++++++")
@@ -69,11 +57,6 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
-//            .swipeable(
-//                state = swipeState,
-//                anchors = mapOf(0f to 0,300f to 1),
-//                orientation = Orientation.Horizontal
-//            )
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDrag = { change, dragAmount ->
@@ -124,12 +107,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                     fontSize = 30.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-//            modifier = Modifier
-//                .align(Alignment.TopCenter)
-//                .clickable { navController?.navigate(Destination.LoginScreen.route) },
-//                    textAlign = TextAlign.Center,
                     fontFamily = InterMedium,
-//                    fontWeight = FontWeight.Bold,
                 )
                 Row(
                     modifier = Modifier
@@ -143,27 +121,19 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                         fontSize = 20.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-//            modifier = Modifier
-//                .align(Alignment.TopCenter)
-//                .clickable { navController?.navigate(Destination.LoginScreen.route) },
-//                    textAlign = TextAlign.Center,
                         fontFamily = InterMedium,
-//                    fontWeight = FontWeight.Bold,
                     )
                 }
             }
         }
         Row(
             modifier = Modifier
-//                .background(Color.DarkGray)
                 .fillMaxWidth()
                 .fillMaxHeight(0.10f)
         ) {
         }
         Row(
             modifier = Modifier
-//                .padding(vertical = 1.dp, horizontal = 50.dp)
-//                .background(Color.Gray)
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {

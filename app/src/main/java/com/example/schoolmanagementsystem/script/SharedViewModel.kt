@@ -19,7 +19,6 @@ class SharedViewModel : ViewModel() {
         user = newUser
     }
 
-    //    var userList by mutableStateListOf<List<User>?>(null)
     var userList = SnapshotStateList<User>()
         private set
 

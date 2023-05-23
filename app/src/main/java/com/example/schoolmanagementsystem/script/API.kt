@@ -258,10 +258,6 @@ fun getContractAndPayment(sharedViewModel: SharedViewModel) {
                 sharedViewModel.defineContractList(contracts?.resultsC)
                 sharedViewModel.definePaymentList(contracts?.resultsP)
                 println("userContractAPI")
-//                contracts?.results?.forEach { contract ->
-//
-//                    println(contract.id)
-//                }
             }
         }
     }
@@ -342,13 +338,13 @@ fun deletePayment(id: Int) {
     }
 }
 
-fun updatePayment(id: Int, payment: Payment) {
+fun updatePayment(id: Int, payment: Payment, sharedViewModel: SharedViewModel) {
     CoroutineScope(Dispatchers.IO).launch {
-        val response = backendApi.updatePayment(id, payment)
-        withContext(Dispatchers.Main) {
-            if (response.isSuccessful) {
-                println("payment updated")
-            }
+        val result = async { backendApi.updatePayment(id, payment) }
+        val response = result.await()
+        if (response.isSuccessful) {
+            println("payment updated")
+                getContractAndPayment(sharedViewModel = sharedViewModel)
         }
     }
 }
