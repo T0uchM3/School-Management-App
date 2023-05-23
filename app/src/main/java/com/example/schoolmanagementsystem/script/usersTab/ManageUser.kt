@@ -127,7 +127,7 @@ fun ManageUser(
                             scope?.launch { state?.hide() }
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 ) {
                     if (sharedViewModel.isNewUser)
                         Text(text = "Create", fontSize = 17.sp, color = Color(0xff386A1F))

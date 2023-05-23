@@ -5,6 +5,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,10 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.ArrowBack
-import androidx.compose.material.icons.twotone.Block
 import androidx.compose.material.icons.twotone.Delete
-import androidx.compose.material.icons.twotone.Edit
-import androidx.compose.material.icons.twotone.Pages
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -40,7 +37,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -54,9 +50,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -64,12 +62,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
-import com.example.schoolmanagementsystem.script.navbar.Screen
-import com.example.schoolmanagementsystem.ui.theme.Fern
-import com.example.schoolmanagementsystem.ui.theme.Perfume
-import com.example.schoolmanagementsystem.ui.theme.SeaBuckthorn
 import com.example.schoolmanagementsystem.ui.theme.scope
 import com.example.schoolmanagementsystem.ui.theme.sheetState
 import kotlinx.coroutines.CoroutineScope
@@ -77,13 +70,16 @@ import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 
+var payments = SnapshotStateList<Payment>()
+var amountLeft by mutableStateOf<Int>(0)
+
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("RememberReturnType")
 @Composable
 fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     val showAddDialog = remember { mutableStateOf(false) }
-    val payments = remember { SnapshotStateList<Payment>() }
+    payments = remember { SnapshotStateList<Payment>() }
     val userName = remember { mutableStateOf("") }
 
 
@@ -134,13 +130,7 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     }
 
     LaunchedEffect(key1 = sharedViewModel.paymentList.size) {
-        payments.clear()
-        for (payment in sharedViewModel.paymentList) {
-            println(sharedViewModel.selectedContractId + " payment id " + payment.contrat_id)
-            if (payment.contrat_id.toString() == sharedViewModel.selectedContractId) {
-                payments.add(payment)
-            }
-        }
+        updateValues(sharedViewModel)
         userName.value =
             sharedViewModel.userList.find { it.id.toString() == sharedViewModel.selectedUserId }?.name.toString()
         //setting up fab
@@ -158,7 +148,8 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     Column(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)) {
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -171,7 +162,8 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 Icon(Icons.TwoTone.ArrowBack, "")
             }
             Text(
-                text = userName.value + " > " + sharedViewModel.selectedSalary, fontSize = 20.sp,
+                text = userName.value + " > " + sharedViewModel.selectedSalary + " (${amountLeft} left)",
+                fontSize = 20.sp,
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(start = 10.dp)
             )
@@ -218,6 +210,35 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     }
 }
 
+/**
+ * Updating the visibility of fab, the amount left to be paid
+ * And initializing local list
+ */
+fun updateValues(sharedViewModel: SharedViewModel) {
+    payments.clear()
+
+    //filling local payment list
+    for (payment in sharedViewModel.paymentList) {
+        println(sharedViewModel.selectedContractId + " payment id " + payment.contrat_id)
+        if (payment.contrat_id.toString() == sharedViewModel.selectedContractId) {
+            payments.add(payment)
+        }
+    }
+    //deciding if the fab should be visible or not
+    //based on if the contract got paid or not
+    var amountPaid = 0
+    for (payment in payments) {
+        amountPaid += payment.montant!!.toInt()
+    }
+    amountLeft = sharedViewModel.selectedSalary.toInt() - amountPaid
+    if (amountPaid == sharedViewModel.selectedSalary.toInt())
+        sharedViewModel.defineFabVisible(false)
+    else
+        sharedViewModel.defineFabVisible(true)
+
+
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SwipeableBoxPreview(
@@ -239,6 +260,8 @@ private fun SwipeableBoxPreview(
         onSwipe = {
 //            deleteContract(contract.id.toInt())
             onRemoveClicked(payment)
+            deletePayment(payment.id.toInt())
+            updateValues(sharedViewModel = sharedViewModel)
 //            deleteContract(contract.id.toInt())
         },
 
@@ -255,10 +278,6 @@ private fun SwipeableBoxPreview(
             sharedViewModel, navCtr = navCtr, payment = payment
         )
     }
-//    if (showEditDialog.value)
-//        EditContractDialog(value = "", setShowDialog = {
-//            showEditDialog.value = it
-//        }, sharedViewModel, contract)
 
 }
 
@@ -276,11 +295,7 @@ private fun SwipeItem(
             .clickable(
                 onClick = {
                     println("clicked")
-//                    navCtr.navigate(Screen.Payment.route)
-
                 }),
-//            .background(MaterialTheme.colorScheme.primaryContainer),
-
         Arrangement.SpaceEvenly
 
     ) {
@@ -306,18 +321,6 @@ private fun SwipeItem(
             Text(
                 text = "type:       ${payment.type}", color = Color.Black, fontSize = 17.sp
             )
-//            Text(
-//                modifier = Modifier
-//                    .padding(start = 0.dp)
-//
-//                    .background(
-//                        MaterialTheme.colorScheme.tertiaryContainer,
-//                        RoundedCornerShape(8.dp)
-//                    ),
-//                text = "    " + payment.type.toString() + "    ",
-//                fontSize = 14.sp
-//
-//            )
         }
         Divider(
             color = Color.DarkGray,
@@ -379,18 +382,19 @@ fun AddPaymentSheet(
     val date = remember {
         mutableStateOf(TextFieldValue("2023-08-17"))
     }
-    val mois = remember {
-        mutableStateOf(TextFieldValue("1"))
-    }
-    val amount = remember {
-        mutableStateOf(TextFieldValue("666"))
-    }
+    var mois by remember { mutableStateOf(0f) }
+
     val type = remember {
         mutableStateOf(TextFieldValue("espece"))
     }
     val ref = remember {
         mutableStateOf(TextFieldValue(""))
     }
+    var montant by remember { mutableStateOf(1f) }
+    var oldMontant by remember { mutableStateOf(1f) }
+    var oldMonth by remember { mutableStateOf(1f) }
+    var checker by remember { mutableStateOf(0f) }
+    checker = sharedViewModel.selectedSalary.toFloat()
     Column() {
         Column(
             Modifier
@@ -400,7 +404,7 @@ fun AddPaymentSheet(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Button(
                     onClick = { scope?.launch { state?.hide() } },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 ) {
                     Text(text = "Cancel", fontSize = 17.sp)
                 }
@@ -408,11 +412,14 @@ fun AddPaymentSheet(
                 Text(text = "New Payment", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Spacer(Modifier.weight(1f))
                 Button(
+                    enabled = !(montant > checker || montant <= 0f),
+                    modifier = Modifier.alpha(if (montant > checker || montant <= 0f) 0.4f else 1f),
+
                     onClick = {
                         val payment = Payment()
                         payment.date = date.value.text
-                        payment.mois = mois.value.text
-                        payment.montant = amount.value.text
+                        payment.mois = mois.toInt().toString()
+                        payment.montant = montant.toInt().toString()
                         payment.type = type.value.text
                         payment.ref = ref.value.text
                         payment.contrat_id = sharedViewModel.selectedContractId
@@ -422,17 +429,18 @@ fun AddPaymentSheet(
                         sharedViewModel.paymentList.clear()
                         addPayment(payment, sharedViewModel = sharedViewModel, true)
 
-                        //resets all fields
-                        date.value = TextFieldValue("")
-                        mois.value = TextFieldValue("")
-                        amount.value = TextFieldValue("")
-                        type.value = TextFieldValue("")
-                        ref.value = TextFieldValue("")
+                        //hide fab
+                        scope?.launch { state?.hide() }
 
 
-                    }, colors = ButtonDefaults . buttonColors (containerColor = Color.Transparent)
+                    }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
                 ) {
-                    Text(text = "Create", fontSize = 17.sp, color = Color(0xff386A1F))
+                    Text(
+                        text = "Create", fontSize = 17.sp,
+                        color = if (montant > checker || montant <= 0f) Color.Gray else Color(
+                            0xff386A1F
+                        )
+                    )
                 }
             }
             OutlinedTextField(value = date.value,
@@ -447,29 +455,73 @@ fun AddPaymentSheet(
                     )
                 })
 
-            OutlinedTextField(value = mois.value,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { mois.value = it },
+            OutlinedTextField(
+                value = mois.toInt().toString(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                onValueChange = { mois = (it.toIntOrNull() ?: 0).toFloat() },
                 singleLine = true,
                 label = {
                     Text(
                         text = "Month",
                         fontSize = 15.sp,
                     )
-                })
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onVerticalDrag = { change, dragAmount ->
+                                change.consume()
+                                var y = dragAmount
+                                //making sure, the month is not negative
+                                oldMonth -= dragAmount.times(0.05f)
+                                if (oldMonth < 1) {
+                                    mois = 1f
+                                    oldMonth = 1f
+                                    return@detectVerticalDragGestures
+                                }
+                                mois -= dragAmount.times(0.05f)
+                            },
+                        )
+                    },
+            )
 
-            OutlinedTextField(value = amount.value,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { amount.value = it },
+            OutlinedTextField(
+                value = montant.toInt().toString(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                onValueChange = { montant = (it.toIntOrNull() ?: 0).toFloat() },
                 singleLine = true,
                 label = {
                     Text(
                         text = "amount",
                         fontSize = 15.sp,
                     )
-                })
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onVerticalDrag = { change, dragAmount ->
+                                change.consume()
+                                var y = dragAmount
+                                //making sure, the amount stay between 1 and what's left from default amount
+                                oldMontant -= dragAmount.times(0.05f)
+                                if (oldMontant > amountLeft) {
+                                    oldMontant = amountLeft.toFloat()
+                                    montant = amountLeft.toFloat()
+                                    return@detectVerticalDragGestures
+                                }
+                                if (oldMontant < 1) {
+                                    montant = 1f
+                                    oldMontant = 1f
+                                    return@detectVerticalDragGestures
+                                }
+                                montant -= dragAmount.times(0.05f)
+                            },
+                        )
+                    },
+
+                )
             OutlinedTextField(value = type.value,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),

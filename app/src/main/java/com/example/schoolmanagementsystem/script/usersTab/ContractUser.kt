@@ -60,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -145,6 +146,8 @@ fun ContractUser(
                 contracts.add(contract)
             }
         }
+        //show faf incase it's invisible
+        sharedViewModel.defineFabVisible(true)
         userName.value =
             sharedViewModel.userList.find { it.id.toString() == sharedViewModel.selectedUserId }?.name.toString()
         //setting up fab
@@ -345,6 +348,7 @@ private fun SwipeItem(
             Modifier
                 .width(IntrinsicSize.Min)
                 .padding(vertical = 12.dp)
+                .alpha(0.6f)
         ) {
             Image(
                 imageVector = Icons.Outlined.Circle,
@@ -630,10 +634,6 @@ fun EditContractSheet(
     state: SheetState? = null,
     sharedViewModel: SharedViewModel,
 ) {
-//    val period = remember {
-//        mutableStateOf(TextFieldValue(contract.periode.toString()))
-//    }
-//    var period = ""
     var period by remember { mutableStateOf(0f) }
     var oldPeriod by remember { mutableStateOf(0f) }
     var checker by remember { mutableStateOf(0f) }
@@ -666,11 +666,12 @@ fun EditContractSheet(
                     text = "Update Contract",
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    color = Color(0xff386A1F)
                 )
                 Spacer(Modifier.weight(1f))
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    enabled = !(period < oldPeriod || period <= 0f),
+                    modifier = Modifier.alpha(if(period < oldPeriod || period == 0f) 0.4f else 1f),
                     onClick = {
                         val ph = PeriodHolder()
                         ph.periode = period.toInt().toString()
@@ -684,10 +685,12 @@ fun EditContractSheet(
                         //close dialog
                         scope?.launch { state?.hide() }
                     }) {
-                    Text(text = "Update", fontSize = 17.sp)
+                    Text(
+                        text = "Update", fontSize = 17.sp,
+                        color = if(period < oldPeriod || period == 0f) Color.Gray else Color(0xff386A1F)
+                    )
                 }
             }
-            val minSwipeOffset by remember { mutableStateOf(50f) }
 
             OutlinedTextField(
                 value = period.toInt().toString(),
