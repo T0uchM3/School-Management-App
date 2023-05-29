@@ -1,6 +1,5 @@
 package com.example.schoolmanagementsystem.script
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,9 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.schoolmanagementsystem.ui.theme.clearSearch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -46,7 +46,8 @@ fun ManageUser(
     navCtr: NavHostController? = null,
     sharedViewModel: SharedViewModel,
     scope: CoroutineScope? = null,
-    state: SheetState? = null
+    state: SheetState? = null,
+    focusManager: FocusManager?=null
 ) {
     //searching through the users list for user that got selected in the previous (userTab)
 //     selectedUser: User? = null
@@ -115,9 +116,11 @@ fun ManageUser(
                         sharedViewModel.contractList.clear()
 
                         if (sharedViewModel.isNewUser) {
+                            clearSearch(sharedViewModel,focusManager!!)
                             addUserAPI(user, sharedViewModel, true)
                             scope?.launch { state?.hide() }
                         } else {
+                            clearSearch(sharedViewModel,focusManager!!)
                             updateUser(
                                 sharedViewModel.selectedUserId.toInt(),
                                 user,
@@ -210,5 +213,5 @@ fun resetAllFields() {
 @Preview
 @Composable
 fun Preview55() {
-    ManageUser(TODO(), TODO())
+//    ManageUser(TODO(), TODO(), focusManger = focusManager)
 }

@@ -1,6 +1,8 @@
 package com.example.schoolmanagementsystem.script
 
+import android.os.Build
 import androidx.navigation.NavHostController
+import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -33,7 +35,6 @@ data class UserInfo(
     var password: String
 )
 
-
 ///Boilerplate.
 val moshi: Moshi = Moshi.Builder()
     .add(KotlinJsonAdapterFactory())
@@ -41,7 +42,9 @@ val moshi: Moshi = Moshi.Builder()
 val loggingInterceptor = HttpLoggingInterceptor()
 val okHttpClient = OkHttpClient.Builder().addInterceptor(loggingInterceptor).build()
 val retrofit: Retrofit = Retrofit.Builder()
-    .baseUrl("http://10.0.2.2:8000/")
+//    .baseUrl(BuildConfig.Host)
+    //check if running on emulator or not
+    .baseUrl(if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.9:8000")
     .addConverterFactory(MoshiConverterFactory.create(moshi))
     .client(okHttpClient)
     .build()
@@ -108,11 +111,17 @@ interface APIService {
 }
 
 
-fun loginAPI(navCtr: NavHostController?, sharedViewModel: SharedViewModel) {
+fun loginAPI(
+    navCtr: NavHostController?,
+    sharedViewModel: SharedViewModel,
+    mail: String,
+    pass: String
+) {
     loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
 
     val usermodel = UserInfo("user1@gmail.com", "123123123")
     val adminmodel = UserInfo("admin@gmail.com", "111111111")
+//    val adminmodel = UserInfo(mail, pass)
 //    var isSuccessful by remember { mutableStateOf(false) }
 //    val jsonAdapter = moshi.adapter<User>(User::class.java)
 //    val retrofit2: RetrofitAPI = retrofit.create(RetrofitAPI::class.java)
@@ -344,7 +353,7 @@ fun updatePayment(id: Int, payment: Payment, sharedViewModel: SharedViewModel) {
         val response = result.await()
         if (response.isSuccessful) {
             println("payment updated")
-                getContractAndPayment(sharedViewModel = sharedViewModel)
+            getContractAndPayment(sharedViewModel = sharedViewModel)
         }
     }
 }

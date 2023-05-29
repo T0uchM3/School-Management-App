@@ -1,5 +1,10 @@
 package com.example.schoolmanagementsystem.script
 
+import android.app.Activity
+import android.os.Build
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.core.AnimationConstants
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -18,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -28,10 +34,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +57,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,29 +65,31 @@ import androidx.navigation.NavHostController
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
+import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.R
+import com.example.schoolmanagementsystem.script.navbar.Screen
 
 
 @Composable
 fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewModel? = null) {
     val text2 = remember {
-        mutableStateOf(TextFieldValue(""))
+        mutableStateOf(TextFieldValue(BuildConfig.LoginMdp))
     }
     val passwordVisible: MutableState<Boolean> = remember {
         mutableStateOf(false)
     }
     val emaiInput = remember {
-        mutableStateOf(TextFieldValue(""))
+        mutableStateOf(TextFieldValue(BuildConfig.LoginMail))
     }
     var isClicked by remember { mutableStateOf(false) }
+    BackPressHandler(navCtr = navCtr)
     Column(
         modifier = Modifier
 //            .background(Color.Yellow)
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .background(Color(0xfff2f2f2)),
+//        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.weight(1f))
 
         val context = LocalContext.current
         val imageLoader = ImageLoader.Builder(context)
@@ -89,23 +101,40 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
 //                    }
             }
             .build()
-
-        Image(
-            painter = rememberAsyncImagePainter(R.drawable.fader, imageLoader),
-            contentDescription = "tests",
+        Column(
             Modifier
-                .scale(1f)
-                .weight(1f)
-        )
-        Image(
+                .fillMaxWidth()
+                .padding(top = 20.dp)
+        ) {
 
-            painter = rememberAsyncImagePainter(R.drawable.schoomanager),
-            contentDescription = "tests",
-            modifier = Modifier
-                .offset(y = (-0).dp)
-                .scale(1f)
-        )
-        Spacer(modifier = Modifier.weight(1f))
+            Row(Modifier.padding(horizontal = 40.dp)) {
+
+                Image(
+
+                    painter = rememberAsyncImagePainter(R.drawable.logovertical),
+                    contentDescription = "tests",
+                    modifier = Modifier
+                        .offset(y = (-0).dp)
+                        .scale(1f)
+                )
+            }
+            Text(
+                text = "Member Login",
+                Modifier.fillMaxWidth(),
+                color = Color(0xFF386BA5),
+                textAlign = TextAlign.Center,
+                fontSize = 35.sp,
+                style = MaterialTheme.typography.titleLarge
+            )
+            Text(
+                text = "Add your details to login",
+                Modifier.fillMaxWidth(),
+                color = Color.DarkGray,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
+//        Spacer(modifier = Modifier.weight(1f))
 
         Column(
             Modifier
@@ -125,6 +154,9 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                     .fillMaxWidth()
                     .padding(bottom = 30.dp),
                 colors = sharedViewModel?.tFColors()!!,
+                shape = RoundedCornerShape(30),
+                textStyle = MaterialTheme.typography.titleSmall
+
             )
 
             OutlinedTextField(
@@ -141,61 +173,78 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                     val description =
                         if (passwordVisible.value) "Hide password" else "Show password"
                     IconButton(onClick = { passwordVisible.value = !passwordVisible.value }) {
-                        Icon(imageVector = image, description)
+                        Icon(imageVector = image, description, Modifier.scale(0.9f))
                     }
-                }, modifier = Modifier
+                },
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 0.dp)
-                    .padding(bottom = 0.dp),
+                    .padding(bottom = 15.dp),
                 colors = sharedViewModel.tFColors(),
+                shape = RoundedCornerShape(30),
+                textStyle = MaterialTheme.typography.titleSmall
+            )
+            Text(
+                text = "Forgot password?",
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 70.dp),
+                color = Color.Black,
+                textAlign = TextAlign.Right,
+                style = MaterialTheme.typography.titleSmall
 
-                )
-        }
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 15.dp, vertical = 0.dp)
-                .weight(1f)
-//                .aspectRatio(1f)
-                .padding(top = 30.dp, bottom = 0.dp)
-        ) {
+            )
             Button(
+                shape = RoundedCornerShape(30),
                 onClick = {
-                    loginAPI(navCtr, sharedViewModel!!)
+                    loginAPI(navCtr, sharedViewModel!!, emaiInput.value.text, text2.value.text)
                     isClicked = true
                 },
                 modifier = Modifier
-                    .scale(0.8f)
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
-                border = BorderStroke(
-                    1.5.dp, MaterialTheme.colorScheme.secondary
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.DarkGray)
+                    .fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4884C9),
+                    contentColor = Color(0xfff2f2f2)
+                )
 
             ) {
                 if (isClicked) {
                     LoadingIndicator()
                 } else
-                    Text(text = "LOGIN", fontSize = 20.sp)
+                    Text(
+                        text = "Login",
+                        fontSize = 25.sp,
+                        modifier = Modifier.padding(vertical = 2.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.surface
+                    )
             }
         }
 
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(top = 30.dp),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Spacer(Modifier.weight(1f))
-            Image(
-                alpha = 120f,
-                painter = rememberAsyncImagePainter(R.drawable.trees),
-                contentDescription = "tree",
-                modifier = Modifier
-            )
+    }
+}
+
+@Composable
+fun BackPressHandler(
+    backPressedDispatcher: OnBackPressedDispatcher? =
+        LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher,
+    navCtr: NavHostController? = null,
+) {
+    val activity = (LocalContext.current as? Activity)
+
+    val backCallback = remember {
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                activity?.finish()
+            }
+        }
+    }
+
+    DisposableEffect(key1 = backPressedDispatcher) {
+        backPressedDispatcher?.addCallback(backCallback)
+
+        onDispose {
+            backCallback.remove()
         }
     }
 }
@@ -216,9 +265,9 @@ fun LoadingIndicator() {
     CircularProgressIndicator(
         progress = 0.7f,
         modifier = Modifier
-            .padding(8.dp)
+            .padding(0.dp)
             .rotate(angle),
-        color = MaterialTheme.colorScheme.onSecondaryContainer,
+        color = Color(0xfff2f2f2),
         strokeWidth = 2.dp,
     )
 }

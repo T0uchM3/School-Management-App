@@ -269,6 +269,8 @@ private fun SwipeableBoxPreview(
         icon = rememberVectorPainter(Icons.TwoTone.Edit),
         background = MaterialTheme.colorScheme.outline,
         onSwipe = {
+            if(sharedViewModel.selectedcontract!!.valide=="0")
+                return@SwipeAction
             //this will trigger recomposition of the PaymentScreen
             //and a condition check will happen for sheetAction
             sheetAction = "edit"
@@ -318,7 +320,7 @@ private fun SwipeItem(
                 .background(Color.Transparent)
                 .padding(vertical = 10.dp, horizontal = 15.dp)
                 .animateContentSize()
-                .weight(1f)
+                .weight(0.5f)
 
         ) {
             Text(
@@ -351,7 +353,7 @@ private fun SwipeItem(
                 .background(Color.Transparent)
                 .padding(start = 15.dp)
                 .animateContentSize()
-                .weight(1f)
+                .weight(0.4f)
 
         ) {
             Text(

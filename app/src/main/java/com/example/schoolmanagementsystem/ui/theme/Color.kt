@@ -29,13 +29,13 @@ val md_theme_light_background = Color(0xFFFDFDF6)
 val md_theme_light_onBackground = Color(0xFF1B1C18)
 val md_theme_light_outline = Color(0xFF75796C)
 val md_theme_light_inverseOnSurface = Color(0xFFF2F1EA)
-val md_theme_light_inverseSurface = Color(0xFFEDF1E4)//using this for bottom bar
+val md_theme_light_inverseSurface = Color(0xFF4884C9)//using this for bottom bar
 val md_theme_light_inversePrimary = Color(0xFFF3F6EA)
-val md_theme_light_surfaceTint = Color(0xFFD9E7CB)//for selected tabs
+val md_theme_light_surfaceTint = Color(0xfff2f2f2)//for selected tabs
 val md_theme_light_outlineVariant = Color(0xFFC4C8BA)
 val md_theme_light_scrim = Color(0xFF000000)
-val md_theme_light_surface = Color(0xFFF3FAED)//general bg 0xFFFAF0E1   0xFFFDFDF5
-val md_theme_light_onSurface = Color(0xFF1A1C18)//text (bottom bar for now)
+val md_theme_light_surface = Color(0xfff2f2f2)//general bg 0xFFFAF0E1   0xFFFDFDF5
+val md_theme_light_onSurface = Color(0xFF4884C9)//text (bottom bar for now)
 val md_theme_light_surfaceVariant = Color(0xFFE1E4D5)
 val md_theme_light_onSurfaceVariant = Color(0xFF44483D)
 

@@ -334,6 +334,7 @@ private fun SwipeItem(
                     println("clicked")
                     sharedViewModel.defineSelectedSalary(contract?.salaire.toString())
                     sharedViewModel.defineSelectedContractId(contract?.id.toString())
+                    sharedViewModel.defineSelectedContract(contract!!)
                     navCtr?.navigate(Screen.Payment.route)
 
                 })
@@ -528,12 +529,13 @@ fun AddContractSheet(
     val sDate = remember {
         mutableStateOf(TextFieldValue("2023-08-17"))
     }
-    val periode = remember {
-        mutableStateOf(TextFieldValue("1"))
-    }
-    val salary = remember {
-        mutableStateOf(TextFieldValue("199"))
-    }
+//    val periode = remember {
+//        mutableStateOf(TextFieldValue(500f))
+//    }
+    var periode by remember { mutableStateOf(1f) }
+    var oldPeriod by remember { mutableStateOf(0f) }
+    var salary by remember { mutableStateOf(500f) }
+    var oldSalary by remember { mutableStateOf(0f) }
     if (value != null && sharedViewModel != null)
         Column() {
             Column(
@@ -559,8 +561,8 @@ fun AddContractSheet(
                         onClick = {
                             val contract = Contract()
                             contract.date_debut = sDate.value.text
-                            contract.periode = periode.value.text
-                            contract.salaire = salary.value.text
+                            contract.periode = periode.toInt().toString()
+                            contract.salaire = salary.toInt().toString()
                             contract.user_id = sharedViewModel.selectedUserId
                             //clearing lists to avoid lazycol parsing error
                             sharedViewModel.contractList.clear()
@@ -568,9 +570,12 @@ fun AddContractSheet(
                             //api call
                             addContract(contract, sharedViewModel, true)
                             //resets all fields
-                            sDate.value = TextFieldValue("")
-                            periode.value = TextFieldValue("")
-                            salary.value = TextFieldValue("")
+//                            sDate.value = TextFieldValue("")
+//                            periode = 0f
+//                            salary.value = TextFieldValue("")
+
+                            scope?.launch { state?.hide() }
+
 
                         }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
                     ) {
@@ -593,32 +598,54 @@ fun AddContractSheet(
                 )
 
                 OutlinedTextField(
-                    value = periode.value,
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    onValueChange = { periode.value = it },
+                    value = periode.toInt().toString(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    onValueChange = { periode = (it.toIntOrNull() ?: 0).toFloat() },
                     singleLine = true,
-                    label = {
-                        Text(
-                            text = "period",
-                            fontSize = 15.sp,
-                        )
-                    },
+                    label = { Text("Period") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onVerticalDrag = { change, dragAmount ->
+                                    change.consume()
+                                    var y = dragAmount
+                                    //making sure period is above 1
+                                    oldPeriod -= dragAmount.times(0.02f)
+                                    if (oldPeriod < 1) {
+                                        oldPeriod = 1f
+                                        return@detectVerticalDragGestures
+                                    }
+                                    periode -= dragAmount.times(0.02f)
+                                },
+                            )
+                        },
                     colors = sharedViewModel.tFColors(),
                 )
 
                 OutlinedTextField(
-                    value = salary.value,
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    onValueChange = { salary.value = it },
+                    value = salary.toInt().toString(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    onValueChange = { salary = (it.toIntOrNull() ?: 0).toFloat() },
                     singleLine = true,
-                    label = {
-                        Text(
-                            text = "salary",
-                            fontSize = 15.sp,
-                        )
-                    },
+                    label = { Text("salary") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onVerticalDrag = { change, dragAmount ->
+                                    change.consume()
+                                    var y = dragAmount
+                                    //making sure period is above 1
+                                    oldSalary -= dragAmount.times(0.02f)
+                                    if (oldSalary < 1) {
+                                        oldSalary = 1f
+                                        return@detectVerticalDragGestures
+                                    }
+                                    salary -= dragAmount.times(0.02f)
+                                },
+                            )
+                        },
                     colors = sharedViewModel.tFColors(),
                 )
             }
@@ -671,7 +698,7 @@ fun EditContractSheet(
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     enabled = !(period < oldPeriod || period <= 0f),
-                    modifier = Modifier.alpha(if(period < oldPeriod || period == 0f) 0.4f else 1f),
+                    modifier = Modifier.alpha(if (period < oldPeriod || period == 0f) 0.4f else 1f),
                     onClick = {
                         val ph = PeriodHolder()
                         ph.periode = period.toInt().toString()
@@ -687,7 +714,9 @@ fun EditContractSheet(
                     }) {
                     Text(
                         text = "Update", fontSize = 17.sp,
-                        color = if(period < oldPeriod || period == 0f) Color.Gray else Color(0xff386A1F)
+                        color = if (period < oldPeriod || period == 0f) Color.Gray else Color(
+                            0xff386A1F
+                        )
                     )
                 }
             }

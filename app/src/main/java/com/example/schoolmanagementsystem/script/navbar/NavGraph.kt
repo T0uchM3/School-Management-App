@@ -29,8 +29,7 @@ import com.google.accompanist.navigation.animation.composable as c2
 
 //import com.google.accompanist.navigation.animation.composable
 @Composable
-fun RootNavGraph(navController: NavHostController) {
-    val sharedViewModel: SharedViewModel = viewModel()
+fun RootNavGraph(navController: NavHostController, sharedViewModel: SharedViewModel) {
     NavHost(
         navController = navController, route = Graph.ROOT, startDestination = Graph.AUTHENTICATION
     ) {
@@ -53,40 +52,6 @@ fun NavGraphBuilder.authNavGraph(
 
     }
 }
-
-
-//@Composable
-//fun BarNavGraph(
-//    navController: NavHostController, sharedViewModel: SharedViewModel
-//) {
-////    val sharedViewModel: SharedViewModel = viewModel()
-//    NavHost(
-//        navController = navController, route = Graph.HOME, startDestination = Screen.Home.route
-//    ) {
-//        composable(route = Screen.Home.route) {
-//            HomeScreen1(navCtr = navController, sharedViewModel = sharedViewModel)
-////            println()
-//        }
-//        composable(route = Screen.Users.route) {
-//            UsersTab(navCtr = navController, sharedViewModel = sharedViewModel)
-//        }
-//        composable(route = Screen.Students.route) {
-//            ManageUser(navController, sharedViewModel)
-//
-//        }
-//        composable(route = Screen.Profile.route) {
-//            HomeScreen4()
-//        }
-//        composable(route = Screen.ManageUser.route) {
-//            ManageUser(navController, sharedViewModel)
-//        }
-//        composable(route = Screen.Contract.route) {
-//            ContractUser(navController, sharedViewModel)
-//        }
-//    }
-//}
-
-@OptIn(ExperimentalAnimationApi::class)
 
 
 val springSpec = spring<IntOffset>(dampingRatio = Spring.DampingRatioMediumBouncy)
@@ -192,10 +157,31 @@ fun AnimatedGraph(
         }) { PaymentScreen(navController, sharedViewModel) }
         composable(route = Screen.Students.route) {
             HomeScreen4(navController, sharedViewModel)
-
         }
         composable(route = Screen.Profile.route) {
             HomeScreen4(navController, sharedViewModel)
+        }
+//        composable(route = Screen.Login.route) {
+//            LoginScreen(navCtr = navController, sharedViewModel = sharedViewModel)
+//        }
+        c2(Screen.Login.route, enterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }, popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }) {
+            LoginScreen(navController, sharedViewModel)
         }
 //        composable(route = Screen.ManageUser.route) {
 //            ManageUser(navController, sharedViewModel)

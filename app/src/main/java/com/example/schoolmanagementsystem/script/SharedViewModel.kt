@@ -1,5 +1,6 @@
 package com.example.schoolmanagementsystem.script
 
+import android.view.Window
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextFieldColors
@@ -9,6 +10,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 
 class SharedViewModel : ViewModel() {
@@ -44,11 +46,11 @@ class SharedViewModel : ViewModel() {
         usersFocus = newState
     }
 
-    var contract by mutableStateOf<Contract?>(null)
+    var selectedcontract by mutableStateOf<Contract?>(null)
         private set
 
-    fun defineContract(newContract: Contract) {
-        contract = newContract
+    fun defineSelectedContract(newContract: Contract) {
+        selectedcontract = newContract
     }
 
     var contractList = SnapshotStateList<Contract>()
@@ -113,15 +115,31 @@ class SharedViewModel : ViewModel() {
     @Composable
     fun tFColors() =
         OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.colorScheme.secondary,
-            focusedLabelColor = MaterialTheme.colorScheme.secondary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+            focusedBorderColor = Color(0xff4774a9),
+            focusedLabelColor = Color(0xff4774a9),
+            unfocusedLabelColor = Color.Gray,
+            unfocusedBorderColor = Color.Gray,
             cursorColor = MaterialTheme.colorScheme.onPrimary,
+            unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
+            focusedTextColor = MaterialTheme.colorScheme.onPrimary
         )
+
     var selectedSalary by mutableStateOf<String>("")
         private set
 
     fun defineSelectedSalary(salary: String) {
         selectedSalary = salary
+    }
+
+    var inLogin by mutableStateOf<Boolean>(true)
+        private set
+
+    fun defineInLogin(newState: Boolean) {
+        inLogin = newState
+    }
+
+    var window by mutableStateOf<Window?>(null)
+    fun setWindow2(window: Window?) {
+        this.window = window
     }
 }
