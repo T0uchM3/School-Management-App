@@ -71,6 +71,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
@@ -79,6 +80,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -145,6 +147,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 topEnd = 12.dp
             ),
             onDismissRequest = {
+
                 scope?.launch {
                     sheetState?.hide()
                 }
@@ -156,20 +159,23 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                     state = sheetState,
                     focusManager = focusManager
                 )
-            }
+            },
+            modifier = Modifier.offset(y = 0.dp)
         )
-    }
+    } else
+        sharedViewModel.defineFABClicked(false)
 
 
     LaunchedEffect(key1 = Unit) {
         sharedViewModel.defineFabVisible(true)
-//        if (textFieldValue.isNotEmpty())
         clearSearch(sharedViewModel, focusManager)
         //setting up fab in user tab
         sharedViewModel.defineFabClick {
             sharedViewModel.defineIsNewUser(true)
             scope?.launch {
                 sheetState?.show()
+//                sharedViewModel.defineFABClicked(true)
+
             }
         }
         sharedViewModel.userList.clear()
@@ -188,7 +194,12 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     Box(
         Modifier
             .fillMaxSize()
-//            .background(Color.Blue)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
+                )
+            )
+            .padding(top = 5.dp)
     ) {
         /********************************************************
         setting up the search bar
@@ -196,7 +207,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         BoxWithConstraints(
             Modifier
                 .zIndex(1f)
-//                .offset(y = 5.dp)
         ) {
 
             Row(
@@ -206,13 +216,14 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 //                    .background(Color.Red)
                     .padding(bottom = 13.dp),
 //                        .zIndex(1f),
-//                horizontalArrangement = Arrangement.Center
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BasicTextField(
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     keyboardActions = KeyboardActions(onDone = { /* Do something */ }),
                     value = textFieldValue,
+                    textStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+
                     onValueChange = {
                         textFieldValue = it
                         searchUser(textFieldValue, localUserList, sharedViewModel)
@@ -224,13 +235,15 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                         ) {
                             Row(
                                 modifier = Modifier,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.search2),
-                                    contentDescription = null,
+                                Icon(
+                                    painterResource(id = R.drawable.o),
+                                    contentDescription = "",
+                                    tint = Color.Gray,
                                     modifier = Modifier
-                                        .padding(start = 3.dp, end = 6.dp)
+                                        .padding(start = 6.dp, end = 7.dp)
+                                        .size(17.dp)
                                         .scale(1.2f),
                                 )
                                 innerTextField()
@@ -241,10 +254,10 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                                 Text(
                                     text = "Search users",
                                     color = Color.Gray,
-                                    fontSize = 15.sp,
+                                    fontSize = 18.sp,
                                     modifier = Modifier
                                         .padding(start = 35.dp)
-                                        .padding(vertical = 3.dp)
+                                        .padding(vertical = 0.dp)
                                 )
                             }
                         }
@@ -274,10 +287,9 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 if (visible)
                     androidx.compose.material3.Button(
                         onClick = { clearSearch(sharedViewModel, focusManager) },
-                        colors =ButtonDefaults.buttonColors(Color.White),
-                       modifier = Modifier
+                        colors = ButtonDefaults.buttonColors(Color.White),
+                        modifier = Modifier
                             .clip(shape = RoundedCornerShape(25.dp))
-//                            .background(MaterialTheme.colorScheme.surface)
 
                     ) {
                         Text(
@@ -286,10 +298,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                             maxLines = 1,
                             color = MaterialTheme.colorScheme.inverseSurface,
                             modifier = Modifier
-//                                .clickable {
-////                                    clearSearch(sharedViewModel, focusManager)
-//                                }
-//                                .padding(horizontal = 15.dp)
                         )
                     }
 
@@ -299,7 +307,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         Column(
             Modifier
 //                .background(Color.Red)
-                .background(MaterialTheme.colorScheme.inverseSurface)
+                .background(Color.Transparent)
                 .padding(top = 0.dp, bottom = 10.dp)
                 .fillMaxSize()
         ) {
@@ -429,8 +437,18 @@ fun SwipeableBoxPreview(
 
     var isActive by rememberSaveable { mutableStateOf(false) }
     val editUser = SwipeAction(
-        icon = rememberVectorPainter(Icons.Outlined.Edit),
-        background = MaterialTheme.colorScheme.outline,
+        icon = {
+            Icon(
+                painterResource(id = R.drawable.j),
+                contentDescription = "",
+                tint = Color(0xCCF1F1F1),
+                modifier = Modifier.scale(0.6f)
+            )
+//            painterResource(id = R.drawable.j),
+
+        },
+//                rememberVectorPainter(Icons.Outlined.Edit),
+        background = MaterialTheme.colorScheme.onSurface,
         onSwipe = {
 //            textFieldvalue=""
             sharedViewModel.defineSelectedUserId(user.id.toString())
@@ -459,10 +477,6 @@ fun SwipeableBoxPreview(
     )
     Card(
         Modifier.fillMaxWidth(),
-//        border = BorderStroke(
-//            1.4.dp,
-//            Color.Gray,
-//        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
 
     ) {
@@ -482,8 +496,6 @@ fun SwipeableBoxPreview(
             )
         }
     }
-
-
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -500,37 +512,27 @@ private fun SwipeItem(
         if (contract.user_id == user.id.toString())
             nbrContracts++
     }
-
+    /*
+                      this come above the card
+     */
     Row(
         modifier = Modifier
             .clickable(
                 onClick = {
                     sharedViewModel.defineSelectedUserId(user.id.toString())
                     sharedViewModel.defineUsersFocus(true)
-//                    getUserContract(user.id.toInt(), sharedViewModel)
                     println("Contra swiped")
                     navCtr.navigate(Screen.Contract.route)
                 })
             .fillMaxWidth()
             .height(intrinsicSize = IntrinsicSize.Max)
-//            .shadow(1.dp)
-//            .background(Color.Red)
-//            .padding(vertical = 16.dp, horizontal = 20.dp)
 
             .animateContentSize()
 
     ) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxHeight()
-//                .width(10.dp)
-//                .background(Color.Red)
-//        ) {
-////           Button(onClick = { /*TODO*/ },Modifier.background(Color.Transparent).fillMaxHeight()) {
-//
-//           }
-        var size by remember { mutableStateOf(Size.Zero) }
-
+/*
+                setting the left vertical blue marker
+ */
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -541,13 +543,14 @@ private fun SwipeItem(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(8.dp)
+//                    .clip(shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
                     .height(20.dp)
-//                    .onGloballyPositioned { coo -> size = coo.size.toSize() }
-                    .clip(shape)
                     .background(MaterialTheme.colorScheme.inverseSurface)
             )
         }
-//        }
+        /*
+                    setting up the left image
+         */
         Row(
             Modifier
                 .padding(top = 2.dp, start = 10.dp)
@@ -576,10 +579,8 @@ private fun SwipeItem(
                 contentDescription = null,
                 modifier = Modifier.size(50.dp)
             )
-
-
         }
-
+//setting up the middle texts
         Column(
             Modifier
                 .padding(horizontal = 16.dp)
@@ -611,6 +612,7 @@ private fun SwipeItem(
             }
         }
         Spacer(modifier = Modifier.weight(1f))
+        //setting the right vertical red marker
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -621,9 +623,9 @@ private fun SwipeItem(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(8.dp)
+                    .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
                     .height(20.dp)
-                    .onGloballyPositioned { coo -> size = coo.size.toSize() }
-                    .clip(shape)
+//                    .onGloballyPositioned { coo -> size = coo.size.toSize() }
                     .background(Color(0x80FFD7D7))
             )
         }

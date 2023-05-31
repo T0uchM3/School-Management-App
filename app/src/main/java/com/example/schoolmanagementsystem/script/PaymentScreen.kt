@@ -1,6 +1,9 @@
 package com.example.schoolmanagementsystem.script
 
 import android.annotation.SuppressLint
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -18,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -29,6 +33,8 @@ import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,6 +47,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +60,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
@@ -60,10 +69,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.example.schoolmanagementsystem.ui.theme.scope
 import com.example.schoolmanagementsystem.ui.theme.sheetState
 import kotlinx.coroutines.CoroutineScope
@@ -73,7 +84,7 @@ import me.saket.swipe.SwipeableActionsBox
 
 var payments = SnapshotStateList<Payment>()
 var amountLeft by mutableStateOf<Int>(0)
-var paymentToEdit =Payment()
+var paymentToEdit = Payment()
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("RememberReturnType")
@@ -83,7 +94,7 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     payments = remember { SnapshotStateList<Payment>() }
     val userName = remember { mutableStateOf("") }
 
-
+    BackPressHandlerP(navCtr = navCtr, sharedViewModel = sharedViewModel)
 
     sheetState =
         remember {
@@ -122,13 +133,13 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                         value = "",
                         scope = scope,
                         state = sheetState,
-                        payment  = paymentToEdit,
+                        payment = paymentToEdit,
                         sharedViewModel = sharedViewModel
-                        )
+                    )
             }
         )
-    }
-
+    } else
+        sharedViewModel.defineFABClicked(false)
     LaunchedEffect(key1 = sharedViewModel.paymentList.size) {
         updateValues(sharedViewModel)
         userName.value =
@@ -142,71 +153,127 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
         }
     }
-//    println("test FRT " + payments.size)
     Column(
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
+                )
+            )
+            .padding(top = 5.dp)
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface),
-//                .shadow(1.dp),
+                .padding(start = 10.dp, bottom = 5.dp),
+//                .background(MaterialTheme.colorScheme.surface),
             verticalAlignment = Alignment.CenterVertically,
 
             ) {
-            IconButton(onClick = { navCtr?.popBackStack() }) {
-                Icon(Icons.TwoTone.ArrowBack, "")
+            IconButton(onClick = {
+                sharedViewModel.defineSelectedContract(null)
+                navCtr.popBackStack()
+            }
+            ) {
+                Icon(
+                    Icons.TwoTone.ArrowBack,
+                    "",
+                    tint = Color(0xCCFFFFFF),
+                    modifier = Modifier
+                        .scale(1.3f)
+                        .padding(end = 5.dp)
+                )
             }
             Text(
                 text = userName.value + " > " + sharedViewModel.selectedSalary + " (${amountLeft} left)",
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(start = 10.dp)
+                color = Color(0xCCFFFFFF),
+                fontSize = 30.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.weight(1f))
 
         }
-        if (payments.isEmpty()) {
-            Box(
-                Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "No payment has been made for this contract!",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        } else {
+        Column(
+            Modifier
+                .clip(shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .fillMaxWidth()
+                .fillMaxHeight()
+        ) {
+            /**
+             * setting up the list section
+             */
+            if (payments.isEmpty()) {
+                Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "No payment has been made for this contract!",
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            } else {
 
-            LazyColumn(
-                state = rememberLazyListState(), modifier = Modifier.padding(bottom = 40.dp)
-            ) {
-                items(payments, key = { item -> item.id }) { payment ->
-                    Box(modifier = Modifier.animateItemPlacement()) {
-                        SwipeableBoxPreview(navCtr,
-                            Modifier.padding(),
-                            sharedViewModel,
-                            payment,
-                            onRemoveClicked = {
-                                payments.remove(payment)
-                                sharedViewModel.paymentList.remove(payment)
-                            })
+                LazyColumn(
+                    state = rememberLazyListState(),
+                    modifier = Modifier
+                        .padding(bottom = 40.dp, top = 15.dp)
+                        .padding(horizontal = 7.dp)
+
+                ) {
+                    items(payments, key = { item -> item.id }) { payment ->
+                        Box(modifier = Modifier.animateItemPlacement()) {
+                            SwipeableBoxPreview(navCtr,
+                                Modifier.padding(),
+                                sharedViewModel,
+                                payment,
+                                onRemoveClicked = {
+                                    payments.remove(payment)
+                                    sharedViewModel.paymentList.remove(payment)
+                                })
+                        }
+                        Spacer(Modifier.height(8.dp))
                     }
-
-                    Spacer(Modifier.height(1.dp))
-                    Divider(Modifier.padding(horizontal = 20.dp))
-                    Spacer(Modifier.height(1.dp))
-
                 }
             }
         }
     }
 }
+
+//handling the fab position when going back without the top arrow
+@Composable
+fun BackPressHandlerP(
+    backPressedDispatcher: OnBackPressedDispatcher? =
+        LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher,
+    navCtr: NavHostController? = null,
+    sharedViewModel: SharedViewModel
+) {
+
+    val backCallback = remember {
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                sharedViewModel.defineSelectedContract(null)
+                navCtr?.popBackStack()
+            }
+        }
+    }
+
+    DisposableEffect(key1 = backPressedDispatcher) {
+        backPressedDispatcher?.addCallback(backCallback)
+
+        onDispose {
+            backCallback.remove()
+        }
+    }
+}
+
 
 /**
  * Updating the visibility of fab, the amount left to be paid
@@ -269,7 +336,7 @@ private fun SwipeableBoxPreview(
         icon = rememberVectorPainter(Icons.TwoTone.Edit),
         background = MaterialTheme.colorScheme.outline,
         onSwipe = {
-            if(sharedViewModel.selectedcontract!!.valide=="0")
+            if (sharedViewModel.selectedcontract!!.valide == "0")
                 return@SwipeAction
             //this will trigger recomposition of the PaymentScreen
             //and a condition check will happen for sheetAction
@@ -281,16 +348,22 @@ private fun SwipeableBoxPreview(
         },
         isUndo = false,
     )
-    SwipeableActionsBox(
-        modifier = modifier,
-        startActions = listOf(editPayment),
-        endActions = listOf(remove),
-        swipeThreshold = 40.dp,
-        backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp),
+    Card(
+        Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+
     ) {
-        SwipeItem(
-            sharedViewModel, navCtr = navCtr, payment = payment
-        )
+        SwipeableActionsBox(
+            modifier = modifier,
+            startActions = listOf(editPayment),
+            endActions = listOf(remove),
+            swipeThreshold = 40.dp,
+            backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp),
+        ) {
+            SwipeItem(
+                sharedViewModel, navCtr = navCtr, payment = payment
+            )
+        }
     }
 
 }
@@ -303,37 +376,58 @@ private fun SwipeItem(
 ) {
     Row(
         modifier = Modifier
-            .clip(shape = RoundedCornerShape(10.dp))
+//            .clip(shape = RoundedCornerShape(10.dp))
             .fillMaxWidth()
             .height(IntrinsicSize.Max)
             .clickable(
                 onClick = {
                     println("clicked")
-                }),
+                })
+            .background(Color.White),
+
         Arrangement.SpaceEvenly
 
     ) {
-
+        /**
+        setting the left vertical blue marker
+         */
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .height(80.dp)
+                .wrapContentSize(Alignment.Center)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(8.dp)
+                    .height(20.dp)
+                    .background(MaterialTheme.colorScheme.inverseSurface)
+            )
+        }
         Column(
             Modifier
                 .fillMaxHeight()
-                .background(Color.Transparent)
                 .padding(vertical = 10.dp, horizontal = 15.dp)
                 .animateContentSize()
                 .weight(0.5f)
-
         ) {
             Text(
                 text = "Date:      ${payment.date?.substring(0, 10)}",
                 color = Color.Black,
                 fontSize = 17.sp,
-                modifier = Modifier.padding(bottom = 0.dp)
+                modifier = Modifier.padding(bottom = 0.dp),
+                style = MaterialTheme.typography.titleSmall,
             )
             Text(
-                text = "month:      ${payment.mois}", color = Color.Black, fontSize = 17.sp
+                text = "month:      ${payment.mois}",
+                style = MaterialTheme.typography.titleSmall,
+                color = Color.Black, fontSize = 17.sp
             )
             Text(
-                text = "type:       ${payment.type}", color = Color.Black, fontSize = 17.sp
+                text = "type:       ${payment.type}",
+                style = MaterialTheme.typography.titleSmall,
+                color = Color.Black, fontSize = 17.sp
             )
         }
         Divider(
@@ -347,9 +441,6 @@ private fun SwipeItem(
         Column(
             Modifier
                 .fillMaxHeight()
-//                        .fillMaxWidth()
-//                        .weight(1f)
-//                        .shadow(1.dp)
                 .background(Color.Transparent)
                 .padding(start = 15.dp)
                 .animateContentSize()
@@ -360,29 +451,43 @@ private fun SwipeItem(
                 text = "Amount: ",
                 color = Color.Black,
                 fontSize = 13.sp,
+                style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier
                     .padding(top = 10.dp)
-//                        .background(Color.Red)
             )
 
 
             Text(
                 text = payment.montant.toString(),
-                color = Color.Black,
+//                color = Color.Black,
                 fontSize = 35.sp,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 55.dp)
-//                    .background(Color.Red)
+                    .padding(start = 40.dp)
 
             )
 
-//            Text(
-//                text = "date ${payment.date}", color = Color.Black, fontSize = 17.sp
-//            )
+        }
+        /**
+        setting the right vertical red marker
+         */
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .height(80.dp)
+                .wrapContentSize(Alignment.Center)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(8.dp)
+                    .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
+                    .height(20.dp)
+                    .background(Color(0x80FFD7D7))
+            )
         }
     }
-//            Spacer(Modifier.height(2.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -404,6 +509,9 @@ fun AddPaymentSheet(
     val ref = remember {
         mutableStateOf(TextFieldValue(""))
     }
+    LaunchedEffect(key1 = Unit) {
+        sharedViewModel.defineFABClicked(true)
+    }
     var montant by remember { mutableStateOf(1f) }
     var oldMontant by remember { mutableStateOf(1f) }
     var oldMonth by remember { mutableStateOf(1f) }
@@ -417,7 +525,10 @@ fun AddPaymentSheet(
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Button(
-                    onClick = { scope?.launch { state?.hide() } },
+                    onClick = {
+                        sharedViewModel.defineFABClicked(false)
+                        scope?.launch { state?.hide() }
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 ) {
                     Text(text = "Cancel", fontSize = 17.sp)
@@ -443,6 +554,7 @@ fun AddPaymentSheet(
                         sharedViewModel.paymentList.clear()
                         addPayment(payment, sharedViewModel = sharedViewModel, true)
 
+                        sharedViewModel.defineFABClicked(false)
                         //hide fab
                         scope?.launch { state?.hide() }
 
@@ -596,7 +708,10 @@ fun EditPaymentSheet(
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Button(
-                    onClick = { scope?.launch { state?.hide() } },
+                    onClick = {
+                        sharedViewModel.defineFABClicked(false)
+                        scope?.launch { state?.hide() }
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 ) {
                     Text(text = "Cancel", fontSize = 17.sp)
@@ -619,10 +734,11 @@ fun EditPaymentSheet(
                         //clearing lists to avoid lazycol parsing error
                         sharedViewModel.contractList.clear()
                         sharedViewModel.paymentList.clear()
-                        println("PAYMENT IDDD "+paymentFinal.id.toInt())
+                        println("PAYMENT IDDD " + paymentFinal.id.toInt())
 
                         updatePayment(paymentFinal.id.toInt(), paymentFinal, sharedViewModel)
 
+                        sharedViewModel.defineFABClicked(false)
                         //hide fab
                         scope?.launch { state?.hide() }
 

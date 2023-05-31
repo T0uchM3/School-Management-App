@@ -9,8 +9,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -29,13 +29,17 @@ import com.google.accompanist.navigation.animation.composable as c2
 
 //import com.google.accompanist.navigation.animation.composable
 @Composable
-fun RootNavGraph(navController: NavHostController, sharedViewModel: SharedViewModel) {
+fun RootNavGraph(
+    navController: NavHostController,
+    sharedViewModel: SharedViewModel,
+    statusBarHeight: Dp
+) {
     NavHost(
         navController = navController, route = Graph.ROOT, startDestination = Graph.AUTHENTICATION
     ) {
         authNavGraph(navController = navController, sharedViewModel = sharedViewModel)
         composable(route = Screen.NavBar.route) {
-            BottomNav(navController = navController, sharedViewModel = sharedViewModel)
+            BottomNav(navController = navController, sharedViewModel = sharedViewModel,statusBarHeight)
         }
     }
 }

@@ -10,14 +10,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.schoolmanagementsystem.script.SharedViewModel
 //import com.example.schoolmanagmentsystem.script.navbar.NavGraph
 import com.example.schoolmanagementsystem.script.navbar.RootNavGraph
 import com.example.schoolmanagementsystem.ui.theme.AppTheme
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 sealed class Destination(val route: String) {
     object LoginScreen : Destination("loginScreen")
@@ -36,16 +34,19 @@ class MainActivity : ComponentActivity() {
             val bottomBarHeight = with(LocalDensity.current) {
                 sysbar.getBottom(this).toDp()
             }
+            val statusBarHeight = with(LocalDensity.current){
+                sysbar.getTop(this).toDp()
+            }
             val isDarkTheme = remember { mutableStateOf(false) }
             val sharedViewModel: SharedViewModel = viewModel()
             sharedViewModel.setWindow2(window)
             AppTheme(darkTheme = isDarkTheme.value, sharedViewModel) {
 
                 Surface(
-                    modifier = Modifier.fillMaxSize().padding(bottom = bottomBarHeight)
+                    modifier = Modifier.fillMaxSize().padding(bottom = bottomBarHeight+0.dp)
                 ) {
                     val navController = rememberNavController()
-                    RootNavGraph(navController = navController, sharedViewModel)
+                    RootNavGraph(navController = navController, sharedViewModel, statusBarHeight)
                 }
             }
 

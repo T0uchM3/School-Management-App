@@ -1,18 +1,15 @@
 package com.example.schoolmanagementsystem.script.navbar
 
 import android.annotation.SuppressLint
-import android.widget.ImageButton
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,42 +19,34 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import coil.compose.rememberAsyncImagePainter
 import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.SharedViewModel
-import com.example.schoolmanagementsystem.ui.theme.Purple500
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -65,7 +54,11 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
     ExperimentalAnimationApi::class, ExperimentalMaterialApi::class,
 )
 @Composable
-fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewModel?) {
+fun BottomNav(
+    navController: NavHostController?,
+    sharedViewModel: SharedViewModel?,
+    statusBarHeight: Dp
+) {
 
     val navController2 = rememberAnimatedNavController()
 
@@ -75,6 +68,7 @@ fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewMode
         floatingActionButton = {
             Box(
                 modifier = Modifier
+                    .offset(y = if (sharedViewModel?.selectedcontract != null) 50.dp else 0.dp)
 //                    .background(Color.T)
                     .width(60.0.dp)
                     .height(60.0.dp)
@@ -111,18 +105,24 @@ fun BottomNav(navController: NavHostController?, sharedViewModel: SharedViewMode
                             Icons.Default.Add,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.surface,
-                            modifier =  Modifier.scale(1.3f)
+                            modifier = Modifier.scale(1.3f)
                         )
                     }
                 }
             }
         },
         content = {
-
             AnimatedGraph(navController = navController2, sharedViewModel = sharedViewModel!!)
-        }
-
-
+        }, modifier = Modifier
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = if (sharedViewModel!!.fabClicked)
+                        listOf(Color(0xFF315A87), Color(0xFF436FA0))
+                    else
+                        listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
+                )
+            )
+            .padding(top = statusBarHeight + 1.dp)
     )
 //    }
 }
@@ -138,7 +138,7 @@ fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel
         Screen.Students,
         Screen.Profile,
     )
-    //screens to show bottom bar in, making sure no bottom bar in payment screen
+    //screens to show bottom bar in
     val navBarScreen = listOf(
         Screen.Home,
         Screen.Users,
@@ -150,6 +150,7 @@ fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel
     val currentDestination = navStackBackEntry?.destination
 
     val bottomBarDestination = navBarScreen.any { it.route == currentDestination?.route }
+    //making sure no bottom bar in payment screen...
     if (bottomBarDestination)
         Row(
             Modifier
@@ -242,5 +243,5 @@ fun AddItem(
 @Composable
 @Preview
 fun BottomNavPreview() {
-    BottomNav(null, null)
+//    BottomNav(null, null, statusBarHeight)
 }

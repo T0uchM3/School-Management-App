@@ -14,6 +14,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,7 +48,7 @@ fun ManageUser(
     sharedViewModel: SharedViewModel,
     scope: CoroutineScope? = null,
     state: SheetState? = null,
-    focusManager: FocusManager?=null
+    focusManager: FocusManager? = null
 ) {
     //searching through the users list for user that got selected in the previous (userTab)
 //     selectedUser: User? = null
@@ -55,10 +56,10 @@ fun ManageUser(
         if (user.id.toString() == sharedViewModel.selectedUserId)
             selectedUser = user
     }
-    println(sharedViewModel.isNewUser.toString()+"  USER ID!::: " + selectedUser?.id)
+    println(sharedViewModel.isNewUser.toString() + "  USER ID!::: " + selectedUser?.id)
 
     nameInput = remember {
-        mutableStateOf(TextFieldValue( selectedUser?.name.toString() ))
+        mutableStateOf(TextFieldValue(selectedUser?.name.toString()))
     }
     cinInput = remember {
         mutableStateOf(TextFieldValue(selectedUser?.cin.toString()))
@@ -81,6 +82,11 @@ fun ManageUser(
         sharedViewModel.defineIsNewUser(false)
         resetAllFields()
     }
+    LaunchedEffect(key1 = Unit) {
+        sharedViewModel.defineFABClicked(true)
+
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -94,7 +100,10 @@ fun ManageUser(
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Button(
-                    onClick = { scope?.launch { state?.hide() } },
+                    onClick = {
+                        sharedViewModel.defineFABClicked(false)
+                        scope?.launch { state?.hide() }
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
                 ) {
                     Text(text = "Cancel", fontSize = 17.sp)
@@ -116,17 +125,19 @@ fun ManageUser(
                         sharedViewModel.contractList.clear()
 
                         if (sharedViewModel.isNewUser) {
-                            clearSearch(sharedViewModel,focusManager!!)
+                            clearSearch(sharedViewModel, focusManager!!)
                             addUserAPI(user, sharedViewModel, true)
+                            sharedViewModel.defineFABClicked(false)
                             scope?.launch { state?.hide() }
                         } else {
-                            clearSearch(sharedViewModel,focusManager!!)
+                            clearSearch(sharedViewModel, focusManager!!)
                             updateUser(
                                 sharedViewModel.selectedUserId.toInt(),
                                 user,
                                 sharedViewModel,
                                 true
                             )
+                            sharedViewModel.defineFABClicked(false)
                             scope?.launch { state?.hide() }
                         }
                     },

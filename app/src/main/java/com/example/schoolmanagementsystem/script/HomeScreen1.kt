@@ -118,7 +118,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                     colors = listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
                 )
             )
-            .padding(top = 25.dp)
+            .padding(top = 5.dp)
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDrag = { change, dragAmount ->
@@ -240,16 +240,6 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                 HomeItems.setting
             )
             LazyVerticalGrid(columns = GridCells.Fixed(3), content = {
-//            LazyVerticalGrid(columns = object :GridCells{
-//                override fun Density.calculateCrossAxisCellSizes(
-//                    availableSize: Int,
-//                    spacing: Int
-//                ): List<Int> {
-//                    val firstColumn = (availableSize - spacing) * 2 / 3
-//                    val secondColumn = availableSize - spacing - firstColumn
-//                    return listOf(firstColumn, secondColumn)
-//                }
-//            }, content = {
                 items(listOfItem.size) { item ->
 
                     Button(
@@ -262,15 +252,10 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                             pressedElevation = 0.dp,
                             disabledElevation = 0.dp
                         ),
-//                        colors = ButtonDefaults.buttonColors(Color.Transparent),
-//                        modifier = Modifier.width(200.dp)
 
-//                    )
                         content = {
-//                    {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-//                            modifier = Modifier.width(200.dp)
                             ) {
                                 Icon(
                                     painterResource(id = listOfItem[item].icon),
@@ -303,14 +288,6 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
     }
 
 
-}
-
-fun verticalGradient(
-    vararg colorStops: Pair<Float, Color>,
-    startY: Float = 0.0f,
-    endY: Float = Float.POSITIVE_INFINITY,
-    tileMode: TileMode = TileMode.Clamp
-) {
 }
 
 @Composable
