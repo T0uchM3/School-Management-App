@@ -1,10 +1,25 @@
 package com.example.schoolmanagementsystem.ui.theme
 
+import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings.Global.getString
+import android.widget.ImageView
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -56,14 +71,17 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusManager
@@ -75,10 +93,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.SemanticsPropertyKey
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -87,10 +110,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavHostController
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.AsyncImagePainter.State.Empty.painter
+import coil.compose.ImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import coil.decode.DecodeResult
+import coil.decode.Decoder
+import coil.imageLoader
+import coil.load
+import coil.request.CachePolicy
 import coil.request.ImageRequest
+import coil.size.Scale
+import coil.transform.CircleCropTransformation
 import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.LoadingIndicator
@@ -101,9 +137,13 @@ import com.example.schoolmanagementsystem.script.deleteUserAPI
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.example.schoolmanagementsystem.script.usersAPI
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
+import okhttp3.internal.wait
+import kotlin.concurrent.fixedRateTimer
 
 var scope: CoroutineScope? = null
 
@@ -153,6 +193,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 }
             },
             content = {
+
                 ManageUser(
                     sharedViewModel = sharedViewModel,
                     scope = scope,
@@ -300,7 +341,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                             modifier = Modifier
                         )
                     }
-
             }
         }
 
@@ -308,7 +348,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             Modifier
 //                .background(Color.Red)
                 .background(Color.Transparent)
-                .padding(top = 0.dp, bottom = 10.dp)
+                .padding(top = 0.dp, bottom = 0.dp)
                 .fillMaxSize()
         ) {
 
@@ -333,7 +373,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                                 when {
                                     (offsetX < 0F && Math.abs(offsetX) > minSwipeOffset) -> {
                                         println(" SwipeDirection.Left")
-
                                     }
 
                                     (offsetX > 0 && Math.abs(offsetX) > minSwipeOffset) -> {
@@ -352,6 +391,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 /****************************************
                 users list
                  ***************************************/
+
                 if (localUserList.isEmpty() && !visible)
                     Box(
                         Modifier.fillMaxSize(), contentAlignment = Alignment.Center,
@@ -362,9 +402,9 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                     LazyColumn(
                         state = rememberLazyListState(),
                         modifier = Modifier
-                            .padding(bottom = 40.dp, top = 30.dp)
+                            .padding(bottom = 45.dp, top = 25.dp)
+//                            .background(Color.Red)
                             .padding(horizontal = 7.dp)
-
                     ) {
                         items(localUserList, key = { item -> item.id }) { user ->
                             Box(modifier = Modifier.animateItemPlacement()) {
@@ -380,13 +420,10 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                                 )
                             }
                             Spacer(Modifier.height(8.dp))
-
                         }
                     }
             }
         }
-
-
     }
 
 }
@@ -498,7 +535,7 @@ fun SwipeableBoxPreview(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 private fun SwipeItem(
     modifier: Modifier = Modifier,
@@ -561,24 +598,68 @@ private fun SwipeItem(
             Alignment.CenterVertically
         ) {
 
-            Image(
-                painter = rememberAsyncImagePainter(
-                    if (user.role == "teacher" && user.sex == "woman") R.drawable.teacherw
-                    else if (user.role == "teacher" && user.sex == "man") R.drawable.teacherm
-                    else if (user.role == "staff" && user.sex == "woman") R.drawable.staffw
-                    else if (user.role == "staff" && user.sex == "man") R.drawable.staffm
-                    else if (user.role == "admin" && user.sex == "woman") R.drawable.adminw
-                    else if (user.role == "admin" && user.sex == "man") R.drawable.adminm
-                    else
-                        ImageRequest.Builder(LocalContext.current)
-                            .data(data = BuildConfig.Host + user.photo)
-                            .apply(block = fun ImageRequest.Builder.() {
-                                crossfade(true)
-                            }).build()
-                ),
-                contentDescription = null,
-                modifier = Modifier.size(50.dp)
+            var painter = rememberAsyncImagePainter(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(
+
+                        if (user.photo == null) {
+                            if (user.role == "teacher" && user.sex == "woman") R.drawable.teacherw
+                            else if (user.role == "teacher" && user.sex == "man") R.drawable.teacherm
+                            else if (user.role == "staff" && user.sex == "woman") R.drawable.staffw
+                            else if (user.role == "staff" && user.sex == "man") R.drawable.staffm
+                            else if (user.role == "admin" && user.sex == "woman") R.drawable.adminw
+                            else R.drawable.adminm
+                        } else {
+                            val host2 =
+                                if (BuildConfig.DEV.toBoolean()) {
+                                    if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.4:8000/"
+                                } else
+                                    BuildConfig.Host
+                            host2 + user.photo
+                        }
+                    )
+                    .size(coil.size.Size(width = 80, height = 80))
+//                    .memoryCachePolicy(CachePolicy.DISABLED)
+                    .setHeader("User-Agent", "Mozilla/5.0")
+                    .transformations(
+                        CircleCropTransformation()
+                    )
+                    .build()
             )
+
+            val painterState = painter.state
+
+            if (painterState is AsyncImagePainter.State.Success) {
+                Image(
+                    painter = painter,
+                    modifier = Modifier
+                        .size(60.dp),
+                    contentDescription = null
+                )
+            }
+            var show by remember { mutableStateOf(false) }
+
+            if (painterState is AsyncImagePainter.State.Error) {
+                // Fallback to local images when loading url fail
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        if (user.role == "teacher" && user.sex == "woman") R.drawable.teacherw
+                        else if (user.role == "teacher" && user.sex == "man") R.drawable.teacherm
+                        else if (user.role == "staff" && user.sex == "woman") R.drawable.staffw
+                        else if (user.role == "staff" && user.sex == "man") R.drawable.staffm
+                        else if (user.role == "admin" && user.sex == "woman") R.drawable.adminw
+                        else R.drawable.adminm
+                    ),
+                    modifier = Modifier
+                        .size(60.dp),
+                    contentDescription = null
+                )
+//                LoadingAnimation()
+            }
+            if (painterState is AsyncImagePainter.State.Loading) {
+                LoadingAnimation()
+            }
+
         }
 //setting up the middle texts
         Column(
@@ -633,12 +714,36 @@ private fun SwipeItem(
     }
 }
 
+@Composable
+fun LoadingAnimation() {
+    val animation = rememberInfiniteTransition()
+    val progress by animation.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000),
+            repeatMode = RepeatMode.Restart,
+        )
+    )
+
+    Box(
+        modifier = Modifier
+            .size(60.dp)
+            .scale(progress)
+            .alpha(1f - progress)
+            .border(
+                5.dp,
+                color = Color.Black,
+                shape = CircleShape
+            )
+    )
+}
+
 val Color.Companion.SeaBuckthorn get() = Color(0xFFF9A825)
 val Color.Companion.Fern get() = Color(0xFF66BB6A)
 val Color.Companion.Perfume get() = Color(0xFFD0BCFF)
 
 
-@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 fun Preview22() {

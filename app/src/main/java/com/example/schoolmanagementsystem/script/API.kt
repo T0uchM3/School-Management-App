@@ -1,6 +1,7 @@
 package com.example.schoolmanagementsystem.script
 
 import android.os.Build
+import androidx.compose.runtime.MutableState
 import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.script.navbar.Screen
@@ -13,7 +14,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.HttpException
 import retrofit2.Response
@@ -22,8 +29,12 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
+import retrofit2.http.PartMap
 import retrofit2.http.Path
+import java.io.File
 
 
 @JsonClass(generateAdapter = true)
@@ -42,9 +53,14 @@ val moshi: Moshi = Moshi.Builder()
 val loggingInterceptor = HttpLoggingInterceptor()
 val okHttpClient = OkHttpClient.Builder().addInterceptor(loggingInterceptor).build()
 val retrofit: Retrofit = Retrofit.Builder()
-//    .baseUrl(BuildConfig.Host)
-    //check if running on emulator or not
-    .baseUrl(if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.9:8000")
+
+    //check if running on emulator or not and on local server or not
+    .baseUrl(
+        if (BuildConfig.DEV.toBoolean()) {
+            if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.4:8000"
+        } else
+            BuildConfig.Host
+    )
     .addConverterFactory(MoshiConverterFactory.create(moshi))
     .client(okHttpClient)
     .build()
@@ -57,19 +73,49 @@ interface APIService {
     suspend fun login(@Body params: UserInfo): Response<User>
 
     @GET("/api/users")
-    suspend fun getUsers(): Response<UserResults>
+    suspend fun getUsers(): Response<List<User>>
+
 
     @Headers("Accept: application/json")
+    @Multipart
     @POST("/api/add")
-    suspend fun addUser(@Body params: User): Response<String>
+    suspend fun addUser(
+        @Part("name") name: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("cin") cin: RequestBody,
+        @Part("date_naiss") date_naiss: RequestBody,
+        @Part("sex") sex: RequestBody,
+        @Part("bank") bank: RequestBody,
+        @Part("tel") tel: RequestBody,
+        @Part("rib") rib: RequestBody,
+        @Part("poste") poste: RequestBody,
+        @Part("adresse") adresse: RequestBody,
+        @Part("role") role: RequestBody,
+        @Part photo: MultipartBody.Part
+    ): Response<User>
 
     @Headers("Accept: application/json")
     @POST("/api/delete/{id}")
     suspend fun deleteUser(@Path("id") id: Int): Response<String>
 
     @Headers("Accept: application/json")
+    @Multipart
     @POST("/api/updateUser/{id}")
-    suspend fun updateUser(@Path("id") id: Int, @Body params: User): Response<User>
+    suspend fun updateUser(
+        @Path("id") id: Int,
+        @Part("name") name: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("cin") cin: RequestBody,
+        @Part("date_naiss") date_naiss: RequestBody,
+        @Part("sex") sex: RequestBody,
+        @Part("bank") bank: RequestBody,
+        @Part("tel") tel: RequestBody,
+        @Part("rib") rib: RequestBody,
+        @Part("poste") poste: RequestBody,
+        @Part("adresse") adresse: RequestBody,
+        @Part("role") role: RequestBody,
+        @Part photo: MultipartBody.Part
+    ): Response<User>
 
     @Headers("Accept: application/json")
     @POST("/api/addContract")
@@ -89,7 +135,10 @@ interface APIService {
 
     @Headers("Accept: application/json")
     @POST("/api/updateContract/{id}")
-    suspend fun updateContract(@Path("id") id: Int, @Body params: PeriodHolder): Response<Contract>
+    suspend fun updateContract(
+        @Path("id") id: Int,
+        @Body params: PeriodHolder
+    ): Response<Contract>
 
     @Headers("Accept: application/json")
     @POST("/api/invalidContract/{id}")
@@ -105,7 +154,10 @@ interface APIService {
 
     @Headers("Accept: application/json")
     @POST("/api/updatePayment/{id}")
-    suspend fun updatePayment(@Path("id") id: Int, @Body params: Payment): Response<String>
+    suspend fun updatePayment(
+        @Path("id") id: Int,
+        @Body params: Payment
+    ): Response<String>
 
 
 }
@@ -121,13 +173,6 @@ fun loginAPI(
 
     val usermodel = UserInfo("user1@gmail.com", "123123123")
     val adminmodel = UserInfo("admin@gmail.com", "111111111")
-//    val adminmodel = UserInfo(mail, pass)
-//    var isSuccessful by remember { mutableStateOf(false) }
-//    val jsonAdapter = moshi.adapter<User>(User::class.java)
-//    val retrofit2: RetrofitAPI = retrofit.create(RetrofitAPI::class.java)
-//    val backendApi = retrofit.create(APIService::class.java)
-//    LaunchedEffect(key1 = Unit) {
-    // Your coroutine code here
     CoroutineScope(Dispatchers.IO).launch {
         val response = backendApi.login(adminmodel)
         withContext(Dispatchers.Main) {
@@ -188,8 +233,8 @@ fun usersAPI(sharedViewModel: SharedViewModel) {
         val response = result.await()
         if (response.isSuccessful) {
             val users = response.body()
-            sharedViewModel.defineUserList(users?.results)
-            users?.results?.forEach { user ->
+            sharedViewModel.defineUserList(users)
+            users?.forEach { user ->
 
                 println(user.name)
             }
@@ -198,14 +243,43 @@ fun usersAPI(sharedViewModel: SharedViewModel) {
     }
 }
 
+fun getRequestBody(userValue: String): RequestBody {
+    return userValue.toRequestBody("text/plain".toMediaTypeOrNull())
+}
+
 fun addUserAPI(
     user: User,
     sharedViewModel: SharedViewModel,
+    file: MutableState<File>?,
     triggerSecondCall: Boolean? = false
 ) {
     CoroutineScope(Dispatchers.IO).launch {
-        val result = async { backendApi.addUser(user) }
+
+        var rBodyFile = getRequestBody("")
+        if (file?.value!!.exists()) {
+            rBodyFile = file.value.asRequestBody("multipart/form-data".toMediaTypeOrNull())
+        }
+        val mpb = MultipartBody.Part.createFormData("photo", file.value.name, rBodyFile)
+
+        val result = async {
+            backendApi.addUser(
+                getRequestBody(user.name!!),
+                getRequestBody(user.email!!),
+                getRequestBody(user.cin!!),
+                getRequestBody(user.date_naiss!!),
+                getRequestBody(user.sex!!),
+                getRequestBody(user.bank!!),
+                getRequestBody(user.tel!!),
+                getRequestBody(user.rib!!),
+                getRequestBody(user.poste!!),
+                getRequestBody(user.adresse!!),
+                getRequestBody(user.role!!),
+                mpb
+
+            )
+        }
         val response = result.await()
+        println("USER ADDED111  " + response.message())
         if (response.isSuccessful) {
             println("USER ADDED")
             if (triggerSecondCall == true)
@@ -227,12 +301,37 @@ fun deleteUserAPI(id: Int) {
 
 fun updateUser(
     id: Int, user: User,
+    file: MutableState<File>?,
     sharedViewModel: SharedViewModel,
     triggerSecondCall: Boolean? = false
 ) {
     CoroutineScope(Dispatchers.IO).launch {
-        val result = async { backendApi.updateUser(id, user) }
+        var rBodyFile = getRequestBody("")
+        if (file?.value!!.exists()) {
+            rBodyFile = file.value.asRequestBody("multipart/form-data".toMediaTypeOrNull())
+        }
+        val mpb = MultipartBody.Part.createFormData("photo", file.value.name, rBodyFile)
+
+        val result = async {
+            backendApi.updateUser(
+                id,
+                getRequestBody(user.name!!),
+                getRequestBody(user.email!!),
+                getRequestBody(user.cin!!),
+                getRequestBody(user.date_naiss!!),
+                getRequestBody(user.sex!!),
+                getRequestBody(user.bank!!),
+                getRequestBody(user.tel!!),
+                getRequestBody(user.rib!!),
+                getRequestBody(user.poste!!),
+                getRequestBody(user.adresse!!),
+                getRequestBody(user.role!!),
+                mpb
+
+            )
+        }
         val response = result.await()
+//        println("USER updated  " + response.message())
         if (response.isSuccessful) {
             println("USER updated")
             if (triggerSecondCall == true)
@@ -240,6 +339,7 @@ fun updateUser(
         }
     }
 }
+
 
 fun getUserContract(id: Int, sharedViewModel: SharedViewModel) {
     CoroutineScope(Dispatchers.IO).launch {

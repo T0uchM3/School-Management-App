@@ -1,5 +1,6 @@
 package com.example.schoolmanagementsystem.script
 
+import android.os.Build
 import android.view.Window
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -10,6 +11,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 
@@ -117,12 +121,25 @@ class SharedViewModel : ViewModel() {
         OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Color(0xff4774a9),
             focusedLabelColor = Color(0xff4774a9),
-            unfocusedLabelColor = Color.Gray,
-            unfocusedBorderColor = Color.Gray,
+            unfocusedLabelColor = Color.DarkGray,
+            unfocusedBorderColor = Color.DarkGray,
             cursorColor = MaterialTheme.colorScheme.onPrimary,
             unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
             focusedTextColor = MaterialTheme.colorScheme.onPrimary
         )
+
+    @Composable
+    fun tFColors2() =
+        OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color.Transparent,
+            focusedLabelColor = Color(0xff4774a9),
+            unfocusedLabelColor = Color.Gray,
+            unfocusedBorderColor = Color.Transparent,
+            cursorColor = MaterialTheme.colorScheme.onPrimary,
+            unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
+            focusedTextColor = MaterialTheme.colorScheme.onPrimary
+        )
+
 
     var selectedSalary by mutableStateOf<String>("")
         private set
@@ -144,6 +161,7 @@ class SharedViewModel : ViewModel() {
     }
 
     var fabClicked by mutableStateOf<Boolean>(false)
+
     /**
      *The price for wanting to draw behind the system bars.
      *this will keep track whenever the fab is clicked
