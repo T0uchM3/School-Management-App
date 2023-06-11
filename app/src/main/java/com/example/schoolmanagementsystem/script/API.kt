@@ -91,6 +91,7 @@ interface APIService {
         @Part("poste") poste: RequestBody,
         @Part("adresse") adresse: RequestBody,
         @Part("role") role: RequestBody,
+        @Part("password") password: RequestBody,
         @Part photo: MultipartBody.Part
     ): Response<User>
 
@@ -114,6 +115,7 @@ interface APIService {
         @Part("poste") poste: RequestBody,
         @Part("adresse") adresse: RequestBody,
         @Part("role") role: RequestBody,
+        @Part("password") password: RequestBody,
         @Part photo: MultipartBody.Part
     ): Response<User>
 
@@ -274,6 +276,7 @@ fun addUserAPI(
                 getRequestBody(user.poste!!),
                 getRequestBody(user.adresse!!),
                 getRequestBody(user.role!!),
+                getRequestBody(user.password!!),
                 mpb
 
             )
@@ -326,6 +329,7 @@ fun updateUser(
                 getRequestBody(user.poste!!),
                 getRequestBody(user.adresse!!),
                 getRequestBody(user.role!!),
+                getRequestBody(user.password!!),
                 mpb
 
             )

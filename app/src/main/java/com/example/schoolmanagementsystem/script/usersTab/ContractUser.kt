@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -31,6 +33,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.twotone.ArrowBack
@@ -54,6 +58,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,7 +70,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -88,7 +95,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
-import kotlin.math.abs
+import java.util.Calendar
 
 
 var sheetAction = ""
@@ -526,7 +533,7 @@ private fun SwipeItem(
                     modifier = Modifier
                         .padding(end = 10.dp)
                         .border(
-                            BorderStroke(2.dp, MaterialTheme.colorScheme.outline),
+                            BorderStroke(2.dp, Color.Gray),
                             RoundedCornerShape(8.dp)
                         )
                         .padding(horizontal = 5.dp, vertical = 3.dp),
@@ -538,11 +545,12 @@ private fun SwipeItem(
                     Text(
                         modifier = Modifier
                             .background(
-                                MaterialTheme.colorScheme.tertiaryContainer,
+                                MaterialTheme.colorScheme.inverseSurface,
                                 RoundedCornerShape(8.dp)
                             )
                             .padding(horizontal = 5.dp, vertical = 3.dp),
-                        text = " Valid ",
+                        text = "  Valid  ",
+                        color = Color.White,
                         fontSize = 13.sp
 
                     )
@@ -554,7 +562,7 @@ private fun SwipeItem(
                                 RoundedCornerShape(8.dp)
                             )
                             .padding(horizontal = 5.dp, vertical = 3.dp),
-                        text = " Invalid ",
+                        text = "  Invalid  ",
                         fontSize = 13.sp,
                         color = Color.White
 
@@ -590,17 +598,25 @@ fun AddContractSheet(
     state: SheetState? = null,
     sharedViewModel: SharedViewModel? = null
 ) {
+    val year = remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
+    val month = remember { mutableStateOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH)) }
+    val day = remember { mutableStateOf(Calendar.getInstance().get(Calendar.MONTH)) }
 
-    val sDate = remember {
-        mutableStateOf(TextFieldValue("2023-08-17"))
-    }
     LaunchedEffect(key1 = Unit) {
+        // Bring back the FAB
         sharedViewModel?.defineFABClicked(true)
     }
-    var periode by remember { mutableStateOf(1f) }
-    var oldPeriod by remember { mutableStateOf(0f) }
-    var salary by remember { mutableStateOf(500f) }
-    var oldSalary by remember { mutableStateOf(0f) }
+
+    val newPeriod: MutableState<Float>?
+    newPeriod = remember { mutableStateOf(1f) }
+    val ogPeriod: MutableState<Float>?
+    ogPeriod = remember { mutableStateOf(1f) }
+    val newSalary: MutableState<Float>?
+    newSalary = remember { mutableStateOf(0f) }
+    val ogSalary: MutableState<Float>?
+    ogSalary = remember { mutableStateOf(0f) }
+
+
     if (value != null && sharedViewModel != null)
         Column() {
             Column(
@@ -616,21 +632,31 @@ fun AddContractSheet(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
                     ) {
-                        Text(text = "Cancel", fontSize = 17.sp)
+                        Text(
+                            text = "Cancel", fontSize = 17.sp, color = Color.Red,
+                        )
                     }
                     Spacer(Modifier.weight(1f))
                     Text(
                         text = "New Contract",
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
                         fontSize = 20.sp,
+                        color = Color.DarkGray
+
                     )
                     Spacer(Modifier.weight(1f))
                     Button(
                         onClick = {
                             val contract = Contract()
-                            contract.date_debut = sDate.value.text
-                            contract.periode = periode.toInt().toString()
-                            contract.salaire = salary.toInt().toString()
+                            contract.date_debut = "${year.value}-${
+                                String.format(
+                                    "%02d",
+                                    month.value + 1
+                                )
+                            }-${String.format("%02d", day.value)}"
+//                            println("date format = " + contract.date_debut)
+                            contract.periode = newPeriod.value.toInt().toString()
+                            contract.salaire = newSalary.value.toInt().toString()
                             contract.user_id = sharedViewModel.selectedUserId
                             //clearing lists to avoid lazycol parsing error
                             sharedViewModel.contractList.clear()
@@ -648,79 +674,43 @@ fun AddContractSheet(
 
                         }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
                     ) {
-                        Text(text = "Add", fontSize = 17.sp, color = Color(0xff386A1F))
+                        Text(
+                            text = "Add",
+                            fontSize = 17.sp,
+                            color = MaterialTheme.colorScheme.inverseSurface
+                        )
                     }
                 }
-                OutlinedTextField(
-                    value = sDate.value,
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    onValueChange = { sDate.value = it },
-                    singleLine = true,
-                    label = {
-                        Text(
-                            text = "Start Date",
-                            fontSize = 15.sp,
-                        )
-                    },
-                    colors = sharedViewModel.tFColors(),
+                Text(
+                    text = "Start Date",
+                    modifier = Modifier.padding(
+                        top = 5.dp,
+                        start = 15.dp,
+                    ),
+                    style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
                 )
+                DatePickerUI(sharedViewModel, year, month, day)
 
-                OutlinedTextField(
-                    value = periode.toInt().toString(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    onValueChange = { periode = (it.toIntOrNull() ?: 0).toFloat() },
-                    singleLine = true,
-                    label = { Text("Period") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onVerticalDrag = { change, dragAmount ->
-                                    change.consume()
-                                    var y = dragAmount
-                                    //making sure period is above 1
-                                    oldPeriod -= dragAmount.times(0.02f)
-                                    if (oldPeriod < 1) {
-                                        oldPeriod = 1f
-                                        return@detectVerticalDragGestures
-                                    }
-                                    periode -= dragAmount.times(0.02f)
-                                },
-                            )
-                        },
-                    colors = sharedViewModel.tFColors(),
+
+
+                ScrollableTextField(
+                    sharedViewModel = sharedViewModel,
+                    labelText = "Period",
+                    tfValue = newPeriod,
+                    min = ogPeriod
                 )
-
-                OutlinedTextField(
-                    value = salary.toInt().toString(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    onValueChange = { salary = (it.toIntOrNull() ?: 0).toFloat() },
-                    singleLine = true,
-                    label = { Text("salary") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onVerticalDrag = { change, dragAmount ->
-                                    change.consume()
-                                    var y = dragAmount
-                                    //making sure period is above 1
-                                    oldSalary -= dragAmount.times(0.02f)
-                                    if (oldSalary < 1) {
-                                        oldSalary = 1f
-                                        return@detectVerticalDragGestures
-                                    }
-                                    salary -= dragAmount.times(0.02f)
-                                },
-                            )
-                        },
-                    colors = sharedViewModel.tFColors(),
+                ScrollableTextField(
+                    sharedViewModel = sharedViewModel,
+                    labelText = "salary",
+                    tfValue = newSalary,
+                    min = ogSalary
                 )
             }
+            Spacer(modifier = Modifier.height(20.dp))
 
         }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -730,20 +720,24 @@ fun EditContractSheet(
     state: SheetState? = null,
     sharedViewModel: SharedViewModel,
 ) {
-    var period by remember { mutableStateOf(0f) }
-    var oldPeriod by remember { mutableStateOf(0f) }
-    var checker by remember { mutableStateOf(0f) }
+
+    val newPeriod: MutableState<Float>?
+    newPeriod = remember {
+        mutableStateOf(0f)
+    }
+    val ogPeriod: MutableState<Float>?
+    ogPeriod = remember {
+        mutableStateOf(0f)
+    }
+
     LaunchedEffect(key1 = Unit) {
         sharedViewModel.defineFABClicked(true)
         for (contract in sharedViewModel.contractList) {
             if (contract.id.toString() == sharedViewModel.selectedContractId)
-                period = contract.periode!!.toFloat()
+                ogPeriod.value = contract.periode!!.toFloat()
         }
-        oldPeriod = period
-        checker = period
+        newPeriod.value = ogPeriod.value
     }
-
-
 
     Column() {
         Column(
@@ -754,24 +748,34 @@ fun EditContractSheet(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Button(
                     onClick = { scope?.launch { state?.hide() } },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.Red
+                    )
                 ) {
                     Text(text = "Cancel", fontSize = 17.sp)
                 }
                 Spacer(Modifier.weight(1f))
                 Text(
                     text = "Update Contract",
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
                     fontSize = 20.sp,
+                    color = Color.DarkGray
                 )
                 Spacer(Modifier.weight(1f))
                 Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    enabled = !(period < oldPeriod || period <= 0f),
-                    modifier = Modifier.alpha(if (period < oldPeriod || period == 0f) 0.4f else 1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        disabledContentColor = Color.Gray,
+                        contentColor = MaterialTheme.colorScheme.inverseSurface
+                    ),
+//                    enabled = !(ogPeriod!!.value < newPeriod || ogPeriod!!.value <= 0f),
+                    enabled = !(newPeriod!!.value < ogPeriod.value || newPeriod!!.value <= 0f),
+                    modifier = Modifier.alpha(if (newPeriod!!.value < ogPeriod.value || newPeriod!!.value <= 0f) 0.4f else 1f),
                     onClick = {
                         val ph = PeriodHolder()
-                        ph.periode = period.toInt().toString()
+                        ph.periode = newPeriod.value.toInt().toString()
                         sharedViewModel.userList.clear()
                         sharedViewModel.contractList.clear()
                         updateContract(
@@ -784,42 +788,110 @@ fun EditContractSheet(
                     }) {
                     Text(
                         text = "Update", fontSize = 17.sp,
-                        color = if (period < oldPeriod || period == 0f) Color.Gray else Color(
-                            0xff386A1F
-                        )
                     )
                 }
             }
-
-            OutlinedTextField(
-                value = period.toInt().toString(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                onValueChange = { period = (it.toIntOrNull() ?: 0).toFloat() },
-                singleLine = true,
-                label = { Text("Period") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures(
-                            onVerticalDrag = { change, dragAmount ->
-                                change.consume()
-                                var y = dragAmount
-                                //making sure, we can only increase the period without
-                                // decreasing it pass the default value
-                                oldPeriod -= dragAmount.times(0.02f)
-                                if (oldPeriod < checker) {
-                                    oldPeriod = checker
-                                    return@detectVerticalDragGestures
-                                }
-                                period -= dragAmount.times(0.02f)
-                            },
-                        )
-                    },
-                colors = sharedViewModel.tFColors(),
+            println("ogPeriodD  " + ogPeriod)
+            ScrollableTextField(
+                sharedViewModel = sharedViewModel,
+                labelText = "Period",
+                tfValue = newPeriod,
+                min = ogPeriod
             )
+            Spacer(modifier = Modifier.height(20.dp))
         }
 
     }
+}
+
+
+@Composable
+fun ScrollableTextField(
+    sharedViewModel: SharedViewModel,
+    labelText: String,
+    tfValue: MutableState<Float>,
+    min: MutableState<Float>,
+    max: MutableState<Int> = mutableStateOf(Int.MAX_VALUE)
+) {
+    val IndicatorUnfocusedWidth = 1.dp
+    val IndicatorFocusedWidth = 2.dp
+    val TextFieldPadding = 16.dp
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val indicatorColor = if (isFocused) Color(0xff4774a9) else Color.Gray
+    val indicatorWidth = if (isFocused) IndicatorFocusedWidth else IndicatorUnfocusedWidth
+    var text = remember { mutableStateOf("") }
+
+    var oldValue = remember { mutableStateOf(tfValue.value) }
+
+    var mod = Modifier.drawBehind {
+        val strokeWidth = indicatorWidth.value * density
+        val y = size.height - strokeWidth / 2
+        drawLine(
+            indicatorColor,
+            Offset(TextFieldPadding.toPx(), y),
+            Offset(size.width - TextFieldPadding.toPx(), y),
+            strokeWidth
+        )
+    }
+    val passwordVisible: MutableState<Boolean> = remember {
+        mutableStateOf(false)
+    }
+    androidx.compose.material3.TextField(
+        value = tfValue.value.toInt().toString(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        onValueChange = { tfValue.value = (it.toIntOrNull() ?: 0).toFloat() },
+        trailingIcon = {
+            val image = if (passwordVisible.value)
+                Icons.Filled.Visibility
+            else Icons.Filled.VisibilityOff
+
+            val description =
+                if (passwordVisible.value) "Hide password" else "Show password"
+            if (labelText == "password")
+                IconButton(onClick = { passwordVisible.value = !passwordVisible.value }) {
+                    Icon(imageVector = image, description, Modifier.scale(0.9f))
+                }
+            else
+                null
+        },
+        label = { Text(labelText, fontSize = 14.sp) },
+        interactionSource = interactionSource,
+        modifier = mod
+            .fillMaxWidth()
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onVerticalDrag = { change, dragAmount ->
+                        change.consume()
+                        var y = dragAmount
+                        oldValue.value -= dragAmount.times(0.02f)
+
+                        // In case we got a defined max value
+                        // prevent going over it
+                        if (oldValue.value > max.value) {
+                            oldValue.value = max.value.toFloat()
+                            tfValue.value = max.value.toFloat()
+                            return@detectVerticalDragGestures
+                        }
+
+                        // Making sure, we can only increase the period without
+                        // decreasing it pass the default value
+                        println("oldperiod " + oldValue.value + " checker " + min.value + " period " + tfValue.value)
+                        if (oldValue.value <= min.value) {
+                            println("1111111111111111")
+                            oldValue.value = min.value
+                            tfValue.value = min.value
+                            return@detectVerticalDragGestures
+                        }
+                        println("222222222222222222222")
+                        tfValue.value -= dragAmount.times(0.02f)
+                    },
+                )
+            },
+        colors = sharedViewModel.tFColors2(),
+        textStyle = MaterialTheme.typography.titleMedium,
+        shape = RoundedCornerShape(20.dp),
+    )
 }
 
 @Preview

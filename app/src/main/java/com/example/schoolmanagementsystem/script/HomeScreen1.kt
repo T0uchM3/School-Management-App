@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -42,6 +44,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +65,7 @@ import androidx.compose.ui.input.key.Key.Companion.Window
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -83,6 +87,9 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import java.lang.Math.abs
 
 
+
+
+
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -92,6 +99,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
 
     //resetting tab focus
     sharedViewModel?.defineUsersFocus(false)
+    sharedViewModel?.defineFABClicked(false)
     //making the app ui draw behind the top bar and under the system nav bar(if it exist)
     val systemUiController = rememberSystemUiController()
     WindowCompat.setDecorFitsSystemWindows(sharedViewModel?.window!!, false)
@@ -100,7 +108,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
         darkIcons = true
     )
 
-    BackPressHandler(navCtr = navCtr)
+    BackPressHandler(navCtr = navCtr, sharedViewModel = sharedViewModel!!)
     LaunchedEffect(key1 = user) {
         sharedViewModel.defineFabVisible(false)
     }
@@ -153,7 +161,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                 .background(Color.Transparent)
                 .fillMaxWidth()
 
-                .weight(0.15f)
+                .weight(0.12f)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.pt12),
@@ -175,13 +183,13 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
             ) {
                 Column(
                     modifier = Modifier
-                        .weight(8f)
+                        .weight(0.82f)
                         .padding(start = 0.dp)
                 ) {
                     Text(
                         text = user?.name.toString(),
                         color = Color(0xCCFFFFFF),
-                        fontSize = 40.sp,
+                        fontSize = 35.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.titleMedium,
@@ -194,7 +202,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                         Text(
                             text = "CIN: ${sharedViewModel?.user?.cin} | ${sharedViewModel?.user?.role}",
                             color = Color(0xCCFFFFFF),
-                            fontSize = 20.sp,
+                            fontSize = 15.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.titleSmall,
@@ -207,7 +215,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                         .padding(10.dp)
                         .clip(shape = RoundedCornerShape(16.dp))
                         .background(Color.White)
-                        .weight(2f)
+                        .weight(0.18f)
 //                        .padding(6.dp)
                 )
 //
@@ -227,10 +235,10 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
 //                    .weight(9f)
 //                .paint(painterResource(id = R.drawable.pattern))
                 .clip(shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp))
-                .background(Color(0xFFF7FBFE))
+                .background(MaterialTheme.colorScheme.surface)
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .weight(0.85f)
+                .weight(0.88f)
         ) {
             val listOfItem = listOf(
                 HomeItems.note,
@@ -265,7 +273,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                                 )
                                 Text(
                                     text = listOfItem[item].title,
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Center,
                                     maxLines = 2
@@ -292,6 +300,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
 
 @Composable
 fun BackPressHandler(
+    sharedViewModel : SharedViewModel,
     backPressedDispatcher: OnBackPressedDispatcher? =
         LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher,
     navCtr: NavHostController? = null,
@@ -300,6 +309,7 @@ fun BackPressHandler(
     val backCallback = remember {
         object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+//                sharedViewModel?.defineFABClicked(null)
                 navCtr?.navigate(Screen.Login.route)
             }
         }

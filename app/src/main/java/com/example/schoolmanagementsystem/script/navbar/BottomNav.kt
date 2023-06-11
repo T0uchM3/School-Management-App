@@ -1,6 +1,7 @@
 package com.example.schoolmanagementsystem.script.navbar
 
 import android.annotation.SuppressLint
+import android.view.ViewTreeObserver
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.scaleIn
@@ -9,10 +10,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -27,19 +31,27 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -49,9 +61,11 @@ import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
+//val isKeyboardOpen: MutableState<Boolean> = mutableStateOf(false)
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(
-    ExperimentalAnimationApi::class, ExperimentalMaterialApi::class,
+    ExperimentalAnimationApi::class, ExperimentalMaterialApi::class, ExperimentalLayoutApi::class,
 )
 @Composable
 fun BottomNav(
@@ -59,33 +73,22 @@ fun BottomNav(
     sharedViewModel: SharedViewModel?,
     statusBarHeight: Dp
 ) {
-
     val navController2 = rememberAnimatedNavController()
-
-
     Scaffold(
         bottomBar = { BottomBar(navController = navController2, sharedViewModel!!) },
         floatingActionButton = {
             Box(
                 modifier = Modifier
                     .offset(y = if (sharedViewModel?.selectedcontract != null) 50.dp else 0.dp)
-//                    .background(Color.T)
                     .width(60.0.dp)
                     .height(60.0.dp)
-
-//                    .clip(shape = RoundedCornerShape(22.dp))
-//                    .paint(painterResource(id = R.drawable.z))
-
             ) {
                 AnimatedVisibility(
                     visible = sharedViewModel!!.fabVisible, enter = scaleIn(),
                     exit = scaleOut(),
                 ) {
-
-
                     FloatingActionButton(
                         modifier = Modifier
-//                            .clip(shape = RoundedCornerShape(22.dp))
                             .scale(0.9f)
                             .background(Color(0x00000000)),
                         contentColor = Color(0xFFF1F1F1),
@@ -112,22 +115,51 @@ fun BottomNav(
             }
         },
         content = {
+//            KeyboardStatus()
+////            Row(Modifier.height(3.dp).background(Color.Red).fillMaxWidth()) {
+////
+////            }
+
+
+
+
+//            if(WindowInsets.isImeVisible)
+//            val isKeyboardOpen by keyboardAsState() // true or false
+//            println("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK "+isKeyboardOpen)
             AnimatedGraph(navController = navController2, sharedViewModel = sharedViewModel!!)
         }, modifier = Modifier
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = if (sharedViewModel!!.fabClicked)
-                        listOf(Color(0xFF315A87), Color(0xFF436FA0))
-                    else
-                        listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
-                )
-            )
+            // Simulating background shadow drop on status bar when a bottom sheet is up
+//            .background(
+//                brush = Brush.horizontalGradient(
+//                    colors = if (sharedViewModel!!.fabClicked)
+//                        listOf(Color(0xFF315A87), Color(0xFF436FA0))
+//                    else
+//                        listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
+//                )
+//            )
             .padding(top = statusBarHeight + 1.dp)
     )
-//    }
 }
 
-//var state = false
+//@Composable
+//fun KeyboardStatus() {
+//    val view = LocalView.current
+//    val viewTreeObserver = view.viewTreeObserver
+//    DisposableEffect(viewTreeObserver) {
+//        val listener = ViewTreeObserver.OnGlobalLayoutListener {
+//             isKeyboardOpen.value = ViewCompat.getRootWindowInsets(view)
+//                ?.isVisible(WindowInsetsCompat.Type.ime()) ?: true
+//            // ... do anything you want here with `isKeyboardOpen`
+////            println("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK " + isKeyboardOpen)
+//
+//        }
+//
+//        viewTreeObserver.addOnGlobalLayoutListener(listener)
+//        onDispose {
+//            viewTreeObserver.removeOnGlobalLayoutListener(listener)
+//        }
+//    }
+//}
 
 @Composable
 fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel) {

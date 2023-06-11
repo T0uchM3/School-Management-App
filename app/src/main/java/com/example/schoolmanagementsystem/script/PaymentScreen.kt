@@ -49,6 +49,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -81,65 +82,57 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
+import java.util.Calendar
 
 var payments = SnapshotStateList<Payment>()
-var amountLeft by mutableStateOf<Int>(0)
+
 var paymentToEdit = Payment()
+var amountLeft = mutableStateOf(0)
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("RememberReturnType")
 @Composable
 fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
-    val showAddDialog = remember { mutableStateOf(false) }
+    val isEdit = remember { mutableStateOf(false) }
     payments = remember { SnapshotStateList<Payment>() }
     val userName = remember { mutableStateOf("") }
 
     BackPressHandlerP(navCtr = navCtr, sharedViewModel = sharedViewModel)
 
-    sheetState =
-        remember {
-            SheetState(
-                skipHiddenState = false,
-                skipPartiallyExpanded = false,
-                initialValue = SheetValue.Hidden
-            )
-        }
+    sheetState = remember {
+        SheetState(
+            skipHiddenState = false, skipPartiallyExpanded = true, initialValue = SheetValue.Hidden
+        )
+    }
     scope = rememberCoroutineScope()
     if (sheetState?.isVisible == true) {
-        ModalBottomSheet(
-            sheetState = sheetState!!,
-            dragHandle = null,
-            shape = RoundedCornerShape(
-                bottomStart = 0.dp,
-                bottomEnd = 0.dp,
-                topStart = 12.dp,
-                topEnd = 12.dp
-            ),
-            onDismissRequest = {
-                scope?.launch {
-                    sheetState?.hide()
-                }
-            },
-            content = {
-                if (sheetAction == "add")
-                    AddPaymentSheet(
-                        value = "",
-                        sharedViewModel = sharedViewModel,
-                        scope = scope,
-                        state = sheetState
-                    )
-                if (sheetAction == "edit")
-                    EditPaymentSheet(
-                        value = "",
-                        scope = scope,
-                        state = sheetState,
-                        payment = paymentToEdit,
-                        sharedViewModel = sharedViewModel
-                    )
+        ModalBottomSheet(sheetState = sheetState!!, dragHandle = null, shape = RoundedCornerShape(
+            bottomStart = 0.dp, bottomEnd = 0.dp, topStart = 12.dp, topEnd = 12.dp
+        ), onDismissRequest = {
+            scope?.launch {
+                sheetState?.hide()
             }
-        )
-    } else
-        sharedViewModel.defineFABClicked(false)
+        }, content = {
+            if (sheetAction == "add") {
+                isEdit.value = false
+                ManagePaymentSheet(
+                    sharedViewModel = sharedViewModel,
+                    scope = scope,
+                    state = sheetState,
+                    isEdit = isEdit
+                )
+            }
+            if (sheetAction == "edit") {
+                isEdit.value = true
+                ManagePaymentSheet(
+                    sharedViewModel = sharedViewModel,
+                    scope = scope,
+                    state = sheetState,
+                    isEdit = isEdit
+                )
+            }
+        })
+    } else sharedViewModel.defineFABClicked(false)
     LaunchedEffect(key1 = sharedViewModel.paymentList.size) {
         updateValues(sharedViewModel)
         userName.value =
@@ -150,7 +143,6 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             scope?.launch {
                 sheetState?.show()
             }
-
         }
     }
     Column(
@@ -167,15 +159,13 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             Modifier
                 .fillMaxWidth()
                 .padding(start = 10.dp, bottom = 5.dp),
-//                .background(MaterialTheme.colorScheme.surface),
             verticalAlignment = Alignment.CenterVertically,
 
             ) {
             IconButton(onClick = {
                 sharedViewModel.defineSelectedContract(null)
                 navCtr.popBackStack()
-            }
-            ) {
+            }) {
                 Icon(
                     Icons.TwoTone.ArrowBack,
                     "",
@@ -186,9 +176,9 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 )
             }
             Text(
-                text = userName.value + " > " + sharedViewModel.selectedSalary + " (${amountLeft} left)",
+                text = userName.value + " > " + sharedViewModel.selectedSalary + " (${amountLeft.value} left)",
                 color = Color(0xCCFFFFFF),
-                fontSize = 30.sp,
+                fontSize = 20.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.titleMedium,
@@ -250,8 +240,7 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 //handling the fab position when going back without the top arrow
 @Composable
 fun BackPressHandlerP(
-    backPressedDispatcher: OnBackPressedDispatcher? =
-        LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher,
+    backPressedDispatcher: OnBackPressedDispatcher? = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher,
     navCtr: NavHostController? = null,
     sharedViewModel: SharedViewModel
 ) {
@@ -295,11 +284,9 @@ fun updateValues(sharedViewModel: SharedViewModel) {
     for (payment in payments) {
         amountPaid += payment.montant!!.toInt()
     }
-    amountLeft = sharedViewModel.selectedSalary.toInt() - amountPaid
-    if (amountPaid == sharedViewModel.selectedSalary.toInt())
-        sharedViewModel.defineFabVisible(false)
-    else
-        sharedViewModel.defineFabVisible(true)
+    amountLeft.value = sharedViewModel.selectedSalary.toInt() - amountPaid
+    if (amountPaid == sharedViewModel.selectedSalary.toInt()) sharedViewModel.defineFabVisible(false)
+    else sharedViewModel.defineFabVisible(true)
 
 
 }
@@ -336,8 +323,7 @@ private fun SwipeableBoxPreview(
         icon = rememberVectorPainter(Icons.TwoTone.Edit),
         background = MaterialTheme.colorScheme.outline,
         onSwipe = {
-            if (sharedViewModel.selectedcontract!!.valide == "0")
-                return@SwipeAction
+            if (sharedViewModel.selectedcontract!!.valide == "0") return@SwipeAction
             //this will trigger recomposition of the PaymentScreen
             //and a condition check will happen for sheetAction
             sheetAction = "edit"
@@ -349,8 +335,7 @@ private fun SwipeableBoxPreview(
         isUndo = false,
     )
     Card(
-        Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+        Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
 
     ) {
         SwipeableActionsBox(
@@ -370,19 +355,16 @@ private fun SwipeableBoxPreview(
 
 @Composable
 private fun SwipeItem(
-    sharedViewModel: SharedViewModel,
-    navCtr: NavHostController,
-    payment: Payment
+    sharedViewModel: SharedViewModel, navCtr: NavHostController, payment: Payment
 ) {
     Row(
         modifier = Modifier
 //            .clip(shape = RoundedCornerShape(10.dp))
             .fillMaxWidth()
             .height(IntrinsicSize.Max)
-            .clickable(
-                onClick = {
-                    println("clicked")
-                })
+            .clickable(onClick = {
+                println("clicked")
+            })
             .background(Color.White),
 
         Arrangement.SpaceEvenly
@@ -422,12 +404,14 @@ private fun SwipeItem(
             Text(
                 text = "month:      ${payment.mois}",
                 style = MaterialTheme.typography.titleSmall,
-                color = Color.Black, fontSize = 17.sp
+                color = Color.Black,
+                fontSize = 17.sp
             )
             Text(
                 text = "type:       ${payment.type}",
                 style = MaterialTheme.typography.titleSmall,
-                color = Color.Black, fontSize = 17.sp
+                color = Color.Black,
+                fontSize = 17.sp
             )
         }
         Divider(
@@ -452,8 +436,7 @@ private fun SwipeItem(
                 color = Color.Black,
                 fontSize = 13.sp,
                 style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier
-                    .padding(top = 10.dp)
+                modifier = Modifier.padding(top = 10.dp)
             )
 
 
@@ -465,9 +448,7 @@ private fun SwipeItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 40.dp)
-
             )
-
         }
         /**
         setting the right vertical red marker
@@ -490,33 +471,67 @@ private fun SwipeItem(
     }
 }
 
+//var year2 = mutableStateOf(Calendar.getInstance().get(Calendar.YEAR))
+//var month2 = mutableStateOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH))
+//var day2 = mutableStateOf(Calendar.getInstance().get(Calendar.MONTH))
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddPaymentSheet(
-    value: String,
+fun ManagePaymentSheet(
     sharedViewModel: SharedViewModel,
     scope: CoroutineScope? = null,
     state: SheetState? = null,
+    isEdit: MutableState<Boolean>,
 ) {
-    val date = remember {
-        mutableStateOf(TextFieldValue("2023-08-17"))
-    }
-    var mois by remember { mutableStateOf(0f) }
 
-    val type = remember {
-        mutableStateOf(TextFieldValue("espece"))
+
+// Changing the values in ManageUser cause the
+// date picker uses those values
+    if (isEdit.value) {
+        stringToDate(paymentToEdit.date!!)
     }
-    val ref = remember {
-        mutableStateOf(TextFieldValue(""))
+
+    val newMontant: MutableState<Float>?
+    newMontant =
+        remember { mutableStateOf(if (isEdit.value) paymentToEdit.montant!!.toFloat() else 9f) }
+    val ogMontant: MutableState<Float>?
+    ogMontant =
+        remember { mutableStateOf(0f) }
+    val newMonth: MutableState<Float>?
+    newMonth = remember { mutableStateOf(if (isEdit.value) paymentToEdit.mois!!.toFloat() else 1f) }
+    val ogMonth: MutableState<Float>?
+    ogMonth = remember { mutableStateOf(if (isEdit.value) paymentToEdit.mois!!.toFloat() else 1f) }
+    val editedAmountLeft: MutableState<Int>?
+    editedAmountLeft =
+        remember { mutableStateOf(0) }
+
+    val selectedType: MutableState<Int>?
+    selectedType = remember {
+        mutableStateOf(
+            if (isEdit.value) when (paymentToEdit.type) {
+                "Espèce" -> 1
+                "Virement" -> 2
+                "Chéque" -> 3
+                else -> -1
+            } else -1
+        )
     }
+
     LaunchedEffect(key1 = Unit) {
+        // For status bar shadow simulation
         sharedViewModel.defineFABClicked(true)
+
+        // Trying to avoid changing amountLeft directly since that can mess things up
+        editedAmountLeft.value = amountLeft.value + newMontant.value.toInt()
     }
-    var montant by remember { mutableStateOf(1f) }
-    var oldMontant by remember { mutableStateOf(1f) }
-    var oldMonth by remember { mutableStateOf(1f) }
-    var checker by remember { mutableStateOf(0f) }
-    checker = sharedViewModel.selectedSalary.toFloat()
+
+
+    var refInput: MutableState<TextFieldValue>? = null
+    refInput = remember {
+        mutableStateOf(TextFieldValue(if (isEdit.value) paymentToEdit.ref.toString() else ""))
+    }
+    if (paymentToEdit.ref.toString() == "null")
+        refInput.value =  TextFieldValue("")
     Column() {
         Column(
             Modifier
@@ -531,333 +546,104 @@ fun AddPaymentSheet(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 ) {
-                    Text(text = "Cancel", fontSize = 17.sp)
+                    Text(text = "Cancel", fontSize = 17.sp, color = Color.Red)
                 }
                 Spacer(Modifier.weight(1f))
-                Text(text = "New Payment", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Text(
+                    text = "New Payment",
+                    fontSize = 20.sp,
+                    color = Color.DarkGray,
+                    style = MaterialTheme.typography.titleMedium,
+                )
                 Spacer(Modifier.weight(1f))
                 Button(
-                    enabled = !(montant > checker || montant <= 0f),
-                    modifier = Modifier.alpha(if (montant > checker || montant <= 0f) 0.4f else 1f),
-
+                    enabled = if (newMontant.value > editedAmountLeft.value.toFloat() ||
+                        newMontant.value < 0f || selectedType.value == -1 || newMonth.value < 1
+                    ) false else true,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        disabledContentColor = Color.Gray,
+                        contentColor = MaterialTheme.colorScheme.inverseSurface
+                    ),
                     onClick = {
                         val payment = Payment()
-                        payment.date = date.value.text
-                        payment.mois = mois.toInt().toString()
-                        payment.montant = montant.toInt().toString()
-                        payment.type = type.value.text
-                        payment.ref = ref.value.text
+                        if (isEdit.value)
+                            payment.id = paymentToEdit.id
+                        payment.date = "${year.value}-${
+                            String.format(
+                                "%02d", month.value + 1
+                            )
+                        }-${String.format("%02d", day.value)}"
+                        payment.mois = newMonth.value.toInt().toString()
+                        payment.montant = newMontant.value.toInt().toString()
+//                        payment.type = type.value.text
+                        payment.ref = refInput.value.text
                         payment.contrat_id = sharedViewModel.selectedContractId
+                        payment.type =
+                            if (selectedType!!.value == 1) "Espèce" else if (selectedType!!.value == 2) "Virement" else "Chéque"
 
-                        //clearing lists to avoid lazycol parsing error
                         sharedViewModel.contractList.clear()
                         sharedViewModel.paymentList.clear()
-                        addPayment(payment, sharedViewModel = sharedViewModel, true)
+
+                        if (isEdit.value)
+                            updatePayment(paymentToEdit.id.toInt(), payment, sharedViewModel)
+                        else
+                            addPayment(payment, sharedViewModel = sharedViewModel, true)
 
                         sharedViewModel.defineFABClicked(false)
                         //hide fab
                         scope?.launch { state?.hide() }
 
 
-                    }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                    },
                 ) {
                     Text(
-                        text = "Create", fontSize = 17.sp,
-                        color = if (montant > checker || montant <= 0f) Color.Gray else Color(
-                            0xff386A1F
-                        )
+                        text = if (isEdit.value) "Update" else "Create", fontSize = 17.sp,
                     )
                 }
             }
-            OutlinedTextField(value = date.value,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { date.value = it },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "Date",
-                        fontSize = 15.sp,
-                    )
-                })
+            Text(
+                text = "Start Date", modifier = Modifier.padding(
+                    top = 5.dp,
+                    start = 15.dp,
+                ), style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
+            )
+            sharedViewModel.defineIsNewUser(!isEdit.value)
+            DatePickerUI(sharedViewModel, year, month, day)
 
-            OutlinedTextField(
-                value = mois.toInt().toString(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                onValueChange = { mois = (it.toIntOrNull() ?: 0).toFloat() },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "Month",
-                        fontSize = 15.sp,
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures(
-                            onVerticalDrag = { change, dragAmount ->
-                                change.consume()
-                                var y = dragAmount
-                                //making sure, the month is not negative
-                                oldMonth -= dragAmount.times(0.05f)
-                                if (oldMonth < 1) {
-                                    mois = 1f
-                                    oldMonth = 1f
-                                    return@detectVerticalDragGestures
-                                }
-                                mois -= dragAmount.times(0.05f)
-                            },
-                        )
-                    },
+            ScrollableTextField(
+                sharedViewModel = sharedViewModel,
+                labelText = "Month",
+                tfValue = newMonth,
+                min = ogMonth
+            )
+            ScrollableTextField(
+                sharedViewModel = sharedViewModel,
+                labelText = "Amount",
+                tfValue = newMontant,
+                min = ogMontant,
+                max = if (isEdit.value) editedAmountLeft else amountLeft
             )
 
-            OutlinedTextField(
-                value = montant.toInt().toString(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                onValueChange = { montant = (it.toIntOrNull() ?: 0).toFloat() },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "amount",
-                        fontSize = 15.sp,
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures(
-                            onVerticalDrag = { change, dragAmount ->
-                                change.consume()
-                                var y = dragAmount
-                                //making sure, the amount stay between 1 and what's left from default amount
-                                oldMontant -= dragAmount.times(0.05f)
-                                if (oldMontant > amountLeft) {
-                                    oldMontant = amountLeft.toFloat()
-                                    montant = amountLeft.toFloat()
-                                    return@detectVerticalDragGestures
-                                }
-                                if (oldMontant < 1) {
-                                    montant = 1f
-                                    oldMontant = 1f
-                                    return@detectVerticalDragGestures
-                                }
-                                montant -= dragAmount.times(0.05f)
-                            },
-                        )
-                    },
+            Text(
+                text = "Type", modifier = Modifier.padding(
+                    top = 5.dp,
+                    start = 15.dp,
+                ), style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
+            )
+            SegmentedButtonsRole(selectedType, "Espèce", "Virement", "Chéque")
 
-                )
-            OutlinedTextField(value = type.value,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { type.value = it },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "type",
-                        fontSize = 15.sp,
-                    )
-                })
-            OutlinedTextField(value = ref.value,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { ref.value = it },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "ref",
-                        fontSize = 15.sp,
-                    )
-                })
+
+
+            TextField(sharedViewModel = sharedViewModel, refInput!!, "ref")
+            Spacer(modifier = Modifier.height(20.dp))
+
         }
 
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EditPaymentSheet(
-    value: String,
-    sharedViewModel: SharedViewModel,
-    scope: CoroutineScope? = null,
-    state: SheetState? = null,
-    payment: Payment,
-) {
-    val date = remember {
-        mutableStateOf(TextFieldValue(payment.date.toString()))
-    }
-    var mois by remember { mutableStateOf(payment.mois!!.toFloat()) }
-
-    val type = remember {
-        mutableStateOf(TextFieldValue(payment.type.toString()))
-    }
-    val ref = remember {
-        mutableStateOf(TextFieldValue(""))
-    }
-    var montant by remember { mutableStateOf(payment.montant!!.toFloat()) }
-    var oldMontant by remember { mutableStateOf(1f) }
-    var oldMonth by remember { mutableStateOf(1f) }
-    var checker by remember { mutableStateOf(0f) }
-    checker = sharedViewModel.selectedSalary.toFloat()
-    Column() {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-        ) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Button(
-                    onClick = {
-                        sharedViewModel.defineFABClicked(false)
-                        scope?.launch { state?.hide() }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                ) {
-                    Text(text = "Cancel", fontSize = 17.sp)
-                }
-                Spacer(Modifier.weight(1f))
-                Text(text = "Update Payment", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Spacer(Modifier.weight(1f))
-                Button(
-                    enabled = !(montant > checker || montant <= 0f),
-                    modifier = Modifier.alpha(if (montant > checker || montant!! <= 0f) 0.4f else 1f),
-
-                    onClick = {
-                        val paymentFinal = payment
-                        paymentFinal.date = date.value.text
-                        paymentFinal.mois = mois.toInt().toString()
-                        paymentFinal.montant = montant.toInt().toString()
-                        paymentFinal.type = type.value.text
-                        paymentFinal.ref = ref.value.text
-
-                        //clearing lists to avoid lazycol parsing error
-                        sharedViewModel.contractList.clear()
-                        sharedViewModel.paymentList.clear()
-                        println("PAYMENT IDDD " + paymentFinal.id.toInt())
-
-                        updatePayment(paymentFinal.id.toInt(), paymentFinal, sharedViewModel)
-
-                        sharedViewModel.defineFABClicked(false)
-                        //hide fab
-                        scope?.launch { state?.hide() }
-
-
-                    }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-                ) {
-                    Text(
-                        text = "Update", fontSize = 17.sp,
-                        color = if (montant > checker || montant <= 0f) Color.Gray else Color(
-                            0xff386A1F
-                        )
-                    )
-                }
-            }
-            OutlinedTextField(value = date.value,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { date.value = it },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "Date",
-                        fontSize = 15.sp,
-                    )
-                })
-
-            OutlinedTextField(
-                value = mois?.toInt().toString(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                onValueChange = { mois = (it.toIntOrNull() ?: 0).toFloat() },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "Month",
-                        fontSize = 15.sp,
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures(
-                            onVerticalDrag = { change, dragAmount ->
-                                change.consume()
-                                var y = dragAmount
-                                //making sure, the month is not negative
-                                oldMonth -= dragAmount.times(0.05f)
-                                if (oldMonth < 1) {
-                                    mois = 1f
-                                    oldMonth = 1f
-                                    return@detectVerticalDragGestures
-                                }
-                                mois -= dragAmount.times(0.05f)
-                            },
-                        )
-                    },
-            )
-
-            OutlinedTextField(
-                value = montant.toInt().toString(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                onValueChange = { montant = (it.toIntOrNull() ?: 0).toFloat() },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "amount",
-                        fontSize = 15.sp,
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures(
-                            onVerticalDrag = { change, dragAmount ->
-                                change.consume()
-                                var y = dragAmount
-                                //making sure, the amount stay between 1 and what's left from default amount
-                                oldMontant -= dragAmount.times(0.05f)
-                                if (oldMontant > amountLeft) {
-                                    oldMontant = amountLeft.toFloat()
-                                    montant = amountLeft.toFloat()
-                                    return@detectVerticalDragGestures
-                                }
-                                if (oldMontant < 1) {
-                                    montant = 1f
-                                    oldMontant = 1f
-                                    return@detectVerticalDragGestures
-                                }
-                                montant -= dragAmount.times(0.05f)
-                            },
-                        )
-                    },
-
-                )
-            OutlinedTextField(value = type.value,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { type.value = it },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "type",
-                        fontSize = 15.sp,
-                    )
-                })
-            OutlinedTextField(value = ref.value,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                onValueChange = { ref.value = it },
-                singleLine = true,
-                label = {
-                    Text(
-                        text = "ref",
-                        fontSize = 15.sp,
-                    )
-                })
-        }
-
-    }
-}
 
 @Preview
 @Composable

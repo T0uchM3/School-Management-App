@@ -82,13 +82,14 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
         mutableStateOf(TextFieldValue(BuildConfig.LoginMail))
     }
     var isClicked by remember { mutableStateOf(false) }
+    sharedViewModel?.defineFABClicked(null)
+    // Manually handling backpress (to prevent going back inside the app)
     BackPressHandler(navCtr = navCtr)
+
     Column(
         modifier = Modifier
-//            .background(Color.Yellow)
             .fillMaxSize()
             .background(Color(0xfff2f2f2)),
-//        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
         val context = LocalContext.current

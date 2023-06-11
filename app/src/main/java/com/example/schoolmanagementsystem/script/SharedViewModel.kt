@@ -160,7 +160,7 @@ class SharedViewModel : ViewModel() {
         this.window = window
     }
 
-    var fabClicked by mutableStateOf<Boolean>(false)
+    var fabClicked by mutableStateOf<Boolean?>(false)
 
     /**
      *The price for wanting to draw behind the system bars.
@@ -169,7 +169,7 @@ class SharedViewModel : ViewModel() {
      *to darker tone to simulate the color change that happen
      *in the background when a dialog or bottomsheet appear.
      */
-    fun defineFABClicked(value: Boolean) {
+    fun defineFABClicked(value: Boolean?) {
         fabClicked = value
 
     }

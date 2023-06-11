@@ -24,10 +24,3 @@ class User(
 //    val created_at: String? = "",
 //    val updated_at: String? = "",
 ) : Parcelable
-//
-//
-//@Parcelize
-//data class UserResults(
-////    @Json(name = "data")
-//    val results: List<User>
-//) : Parcelable

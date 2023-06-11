@@ -63,6 +63,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -83,6 +84,9 @@ import coil.request.ImageRequest
 import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.ui.theme.clearSearch
+import com.example.schoolmanagementsystem.ui.theme.isInitialFocus
+import com.example.schoolmanagementsystem.ui.theme.localUserList
+import com.example.schoolmanagementsystem.ui.theme.visible
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -118,11 +122,19 @@ var year = mutableStateOf(Calendar.getInstance().get(Calendar.YEAR))
 var month = mutableStateOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH))
 var day = mutableStateOf(Calendar.getInstance().get(Calendar.MONTH))
 
+var nbrDays = mutableStateOf(getDays(month.value))
+
 var bank = mutableStateOf(8)
 var weGotPermission = mutableStateOf(false)
 
+@Composable
+fun stringToDate(date: String){
+     year =remember { mutableStateOf(date.substring(0, 4).toInt()) }
+     month =remember { mutableStateOf(date.substring(5, 7).toInt() - 1) }
+     day = remember { mutableStateOf(date.substring(8, 10).toInt()) }
+}
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageUser(
     navCtr: NavHostController? = null,
@@ -190,16 +202,17 @@ fun ManageUser(
             mutableStateOf(if (selectedUser?.role == "staff") 1 else if (selectedUser?.role == "teacher") 2 else 3)
         }
         //format 2023-05-27
-        year = remember { mutableStateOf(selectedUser?.date_naiss!!.substring(0, 4).toInt()) }
-        month = remember { mutableStateOf(selectedUser?.date_naiss!!.substring(5, 7).toInt() - 1) }
-        day = remember { mutableStateOf(selectedUser?.date_naiss!!.substring(8, 10).toInt()) }
+        stringToDate(selectedUser?.date_naiss!!)
 
-        bank = remember { mutableStateOf(bankNames.indexOf(selectedUser?.bank)) }
-
-
+        bank = remember {
+            mutableStateOf(
+                if (selectedUser?.bank == null) 0 else bankNames.indexOf(selectedUser?.bank)
+            )
+        }
     }
 
     LaunchedEffect(key1 = Unit) {
+        // For status bar shadow simulation
         sharedViewModel.defineFABClicked(true)
         if (sharedViewModel.isNewUser) {
             //this will get recomposed, so better to trigger it once per fap pres
@@ -248,12 +261,9 @@ fun ManageUser(
                 onClick = {
                     val user = User()
 
-                    //TODO: prevent create button from being clicked of things aren't selected
                     user.name = nameInput!!.value.text
                     user.cin = cinInput!!.value.text
-//                    user.date_naiss = dnInput!!.value.text
                     user.date_naiss = "${year.value}-${month.value + 1}-${day.value}"
-//                    println("BBBBIRTTHHTHTHTHT   " + user.date_naiss)
                     user.email = emailInput!!.value.text
                     user.sex =
                         if (selectedSex!!.value == 1) "man" else if (selectedSex!!.value == 2) "woman" else null
@@ -262,6 +272,8 @@ fun ManageUser(
                     user.rib = ribInput!!.value.text
                     user.poste = positionInput!!.value.text
                     user.adresse = addressInput!!.value.text
+                    user.password = passwordInput!!.value.text
+                    println("password   " + user.password)
                     user.role =
                         if (selectedRole!!.value == 1) "staff" else if (selectedRole!!.value == 2) "teacher" else "admin"
                     //clearing lists to avoid lazycol parsing error
@@ -271,7 +283,6 @@ fun ManageUser(
                     // Adding new user
                     if (sharedViewModel.isNewUser) {
                         clearSearch(sharedViewModel, focusManager!!)
-//                        addUserAPI(user, sharedViewModel, true)
                         addUserAPI(user, sharedViewModel, selectedPhoto, true)
                         sharedViewModel.defineFABClicked(false)
                         scope?.launch { state?.hide() }
@@ -302,13 +313,10 @@ fun ManageUser(
                 if (sharedViewModel.isNewUser) Text(
                     text = "Create",
                     fontSize = 17.sp,
-//                    color = Color(0xFFF1F1F1)
-//                    color = MaterialTheme.colorScheme.inverseSurface
                 )
                 else Text(
                     text = "Update",
                     fontSize = 17.sp,
-//                    color = MaterialTheme.colorScheme.inverseSurface
                 )
             }
         }
@@ -322,7 +330,6 @@ fun ManageUser(
             //user's photo
             ImageSelection(LocalContext.current, userPhoto!!)
 
-//            RequestContentPermission()
 
             TextField(sharedViewModel = sharedViewModel, nameInput!!, "name")
             TextField(sharedViewModel = sharedViewModel, cinInput!!, "cin")
@@ -337,7 +344,7 @@ fun ManageUser(
                 ),
                 style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
             )
-            SegmentedButtonsRole(selectedRole!!)
+            SegmentedButtonsRole(selectedRole!!, "Staff", "Teacher", "Admin")
             TextField(sharedViewModel = sharedViewModel, positionInput!!, "poste")
 
             Text(
@@ -348,10 +355,9 @@ fun ManageUser(
                 ),
                 style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
             )
-            DatePickerUI(sharedViewModel)
+            DatePickerUI(sharedViewModel, year, month, day)
 
             TextField(sharedViewModel = sharedViewModel, addressInput!!, "address")
-//            TextField(sharedViewModel = sharedViewModel, emailInput!!, "bank")
 
             Text(
                 text = "Gender",
@@ -377,14 +383,14 @@ fun ManageUser(
 
 fun resetAllFields() {
     //resets all fields
-    nameInput?.value = TextFieldValue("suzume")
+    nameInput?.value = TextFieldValue("elmo")
     cinInput?.value = TextFieldValue("010010110")
     dnInput?.value = TextFieldValue("")
-    emailInput?.value = TextFieldValue("suzume@gmail.com")
+    emailInput?.value = TextFieldValue("elmo@gmail.com")
     phoneInput?.value = TextFieldValue("21547856")
-    passwordInput?.value = TextFieldValue("fuckthishit")
-    addressInput?.value = TextFieldValue("sesemee street")
-    ribInput?.value = TextFieldValue("kil")
+    passwordInput?.value = TextFieldValue("gina")
+    addressInput?.value = TextFieldValue("sesame street")
+    ribInput?.value = TextFieldValue("3")
     positionInput?.value = TextFieldValue("position")
 //    selectedBank?
     selectedSex?.value = -1
@@ -407,16 +413,17 @@ fun TextField(
     val indicatorWidth = if (isFocused) IndicatorFocusedWidth else IndicatorUnfocusedWidth
     var text = remember { mutableStateOf("") }
 
-    var mod = Modifier.drawBehind {
-        val strokeWidth = indicatorWidth.value * density
-        val y = size.height - strokeWidth / 2
-        drawLine(
-            indicatorColor,
-            Offset(TextFieldPadding.toPx(), y),
-            Offset(size.width - TextFieldPadding.toPx(), y),
-            strokeWidth
-        )
-    }
+    var mod = Modifier
+        .drawBehind {
+            val strokeWidth = indicatorWidth.value * density
+            val y = size.height - strokeWidth / 2
+            drawLine(
+                indicatorColor,
+                Offset(TextFieldPadding.toPx(), y),
+                Offset(size.width - TextFieldPadding.toPx(), y),
+                strokeWidth
+            )
+        }
     val passwordVisible: MutableState<Boolean> = remember {
         mutableStateOf(false)
     }
@@ -508,7 +515,12 @@ fun SegmentedButtons(selectedButton: MutableState<Int>) {
 }
 
 @Composable
-fun SegmentedButtonsRole(selectedRoleIndex: MutableState<Int>) {
+fun SegmentedButtonsRole(
+    selectedRoleIndex: MutableState<Int>,
+    left: String,
+    middle: String,
+    right: String
+) {
 //    var selectedButton = remember { mutableStateOf(-1) }
     Row(
         modifier = Modifier
@@ -533,7 +545,7 @@ fun SegmentedButtonsRole(selectedRoleIndex: MutableState<Int>) {
                 .weight(1f)
         ) {
             Text(
-                "Staff",
+                left,
                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                 fontSize = 15.sp,
             )
@@ -554,7 +566,7 @@ fun SegmentedButtonsRole(selectedRoleIndex: MutableState<Int>) {
                 .weight(1f)
         ) {
             Text(
-                "Teacher",
+                middle,
                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                 fontSize = 15.sp,
             )
@@ -574,12 +586,9 @@ fun SegmentedButtonsRole(selectedRoleIndex: MutableState<Int>) {
 
         ) {
             Text(
-                "Admin",
+                right,
                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                 fontSize = 15.sp
-//                style = MaterialTheme.typography.titleMedium.copy(
-////                    color = Color.DarkGray
-//                )
             )
         }
     }
@@ -598,7 +607,10 @@ fun Preview55() {
 
 @Composable
 fun DatePickerUI(
-    sharedViewModel: SharedViewModel
+    sharedViewModel: SharedViewModel,
+    year: MutableState<Int>,
+    month: MutableState<Int>,
+    day: MutableState<Int>
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -607,14 +619,35 @@ fun DatePickerUI(
             .padding(vertical = 4.dp, horizontal = 5.dp)
             .background(Color.Transparent)
     ) {
-
         DateSelectionSection(
             onYearChosen = { year.value = it.toInt() },
-            onMonthChosen = { month.value = monthsNames.indexOf(it) },
+            onMonthChosen = {
+                month.value = monthsNames.indexOf(it)
+                nbrDays.value = getDays(month.value)
+            },
             onDayChosen = { day.value = it.toInt() },
             isNewUser = sharedViewModel.isNewUser
         )
     }
+}
+
+fun getDays(monthToFix: Int): Int {
+    val number = when (monthToFix) {
+        0 -> 31
+        1 -> 28
+        2 -> 31
+        3 -> 30
+        4 -> 31
+        5 -> 30
+        6 -> 31
+        7 -> 31
+        8 -> 30
+        9 -> 31
+        10 -> 30
+        11 -> 31
+        else -> throw RuntimeException("Invalid month")
+    }
+    return number
 }
 
 @Composable
@@ -643,17 +676,16 @@ fun DateSelectionSection(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
         ) {
+            val reducedList = days.take(nbrDays.value)
             InfiniteItemsPicker(
                 modifier = Modifier,
-                items = days,
-                firstIndex = if (!isNewUser) day.value - 2
-                else Int.MAX_VALUE / 2 + (Calendar.getInstance()
-                    .get(Calendar.DAY_OF_MONTH) - 2),
+                items = reducedList,
+                firstIndex =
+                if (!isNewUser) Int.MAX_VALUE / 2 + day.value - 5
+                else Int.MAX_VALUE / 2 + (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) - 5),
                 onItemSelected = onDayChosen,
-                isForBank = false
-
+                isForBank = false,
             )
-
             InfiniteItemsPicker(
                 items = monthsNames,
                 firstIndex = if (!isNewUser) Int.MAX_VALUE / 2 - 4 + month.value
@@ -677,7 +709,6 @@ fun BanksScroll(
     onBankChosen: (String) -> Unit, isNewUser: (Boolean)
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
-        println("BBBBZAAAAAABBBBKKKKKKKKKKK  " + bank.value)
         InfiniteItemsPicker(
             items = bankNames,
             firstIndex = if (!isNewUser) Int.MAX_VALUE / 2 + bank.value + 8
@@ -697,12 +728,9 @@ fun InfiniteItemsPicker(
     onItemSelected: (String) -> Unit,
     isForBank: Boolean,
 ) {
-
     val listState = rememberLazyListState(firstIndex)
     val currentValue = remember { mutableStateOf("") }
-
     LaunchedEffect(key1 = !listState.isScrollInProgress) {
-//        onItemSelected(currentValue.value)
         onItemSelected(currentValue.value)
         listState.animateScrollToItem(index = listState.firstVisibleItemIndex)
     }
@@ -724,8 +752,6 @@ fun InfiniteItemsPicker(
                     val index = it % items.size
                     if (it == listState.firstVisibleItemIndex + 1) {
                         currentValue.value = items[index]
-
-//                        println("CURRRREEECNT VALUEEEUEUE   "+currentValue.value)
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -750,6 +776,9 @@ fun InfiniteItemsPicker(
 val years = (1950..2050).map { it.toString() }
 val monthsNumber = (1..12).map { it.toString() }
 val days = (1..31).map { it.toString() }
+val days2 = (1..30).map { it.toString() }
+//var dayList = mutableStateOf(if(month.value==9) days2 else days)
+
 val monthsNames = listOf(
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 )
@@ -847,7 +876,6 @@ fun ImageSelection(context: Context, userImage: MutableState<String>) {
                             .size(80.dp)
                             .clip(CircleShape)
                             .border(1.4.dp, MaterialTheme.colorScheme.inverseSurface, CircleShape)
-//                            .clickable(onClick = { galleryLauncher.launch("image/*") })
                     )
                 } else
                     Icon(
