@@ -6,17 +6,20 @@ import android.text.Layout
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.GridLayout
+import android.widget.Space
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -35,12 +38,14 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.Button
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 //import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +62,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -84,10 +90,9 @@ import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.script.navbar.RootNavGraph
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.mrerror.singleRowCalendar.SingleRowCalendar
 import java.lang.Math.abs
-
-
-
+import java.util.Date
 
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
@@ -96,13 +101,13 @@ import java.lang.Math.abs
 fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
     val name = navCtr?.previousBackStackEntry?.arguments?.getString("name")
     val user = sharedViewModel?.user
-
+    sharedViewModel?.defineWaiting(true)
     //resetting tab focus
     sharedViewModel?.defineUsersFocus(false)
     sharedViewModel?.defineFABClicked(false)
     //making the app ui draw behind the top bar and under the system nav bar(if it exist)
-    val systemUiController = rememberSystemUiController()
     WindowCompat.setDecorFitsSystemWindows(sharedViewModel?.window!!, false)
+    val systemUiController = rememberSystemUiController()
     systemUiController.setSystemBarsColor(
         color = Color.Transparent,
         darkIcons = true
@@ -119,14 +124,15 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
     var offsetY by remember { mutableStateOf(0f) }
     val minSwipeOffset by remember { mutableStateOf(300f) }
     Column(
+//        verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
+                    colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
                 )
             )
-            .padding(top = 5.dp)
+            .padding(top = 0.dp)
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDrag = { change, dragAmount ->
@@ -160,8 +166,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
             modifier = Modifier
                 .background(Color.Transparent)
                 .fillMaxWidth()
-
-                .weight(0.12f)
+                .weight(0.08f)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.pt12),
@@ -224,11 +229,34 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                         painterResource(id = R.drawable.q),
                         contentDescription = "",
                         tint = MaterialTheme.colorScheme.inverseSurface,
-                        modifier = Modifier.scale(0.8f)
+                        modifier = Modifier.scale(0.7f)
                     )
                 }
             }
         }
+        Divider(
+            Modifier
+                .padding(horizontal = 15.dp)
+                .background(Color(0xFF79B6FD)))
+
+        var day = remember { mutableStateOf(Date()) }
+        SingleRowCalendar(
+//            Modifier.weight(0.3f),
+            selectedDayBackgroundColor = Color(0xFFFFFFFF),
+            selectedDayTextColor = MaterialTheme.colorScheme.inverseSurface,
+            dayNumTextColor = Color(0xCCFFFFFF),
+            dayTextColor = Color(0xCCFFFFFF),
+            iconsTintColor = Color(0xCCFFFFFF),
+            headTextColor = Color(0xCCFFFFFF),
+            headTextStyle = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
+            nextDrawableRes = R.drawable.round_arrow_forward,
+            prevDrawableRes = R.drawable.round_arrow_back,
+            onSelectedDayChange = {
+                day.value = it
+            })
+
+
+        Spacer(modifier = Modifier.height(10.dp))
 
         Row(
             modifier = Modifier
@@ -238,7 +266,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                 .background(MaterialTheme.colorScheme.surface)
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .weight(0.88f)
+                .weight(0.5f)
         ) {
             val listOfItem = listOf(
                 HomeItems.note,
@@ -251,7 +279,12 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                 items(listOfItem.size) { item ->
 
                     Button(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            if (listOfItem[item].title == "Settings")
+                                navCtr?.navigate(Screen.Settings.route)
+                            if (listOfItem[item].title == "Messages")
+                                navCtr?.navigate(Screen.Inbox.route)
+                        },
                         colors = androidx.compose.material.ButtonDefaults.buttonColors(
                             contentColor = Color.Transparent, backgroundColor = Color.Transparent
                         ),
@@ -269,17 +302,16 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                                     painterResource(id = listOfItem[item].icon),
                                     contentDescription = "",
                                     tint = listOfItem[item].color,
-                                    modifier = Modifier.scale(0.6f)
+                                    modifier = Modifier.scale(0.5f)
                                 )
                                 Text(
                                     text = listOfItem[item].title,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp),
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Center,
                                     maxLines = 2
                                 )
                             }
-//                    }
                         })
                 }
             })
@@ -300,7 +332,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
 
 @Composable
 fun BackPressHandler(
-    sharedViewModel : SharedViewModel,
+    sharedViewModel: SharedViewModel,
     backPressedDispatcher: OnBackPressedDispatcher? =
         LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher,
     navCtr: NavHostController? = null,

@@ -2,6 +2,8 @@ package com.example.schoolmanagementsystem.script
 
 import android.os.Build
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.script.navbar.Screen
@@ -12,7 +14,9 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -35,6 +39,7 @@ import retrofit2.http.Part
 import retrofit2.http.PartMap
 import retrofit2.http.Path
 import java.io.File
+import java.lang.Exception
 
 
 @JsonClass(generateAdapter = true)
@@ -57,11 +62,11 @@ val retrofit: Retrofit = Retrofit.Builder()
     //check if running on emulator or not and on local server or not
     .baseUrl(
         if (BuildConfig.DEV.toBoolean()) {
-            if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.4:8000"
+            if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.5:8000"
         } else
             BuildConfig.Host
     )
-    .addConverterFactory(MoshiConverterFactory.create(moshi))
+    .addConverterFactory(MoshiConverterFactory.create(moshi).asLenient())
     .client(okHttpClient)
     .build()
 val backendApi: APIService = retrofit.create(APIService::class.java)
@@ -161,7 +166,33 @@ interface APIService {
         @Body params: Payment
     ): Response<String>
 
+    @Headers("Accept: application/json")
+    @GET("/api/getMessageAPI/{id}")
+    suspend fun getMessage(
+        @Path("id") id: Int
+    ): Response<List<Message>>
 
+    @Headers("Accept: application/json")
+    @POST("/api/sendMessageAPI/{id}")
+    suspend fun sendMessage(@Path("id") id: Int, @Body params: MessageToSend): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/vuMessageAPI")
+    suspend fun updateMessagesView(
+        @Body params: MessagesIds
+    ): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/deleteToMessage/{id}")
+    suspend fun deleteFromThisSide(
+        @Path("id") id: Int
+    ): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/deleteFromMessage/{id}")
+    suspend fun deleteFromOtherSide(
+        @Path("id") id: Int
+    ): Response<String>
 }
 
 
@@ -458,6 +489,139 @@ fun updatePayment(id: Int, payment: Payment, sharedViewModel: SharedViewModel) {
         if (response.isSuccessful) {
             println("payment updated")
             getContractAndPayment(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+fun sendMessage(
+    id: Int, message: MessageToSend, sharedViewModel: SharedViewModel,
+    triggerSecondCall: Boolean? = false
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.sendMessage(id, message) }
+        val response = result.await()
+        println("message info " + response.message())
+        if (response.isSuccessful) {
+            println("message SENT")
+            if (triggerSecondCall == true) {
+                sharedViewModel.defineGetMessageWorked(false)
+                while (!sharedViewModel.getMessageWorked) {
+                    getMessages(id, sharedViewModel)
+                    delay(1000)
+                }
+            }
+        }
+        sharedViewModel.defineSpinSendBtn(false)
+    }
+}
+
+fun getMessages(id: Int, sharedViewModel: SharedViewModel) {
+    println(sharedViewModel.gettingMsg.toString() + " STATES " + sharedViewModel.getMessageWorked)
+    // Making sure no more than 1 getMessages running in the background
+    if (sharedViewModel.gettingMsg && !sharedViewModel.getMessageWorked) {//T & F GTFO
+        return
+    }
+    sharedViewModel.defineGettingMsg(true)
+
+//    sharedViewModel.messageList.clear()
+//    sharedViewModel.targetedMessageList.clear()
+    CoroutineScope(Dispatchers.IO).launch {
+        // Prevent app crash when the json is too large? lol
+        // this's the exception: java.io.EOFException: End of input, it's a moshi thing it seems
+        // using try and catch didn't fix the crash btw
+        supervisorScope {
+            val result = async { backendApi.getMessage(id) }
+            var response: Response<List<Message>>? = null
+            try {
+                response = result.await()
+            } catch (e: Exception) {
+                println("EXCEPTIONNN!! " + e.message)
+            }
+
+            var filteredList = mutableStateOf(listOf<Message>())
+            var unseenMessages = mutableStateOf(listOf<Int>())
+            var tempMsg = mutableStateOf(listOf<Int>())
+            if (response?.isSuccessful == true) {
+                sharedViewModel.messageList.clear()
+                // TagetedMessageList storing the msgs between this user and the one they just selected
+                // doing it like this (full api call) in case a message get received when entering a convo
+                sharedViewModel.targetedMessageList.clear()
+                sharedViewModel.defineGetMessageWorked(true)
+                val messages = response.body()
+                if (sharedViewModel.messageList.isNotEmpty())
+                    sharedViewModel.messageList.clear()
+                sharedViewModel.defineMessageList(messages)
+                sharedViewModel.defineUnseenMsgExist(false)
+                messages!!.forEach { message ->
+                    if (message.to_user_id == sharedViewModel.user?.id.toString()) {
+                        if (message.vu == "0")
+                            sharedViewModel.defineUnseenMsgExist(true)
+                    }
+                }
+                // This will run ONLY if user reading actual messages
+                if (sharedViewModel.userToMessage != null) {
+                    messages!!.forEach { message ->
+                        if (message.to_user_id == sharedViewModel.userToMessage!!.id.toString() ||
+                            message.from_user_id == sharedViewModel.userToMessage!!.id.toString()
+                        ) {
+                            filteredList.value = filteredList.value + message
+                            unseenMessages.value += message.id.toInt()
+                        }
+                    }
+                }
+                sharedViewModel.defineTargetedMessageList(filteredList.value)
+                // Get only the messages that got send to this user
+                filteredList.value.forEach { unseenMsg ->
+                    if (unseenMsg.to_user_id == sharedViewModel.user?.id.toString()) {
+                        tempMsg.value += unseenMsg.id.toInt()
+                    }
+                }
+                var msgUnseen = MessagesIds(ids = tempMsg.value)
+                sharedViewModel.defineUnseenMessages(msgUnseen)
+                println(sharedViewModel.targetedMessageList.size.toString() + "receiving messages " + sharedViewModel.targetedMessageList.size)
+            }
+        }
+        sharedViewModel.defineGettingMsg(false)
+    }
+}
+
+fun updateMessageView(unseenMsg: MessagesIds, sharedViewModel: SharedViewModel) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.updateMessagesView(unseenMsg) }
+        val response = result.await()
+        if (response.isSuccessful) {
+            println("messages updated")
+//                getContractAndPayment(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+fun deleteOtherMsg(
+    id: Int, sharedViewModel: SharedViewModel,
+    triggerSecondCall: Boolean? = false
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.deleteFromOtherSide(id) }
+        val response = result.await()
+        println("message info " + response.message())
+        if (response.isSuccessful) {
+            println("message deleted")
+        }
+    }
+}
+fun deleteThisMsg(
+    id: Int, sharedViewModel: SharedViewModel,
+    triggerSecondCall: Boolean? = false
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.deleteFromThisSide(id) }
+        val response = result.await()
+        println("message info " + response.message())
+        if (response.isSuccessful) {
+            println("message deleted")
+            if (triggerSecondCall == true) {
+                deleteOtherMsg(id, sharedViewModel)
+            }
         }
     }
 }

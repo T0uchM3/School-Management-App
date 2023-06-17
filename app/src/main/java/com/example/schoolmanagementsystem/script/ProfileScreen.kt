@@ -15,16 +15,17 @@ import androidx.navigation.NavHostController
 
 @SuppressLint("RememberReturnType")
 @Composable
-fun HomeScreen4(navController: NavHostController, sharedViewModel: SharedViewModel) {
-    var text = remember { mutableStateOf("Hello, World!") }
+fun ProfileScreen(navController: NavHostController, sharedViewModel: SharedViewModel) {
+    var text = remember { mutableStateOf("Hello, Mom!") }
+    sharedViewModel.defineUsersFocus(false)
 
     MaterialTheme {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            repeat(100) {
-                item {
-                    Text("Test Test Test Test $it    ")
-                }
-            }
+//            repeat(100) {
+//                item {
+//                    Text("Test Test Test Test $it    ")
+//                }
+//            }
         }
     }
 
@@ -33,5 +34,5 @@ fun HomeScreen4(navController: NavHostController, sharedViewModel: SharedViewMod
 @Preview
 @Composable
 fun Preview44() {
-    HomeScreen4(TODO(), TODO())
+//    HomeScreen4(TODO(), TODO())
 }

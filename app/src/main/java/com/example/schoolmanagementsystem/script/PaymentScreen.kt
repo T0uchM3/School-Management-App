@@ -28,6 +28,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
@@ -150,7 +152,7 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             .fillMaxSize()
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
+                    colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
                 )
             )
             .padding(top = 5.dp)
@@ -307,7 +309,13 @@ private fun SwipeableBoxPreview(
     var isActive by rememberSaveable { mutableStateOf(false) }
 
     val remove = SwipeAction(
-        icon = rememberVectorPainter(Icons.TwoTone.Delete),
+        icon ={
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "",
+                tint = Color(0xCCFFFFFF),
+                modifier = Modifier.scale(1f)
+            )},
         background = MaterialTheme.colorScheme.error,
         onSwipe = {
 //            deleteContract(contract.id.toInt())
@@ -320,8 +328,16 @@ private fun SwipeableBoxPreview(
         isUndo = isSnoozed,
     )
     val editPayment = SwipeAction(
-        icon = rememberVectorPainter(Icons.TwoTone.Edit),
-        background = MaterialTheme.colorScheme.outline,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "",
+                tint = Color(0xFFFFFFFF),
+                modifier = Modifier.scale(1f)
+            )
+
+        },
+        background = MaterialTheme.colorScheme.onSurface,
         onSwipe = {
             if (sharedViewModel.selectedcontract!!.valide == "0") return@SwipeAction
             //this will trigger recomposition of the PaymentScreen
@@ -428,7 +444,7 @@ private fun SwipeItem(
                 .background(Color.Transparent)
                 .padding(start = 15.dp)
                 .animateContentSize()
-                .weight(0.4f)
+                .weight(0.25f)
 
         ) {
             Text(
@@ -493,7 +509,7 @@ fun ManagePaymentSheet(
 
     val newMontant: MutableState<Float>?
     newMontant =
-        remember { mutableStateOf(if (isEdit.value) paymentToEdit.montant!!.toFloat() else 9f) }
+        remember { mutableStateOf(if (isEdit.value) paymentToEdit.montant!!.toFloat() else 0f) }
     val ogMontant: MutableState<Float>?
     ogMontant =
         remember { mutableStateOf(0f) }

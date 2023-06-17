@@ -20,10 +20,13 @@ import com.example.schoolmanagementsystem.script.ContractUser
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.ui.theme.HomeScreen1
 import com.example.schoolmanagementsystem.ui.theme.UsersTab
-import com.example.schoolmanagementsystem.script.HomeScreen4
 import com.example.schoolmanagementsystem.script.ManageUser
 import com.example.schoolmanagementsystem.script.LoginScreen
+import com.example.schoolmanagementsystem.script.MessageScreen
 import com.example.schoolmanagementsystem.script.PaymentScreen
+import com.example.schoolmanagementsystem.script.ProfileScreen
+import com.example.schoolmanagementsystem.script.SettingsScreen
+import com.example.schoolmanagementsystem.ui.theme.InboxScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable as c2
 
@@ -159,15 +162,30 @@ fun AnimatedGraph(
                 AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
             )
         }) { PaymentScreen(navController, sharedViewModel) }
-        composable(route = Screen.Students.route) {
-            HomeScreen4(navController, sharedViewModel)
-        }
-        composable(route = Screen.Profile.route) {
-            HomeScreen4(navController, sharedViewModel)
-        }
-//        composable(route = Screen.Login.route) {
-//            LoginScreen(navCtr = navController, sharedViewModel = sharedViewModel)
+//        composable(route = Screen.Students.route) {
+//            HomeScreen4(navController, sharedViewModel)
 //        }
+        //******************* profile *********************
+        c2(Screen.Profile.route, enterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }, popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }) {
+            ProfileScreen(navController, sharedViewModel)
+        }
+        //******************* login *********************
         c2(Screen.Login.route, enterTransition = {
             slideIntoContainer(
                 AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
@@ -187,12 +205,67 @@ fun AnimatedGraph(
         }) {
             LoginScreen(navController, sharedViewModel)
         }
-//        composable(route = Screen.ManageUser.route) {
-//            ManageUser(navController, sharedViewModel)
-//        }
-//        composable(route = Screen.Contract.route) {
-//            ContractUser(navController, sharedViewModel)
-//        }
+
+        //********************** inbox **************************
+        c2(Screen.Inbox.route, enterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }, popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }) {
+            InboxScreen(navController, sharedViewModel)
+        }
+        //**************************** message ********************************
+        c2(Screen.Messages.route, enterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Left, animationSpec = tween(300)
+            )
+        }, popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }, popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }) {
+            MessageScreen(navController, sharedViewModel)
+        }
+        //**************************** settings ********************************
+        c2(Screen.Settings.route, enterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }, exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }, popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }, popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Right, animationSpec = tween(300)
+            )
+        }) {
+            SettingsScreen(navController, sharedViewModel)
+        }
     }
 }
 
@@ -200,7 +273,5 @@ object Graph {
     const val ROOT = "root_graph"
     const val AUTHENTICATION = "auth_graph"
     const val HOME = "home_graph"
-
-    //    const val DETAILS = "details_graph"
     const val EDITUSER = "edit_user"
 }

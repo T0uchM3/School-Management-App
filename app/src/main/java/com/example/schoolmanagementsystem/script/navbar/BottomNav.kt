@@ -16,9 +16,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +29,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +47,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -61,12 +66,8 @@ import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
-//val isKeyboardOpen: MutableState<Boolean> = mutableStateOf(false)
-
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(
-    ExperimentalAnimationApi::class, ExperimentalMaterialApi::class, ExperimentalLayoutApi::class,
-)
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun BottomNav(
     navController: NavHostController?,
@@ -79,7 +80,7 @@ fun BottomNav(
         floatingActionButton = {
             Box(
                 modifier = Modifier
-                    .offset(y = if (sharedViewModel?.selectedcontract != null) 50.dp else 0.dp)
+//                    .offset(y = if (sharedViewModel?.selectedcontract != null) 50.dp else 0.dp)
                     .width(60.0.dp)
                     .height(60.0.dp)
             ) {
@@ -104,62 +105,33 @@ fun BottomNav(
                                 .padding(3.dp)
                                 .scale(1.5f)
                         )
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.surface,
-                            modifier = Modifier.scale(1.3f)
-                        )
+                        if (sharedViewModel.isOnInbox)
+                            Icon(
+                                painterResource(id = R.drawable.e),
+                                contentDescription = "",
+                                tint = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier.scale(0.7f)
+                            )
+                        else
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier.scale(1.3f)
+                            )
                     }
                 }
             }
         },
         content = {
-//            KeyboardStatus()
-////            Row(Modifier.height(3.dp).background(Color.Red).fillMaxWidth()) {
-////
-////            }
-
-
-
-
-//            if(WindowInsets.isImeVisible)
-//            val isKeyboardOpen by keyboardAsState() // true or false
-//            println("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK "+isKeyboardOpen)
             AnimatedGraph(navController = navController2, sharedViewModel = sharedViewModel!!)
         }, modifier = Modifier
-            // Simulating background shadow drop on status bar when a bottom sheet is up
-//            .background(
-//                brush = Brush.horizontalGradient(
-//                    colors = if (sharedViewModel!!.fabClicked)
-//                        listOf(Color(0xFF315A87), Color(0xFF436FA0))
-//                    else
-//                        listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
-//                )
-//            )
-            .padding(top = statusBarHeight + 1.dp)
+            .statusBarsPadding()
+//            .background(Color.Green)
+            .padding(top = statusBarHeight + 0.dp)
     )
 }
 
-//@Composable
-//fun KeyboardStatus() {
-//    val view = LocalView.current
-//    val viewTreeObserver = view.viewTreeObserver
-//    DisposableEffect(viewTreeObserver) {
-//        val listener = ViewTreeObserver.OnGlobalLayoutListener {
-//             isKeyboardOpen.value = ViewCompat.getRootWindowInsets(view)
-//                ?.isVisible(WindowInsetsCompat.Type.ime()) ?: true
-//            // ... do anything you want here with `isKeyboardOpen`
-////            println("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK " + isKeyboardOpen)
-//
-//        }
-//
-//        viewTreeObserver.addOnGlobalLayoutListener(listener)
-//        onDispose {
-//            viewTreeObserver.removeOnGlobalLayoutListener(listener)
-//        }
-//    }
-//}
 
 @Composable
 fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel) {
@@ -167,16 +139,16 @@ fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel
     val screens = listOf(
         Screen.Home,
         Screen.Users,
-        Screen.Students,
+        Screen.Inbox,
         Screen.Profile,
     )
     //screens to show bottom bar in
     val navBarScreen = listOf(
         Screen.Home,
         Screen.Users,
-        Screen.Students,
+        Screen.Inbox,
         Screen.Profile,
-        Screen.Contract
+        Screen.Contract,
     )
     val navStackBackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navStackBackEntry?.destination
@@ -268,8 +240,17 @@ fun AddItem(
                 )
             }
         }
+        if (screen.route == "Inbox" && sharedViewModel.unseenMsgExist)
+            Icon(
+                imageVector = Icons.Default.Circle,
+                contentDescription = null,
+                tint = Color.Red,
+                modifier = Modifier
+                    .scale(0.4f)
+                    .align(Alignment.TopCenter)
+                    .offset(y = -20.dp)
+            )
     }
-//    }
 }
 
 @Composable

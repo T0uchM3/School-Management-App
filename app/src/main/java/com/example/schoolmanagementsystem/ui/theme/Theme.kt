@@ -98,7 +98,6 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = md_theme_dark_onSurfaceVariant,
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -106,15 +105,6 @@ fun AppTheme(
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true, content: @Composable() () -> Unit
 ) {
-//    val colorScheme = when {
-//        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-//            val context = LocalContext.current
-//            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-//        }
-//
-//        darkTheme -> DarkColorScheme
-//        else -> LightColorScheme
-//    }
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val view = LocalView.current
     val systemUiController = rememberSystemUiController()
@@ -122,17 +112,10 @@ fun AppTheme(
 
     if (!view.isInEditMode) {
         SideEffect {
-//        val window = (view.context as Activity).window
-//            window.statusBarColor = colorScheme.primary.toArgb()
-//            systemUiController.setSystemBarsColor(
-//                color = colorScheme.primary,
-//                darkIcons = useDarkIcons,
-//            )
             systemUiController.setSystemBarsColor(
                 color = Color(0xfff2f2f2),
                 darkIcons = true
             )
-//        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }
     }
 

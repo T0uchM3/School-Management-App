@@ -91,6 +91,7 @@ import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.example.schoolmanagementsystem.ui.theme.scope
 import com.example.schoolmanagementsystem.ui.theme.sheetState
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
@@ -107,6 +108,16 @@ fun ContractUser(
     navCtr: NavHostController? = null,
     sharedViewModel: SharedViewModel,
 ) {
+    // In case user came to Contract view from searching
+    // fix bottom bar
+    sharedViewModel.defineSearchBarFocused(false)
+    // fix status bar
+    val systemUiController = rememberSystemUiController()
+    systemUiController.setSystemBarsColor(
+        color = Color.Transparent,
+        darkIcons = true
+    )
+
     val fabClicked = remember { mutableStateOf(false) }
     val contracts = remember { SnapshotStateList<Contract>() }
     val userName = remember { mutableStateOf("") }
@@ -159,7 +170,7 @@ fun ContractUser(
                 contracts.add(contract)
             }
         }
-        //show faf incase it's invisible
+        //show fab incase it's invisible
         sharedViewModel.defineFabVisible(true)
         userName.value =
             sharedViewModel.userList.find { it.id.toString() == sharedViewModel.selectedUserId }?.name.toString()
@@ -180,7 +191,7 @@ fun ContractUser(
             .fillMaxSize()
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
+                    colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
                 )
             )
             .padding(top = 5.dp)
@@ -240,7 +251,7 @@ fun ContractUser(
                 LazyColumn(
                     state = rememberLazyListState(),
                     modifier = Modifier
-                        .padding(bottom = 40.dp, top = 15.dp)
+                        .padding(bottom = 51.dp, top = 15.dp)
                         .padding(horizontal = 7.dp)
 
                 ) {
@@ -286,7 +297,7 @@ private fun SwipeableBoxPreview(
     var isActive by rememberSaveable { mutableStateOf(false) }
     val editContract = SwipeAction(
         icon = rememberVectorPainter(Icons.TwoTone.Edit),
-        background = MaterialTheme.colorScheme.outline,
+        background = MaterialTheme.colorScheme.onSurface,
         onSwipe = {
             if (contract.valide == "0")
                 return@SwipeAction
@@ -375,6 +386,7 @@ private fun SwipeItem(
             .clickable(
                 onClick = {
                     println("clicked")
+                    sharedViewModel.defineIsInPayment(true)
                     sharedViewModel.defineSelectedSalary(contract?.salaire.toString())
                     sharedViewModel.defineSelectedContractId(contract?.id.toString())
                     sharedViewModel.defineSelectedContract(contract!!)
@@ -526,8 +538,9 @@ private fun SwipeItem(
             Row(
                 Modifier
                     .fillMaxWidth()
-//                    .background(Color.Red)
-                    .padding(top = 0.dp)
+                    .padding(top = 4.dp),
+//                .background(Color.Red),
+                verticalAlignment = Alignment.Bottom
             ) {
                 Text(
                     modifier = Modifier
@@ -535,8 +548,8 @@ private fun SwipeItem(
                         .border(
                             BorderStroke(2.dp, Color.Gray),
                             RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 5.dp, vertical = 3.dp),
+                        ),
+//                        .padding(horizontal = 5.dp, vertical = 3.dp),
                     text = " Payments: $nbrPayments ",
                     fontSize = 13.sp
                 )
@@ -547,8 +560,7 @@ private fun SwipeItem(
                             .background(
                                 MaterialTheme.colorScheme.inverseSurface,
                                 RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 5.dp, vertical = 3.dp),
+                            ),
                         text = "  Valid  ",
                         color = Color.White,
                         fontSize = 13.sp
@@ -560,8 +572,7 @@ private fun SwipeItem(
                             .background(
                                 MaterialTheme.colorScheme.outline,
                                 RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 5.dp, vertical = 3.dp),
+                            ),
                         text = "  Invalid  ",
                         fontSize = 13.sp,
                         color = Color.White

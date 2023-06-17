@@ -119,8 +119,8 @@ var selectedSex: MutableState<Int>? = null
 var selectedRole: MutableState<Int>? = null
 
 var year = mutableStateOf(Calendar.getInstance().get(Calendar.YEAR))
-var month = mutableStateOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH))
-var day = mutableStateOf(Calendar.getInstance().get(Calendar.MONTH))
+var day = mutableStateOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH))
+var month = mutableStateOf(Calendar.getInstance().get(Calendar.MONTH))
 
 var nbrDays = mutableStateOf(getDays(month.value))
 
@@ -546,7 +546,7 @@ fun SegmentedButtonsRole(
         ) {
             Text(
                 left,
-                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
                 fontSize = 15.sp,
             )
         }
@@ -567,7 +567,7 @@ fun SegmentedButtonsRole(
         ) {
             Text(
                 middle,
-                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
                 fontSize = 15.sp,
             )
         }
@@ -587,7 +587,7 @@ fun SegmentedButtonsRole(
         ) {
             Text(
                 right,
-                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
                 fontSize = 15.sp
             )
         }
@@ -632,6 +632,8 @@ fun DatePickerUI(
 }
 
 fun getDays(monthToFix: Int): Int {
+    println("MONTH ?? "+monthToFix)
+
     val number = when (monthToFix) {
         0 -> 31
         1 -> 28

@@ -148,19 +148,13 @@ class SharedViewModel : ViewModel() {
         selectedSalary = salary
     }
 
-    var inLogin by mutableStateOf<Boolean>(true)
-        private set
-
-    fun defineInLogin(newState: Boolean) {
-        inLogin = newState
-    }
 
     var window by mutableStateOf<Window?>(null)
     fun setWindow2(window: Window?) {
         this.window = window
     }
 
-    var fabClicked by mutableStateOf<Boolean?>(false)
+    var fabClicked by mutableStateOf<Boolean?>(null)
 
     /**
      *The price for wanting to draw behind the system bars.
@@ -172,5 +166,108 @@ class SharedViewModel : ViewModel() {
     fun defineFABClicked(value: Boolean?) {
         fabClicked = value
 
+    }
+
+    var messageList = SnapshotStateList<Message>()
+        private set
+
+    fun defineMessageList(newList: List<Message>?) {
+        messageList.addAll(newList!!)
+    }
+
+    var targetedMessageList = SnapshotStateList<Message>()
+        private set
+
+    fun defineTargetedMessageList(newList: List<Message>?) {
+        targetedMessageList.addAll(newList!!)
+    }
+
+    var userToMessage by mutableStateOf<User?>(null)
+        private set
+
+    fun defineUserToMsg(userToMsg: User) {
+        userToMessage = userToMsg
+    }
+
+    var isOnInbox by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineIsOnBox(newState: Boolean) {
+        isOnInbox = newState
+    }
+
+    var isInPayment by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineIsInPayment(newState: Boolean) {
+        isInPayment = newState
+    }
+
+    var getMessageWorked by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineGetMessageWorked(newState: Boolean) {
+        getMessageWorked = newState
+    }
+    var gettingMsg by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineGettingMsg(newState: Boolean) {
+        gettingMsg = newState
+    }
+
+    // Using this to know if search bar is focused
+    // To fix a bottom bar problem in MainActivity
+    var searchBarFocused by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineSearchBarFocused(newState: Boolean) {
+        searchBarFocused = newState
+    }
+
+//    var unseenMessageList = SnapshotStateList<Int>()
+//        private set
+//
+//    fun defineUnseenMessageList(newList: List<Int>?) {
+//        unseenMessageList.addAll(newList!!)
+//    }
+    var unseenMessages by mutableStateOf<MessagesIds?>(null)
+        private set
+
+    fun defineUnseenMessages(msgToUpdate: MessagesIds) {
+        unseenMessages = msgToUpdate
+    }
+
+    var oldMsgListSize by mutableStateOf<Int>(0)
+        private set
+
+    fun definedMsgListSize(newState: Int) {
+        oldMsgListSize = newState
+    }
+    var spinSendBtn by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineSpinSendBtn(newState: Boolean) {
+        spinSendBtn = newState
+    }
+    var unseenMsgExist by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineUnseenMsgExist(newState: Boolean) {
+        unseenMsgExist = newState
+    }
+    // This will be used as a refresher for the messaging api
+    var waiting by mutableStateOf<Boolean>(true)
+        private set
+
+    fun defineWaiting(newState: Boolean) {
+        waiting = newState
+    }
+
+    var tempMsgSearchList = SnapshotStateList<Message>()
+        private set
+
+    fun defineTempMsgSearchList(newList: List<Message>?) {
+        tempMsgSearchList.addAll(newList!!)
     }
 }

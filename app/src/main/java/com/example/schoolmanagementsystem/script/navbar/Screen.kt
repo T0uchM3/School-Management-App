@@ -15,20 +15,23 @@ sealed class Screen(
     val icon_focused: ImageVector?
 ) {
 
-    // for 111
     object Home : Screen(
         route = "home",
         title = "Home",
-//        icon = Icons.Outlined.Home,
         icon = R.drawable.a,
         icon_focused = null,
     )
 
-    // for 2222
     object Users : Screen(
         route = "Users",
         title = "Users",
         icon = R.drawable.g,
+        icon_focused = null,
+    )
+    object Inbox : Screen(
+        route = "Inbox",
+        title = "Inbox",
+        icon = R.drawable.e,
         icon_focused = null,
     )
     object Messages : Screen(
@@ -44,7 +47,6 @@ sealed class Screen(
         icon_focused = null,
     )
 
-    // for 3333
     object Profile : Screen(
         route = "Profile",
         title = "Profile",
@@ -82,6 +84,12 @@ sealed class Screen(
 
     object Payment : Screen(
         route = "Payment",
+        title = "",
+        icon = 0,
+        icon_focused = null,
+    )
+    object Settings : Screen(
+        route = "Settings",
         title = "",
         icon = 0,
         icon_focused = null,

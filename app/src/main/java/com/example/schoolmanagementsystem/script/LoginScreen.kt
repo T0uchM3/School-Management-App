@@ -13,6 +13,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -68,10 +69,17 @@ import coil.decode.GifDecoder
 import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.navbar.Screen
-
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 @Composable
 fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewModel? = null) {
+    sharedViewModel?.defineWaiting(false)
+    val systemUiController = rememberSystemUiController()
+    systemUiController.setSystemBarsColor(
+        color = Color(0xfff2f2f2),
+        darkIcons = true
+    )
+//    TransparentSystemBars()
     val text2 = remember {
         mutableStateOf(TextFieldValue(BuildConfig.LoginMdp))
     }
@@ -214,7 +222,7 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                 } else
                     Text(
                         text = "Login",
-                        fontSize = 25.sp,
+                        fontSize = 23.sp,
                         modifier = Modifier.padding(vertical = 2.dp),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.surface
@@ -251,7 +259,7 @@ fun BackPressHandler(
 }
 
 @Composable
-fun LoadingIndicator() {
+fun LoadingIndicator(isDark : Boolean = false, small: Boolean =false) {
     val infiniteTransition = rememberInfiniteTransition()
 
     val angle by infiniteTransition.animateFloat(
@@ -267,8 +275,9 @@ fun LoadingIndicator() {
         progress = 0.7f,
         modifier = Modifier
             .padding(0.dp)
+            .scale(if(small )0.8f else 1f)
             .rotate(angle),
-        color = Color(0xfff2f2f2),
+        color = Color(if(isDark) 0xFF4884C9 else 0xfff2f2f2),
         strokeWidth = 2.dp,
     )
 }

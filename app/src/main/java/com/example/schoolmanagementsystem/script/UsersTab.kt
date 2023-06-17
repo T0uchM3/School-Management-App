@@ -1,24 +1,13 @@
 package com.example.schoolmanagementsystem.ui.theme
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
-import android.os.Build
-import android.os.Handler
-import android.os.Looper
-import android.provider.Settings.Global.getString
-import android.view.ViewTreeObserver
-import android.widget.ImageView
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,13 +19,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,20 +36,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Man
-import androidx.compose.material.icons.filled.Woman
-import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.twotone.Delete
-import androidx.compose.material3.AlertDialogDefaults.shape
-import androidx.compose.material3.ButtonColors
+import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -72,15 +54,11 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -93,50 +71,20 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.SemanticsPropertyKey
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavHostController
-import coil.ImageLoader
-import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter
-import coil.compose.AsyncImagePainter.State.Empty.painter
-import coil.compose.ImagePainter
-import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
-import coil.decode.DecodeResult
-import coil.decode.Decoder
-import coil.imageLoader
-import coil.load
-import coil.request.CachePolicy
-import coil.request.ImageRequest
-import coil.size.Scale
-import coil.transform.CircleCropTransformation
-import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.R
+import com.example.schoolmanagementsystem.script.GetImage
 import com.example.schoolmanagementsystem.script.LoadingIndicator
 import com.example.schoolmanagementsystem.script.ManageUser
 import com.example.schoolmanagementsystem.script.SharedViewModel
@@ -144,14 +92,11 @@ import com.example.schoolmanagementsystem.script.User
 import com.example.schoolmanagementsystem.script.deleteUserAPI
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.example.schoolmanagementsystem.script.usersAPI
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
-import okhttp3.internal.wait
-import kotlin.concurrent.fixedRateTimer
 
 var scope: CoroutineScope? = null
 
@@ -165,6 +110,7 @@ val focusRequester = FocusRequester()
 
 //val focusManager = LocalFocusManager
 var isInitialFocus by mutableStateOf(true)
+
 @OptIn(
     ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
 )
@@ -172,8 +118,13 @@ var isInitialFocus by mutableStateOf(true)
 fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     val minSwipeOffset by remember { mutableStateOf(300f) }
     var offsetX by remember { mutableStateOf(0f) }
-//    val localUserList = remember { SnapshotStateList<User>() }
     val focusManager = LocalFocusManager.current
+    val systemUiController = rememberSystemUiController()
+    systemUiController.setSystemBarsColor(
+        color = Color.Transparent,
+        darkIcons = true
+    )
+    // Setting up bottom sheet
     sheetState =
         remember {
             SheetState(
@@ -200,7 +151,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 }
             },
             content = {
-
                 ManageUser(
                     sharedViewModel = sharedViewModel,
                     scope = scope,
@@ -215,6 +165,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
 
     LaunchedEffect(key1 = Unit) {
+        sharedViewModel.defineIsOnBox(false)
         sharedViewModel.defineFabVisible(true)
         clearSearch(sharedViewModel, focusManager)
         //setting up fab in user tab
@@ -222,7 +173,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             sharedViewModel.defineIsNewUser(true)
             scope?.launch {
                 sheetState?.show()
-//                sharedViewModel.defineFABClicked(true)
 
             }
         }
@@ -231,6 +181,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         sharedViewModel.paymentList.clear()
         usersAPI(sharedViewModel = sharedViewModel)
     }
+    // Feed unfiltered user list to display (localUserList)
     if (textFieldValue.isEmpty() && !visible) {
 
         localUserList.clear()
@@ -244,14 +195,16 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             .fillMaxSize()
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4884C9), Color(0xFF63A4EE))
+                    colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
                 )
             )
             .padding(top = 5.dp)
     ) {
+
         /********************************************************
         setting up the search bar
          *********************************************************/
+
         BoxWithConstraints(
             Modifier
                 .zIndex(1f)
@@ -322,7 +275,9 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                                 isInitialFocus = false
                                 return@onFocusChanged
                             }
+                            // This happen when search bar is focused
                             sharedViewModel.defineFabVisible(false)
+                            sharedViewModel.defineSearchBarFocused(true)
                             localUserList.clear()
                             visible = true
                         }
@@ -332,7 +287,10 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 )
                 if (visible)
                     androidx.compose.material3.Button(
-                        onClick = { clearSearch(sharedViewModel, focusManager) },
+                        onClick = {
+                            clearSearch(sharedViewModel, focusManager)
+                            sharedViewModel.defineSearchBarFocused(false)
+                        },
                         colors = ButtonDefaults.buttonColors(Color.White),
                         modifier = Modifier
                             .clip(shape = RoundedCornerShape(25.dp))
@@ -348,7 +306,10 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                     }
             }
         }
-
+        systemUiController.setSystemBarsColor(
+            color = Color.Transparent,
+            darkIcons = true
+        )
         Column(
             Modifier
 //                .background(Color.Red)
@@ -378,6 +339,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                                 when {
                                     (offsetX < 0F && Math.abs(offsetX) > minSwipeOffset) -> {
                                         println(" SwipeDirection.Left")
+                                        navCtr.navigate(Screen.Messages.route)
                                     }
 
                                     (offsetX > 0 && Math.abs(offsetX) > minSwipeOffset) -> {
@@ -401,16 +363,18 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                     Box(
                         Modifier.fillMaxSize(), contentAlignment = Alignment.Center,
                     ) {
-                        LoadingIndicator()
+                        LoadingIndicator(true)
                     }
                 else
                     LazyColumn(
                         state = rememberLazyListState(),
                         modifier = Modifier
-                            .padding(bottom = 45.dp, top = 25.dp)
-//                            .background(Color.Red)
+                            .padding(bottom = 45.dp, top = 8.dp)
                             .padding(horizontal = 7.dp)
                     ) {
+                        item(key = "0") {
+                            Spacer(Modifier.height(20.dp)) // To add some padding on top of the list
+                        }
                         items(localUserList, key = { item -> item.id }) { user ->
                             Box(modifier = Modifier.animateItemPlacement()) {
                                 SwipeableBoxPreview(
@@ -421,7 +385,6 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                                     onRemoveClicked = {
                                         sharedViewModel.userList.remove(user)
                                     },
-                                    focusManager
                                 )
                             }
                             Spacer(Modifier.height(8.dp))
@@ -472,44 +435,41 @@ fun SwipeableBoxPreview(
     sharedViewModel: SharedViewModel,
     user: User,
     onRemoveClicked: (user: User) -> Unit,
-    focusManager: FocusManager
 ) {
     var isSnoozed by rememberSaveable { mutableStateOf(false) }
-    var isArchived by rememberSaveable { mutableStateOf(false) }
 
-    var isActive by rememberSaveable { mutableStateOf(false) }
     val editUser = SwipeAction(
         icon = {
             Icon(
-                painterResource(id = R.drawable.j),
+                imageVector = Icons.Default.Edit,
                 contentDescription = "",
-                tint = Color(0xCCF1F1F1),
-                modifier = Modifier.scale(0.6f)
+                tint = Color(0xFFFFFFFF),
+                modifier = Modifier.scale(1f)
             )
-//            painterResource(id = R.drawable.j),
 
         },
-//                rememberVectorPainter(Icons.Outlined.Edit),
         background = MaterialTheme.colorScheme.onSurface,
         onSwipe = {
-//            textFieldvalue=""
             sharedViewModel.defineSelectedUserId(user.id.toString())
             sharedViewModel.defineIsNewUser(false)
             sharedViewModel.defineUsersFocus(true)
             scope?.launch {
                 sheetState?.expand()
             }
-//            navCtr.navigate(Screen.ManageUser.route)
         },
         isUndo = false,
     )
 
     val remove = SwipeAction(
-        icon =
-        rememberVectorPainter(Icons.TwoTone.Delete),
+        icon ={
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = "",
+            tint = Color(0xCCFFFFFF),
+            modifier = Modifier.scale(1f)
+        )},
         background = MaterialTheme.colorScheme.error,
         onSwipe = {
-//            isSnoozed = !isSnoozed
             println("IDDDD" + user.id)
             deleteUserAPI(user.id.toInt())
             onRemoveClicked(user)
@@ -603,68 +563,8 @@ private fun SwipeItem(
             Alignment.CenterVertically
         ) {
 
-            var painter = rememberAsyncImagePainter(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(
-
-                        if (user.photo == null) {
-                            if (user.role == "teacher" && user.sex == "woman") R.drawable.teacherw
-                            else if (user.role == "teacher" && user.sex == "man") R.drawable.teacherm
-                            else if (user.role == "staff" && user.sex == "woman") R.drawable.staffw
-                            else if (user.role == "staff" && user.sex == "man") R.drawable.staffm
-                            else if (user.role == "admin" && user.sex == "woman") R.drawable.adminw
-                            else R.drawable.adminm
-                        } else {
-                            val host2 =
-                                if (BuildConfig.DEV.toBoolean()) {
-                                    if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.4:8000/"
-                                } else
-                                    BuildConfig.Host
-                            host2 + user.photo
-                        }
-                    )
-                    .size(coil.size.Size(width = 80, height = 80))
-//                    .memoryCachePolicy(CachePolicy.DISABLED)
-                    .setHeader("User-Agent", "Mozilla/5.0")
-                    .transformations(
-                        CircleCropTransformation()
-                    )
-                    .build()
-            )
-
-            val painterState = painter.state
-
-            if (painterState is AsyncImagePainter.State.Success) {
-                Image(
-                    painter = painter,
-                    modifier = Modifier
-                        .size(60.dp),
-                    contentDescription = null
-                )
-            }
-            var show by remember { mutableStateOf(false) }
-
-            if (painterState is AsyncImagePainter.State.Error) {
-                // Fallback to local images when loading url fail
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        if (user.role == "teacher" && user.sex == "woman") R.drawable.teacherw
-                        else if (user.role == "teacher" && user.sex == "man") R.drawable.teacherm
-                        else if (user.role == "staff" && user.sex == "woman") R.drawable.staffw
-                        else if (user.role == "staff" && user.sex == "man") R.drawable.staffm
-                        else if (user.role == "admin" && user.sex == "woman") R.drawable.adminw
-                        else R.drawable.adminm
-                    ),
-                    modifier = Modifier
-                        .size(60.dp),
-                    contentDescription = null
-                )
-//                LoadingAnimation()
-            }
-            if (painterState is AsyncImagePainter.State.Loading) {
-                LoadingAnimation()
-            }
-
+            // Handling user photo whether it's from url or it doesn't exist
+            GetImage(user = user)
         }
 //setting up the middle texts
         Column(
@@ -683,19 +583,6 @@ private fun SwipeItem(
                 text = "CIN: ${user.cin} \nRole: ${user.role} | Contracts: $nbrContracts"
             )
 
-            if (isSnoozed) {
-                Text(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .background(
-                            Color.SeaBuckthorn.copy(alpha = 0.4f),
-                            RoundedCornerShape(4.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    text = "Snoozed until tomorrow",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
         }
         Spacer(modifier = Modifier.weight(1f))
         //setting the right vertical red marker
@@ -743,11 +630,6 @@ fun LoadingAnimation() {
             )
     )
 }
-
-val Color.Companion.SeaBuckthorn get() = Color(0xFFF9A825)
-val Color.Companion.Fern get() = Color(0xFF66BB6A)
-val Color.Companion.Perfume get() = Color(0xFFD0BCFF)
-
 
 @Preview
 @Composable
