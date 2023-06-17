@@ -108,32 +108,33 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     }
     scope = rememberCoroutineScope()
     if (sheetState?.isVisible == true) {
-        ModalBottomSheet(sheetState = sheetState!!, dragHandle = null, shape = RoundedCornerShape(
-            bottomStart = 0.dp, bottomEnd = 0.dp, topStart = 12.dp, topEnd = 12.dp
-        ), onDismissRequest = {
-            scope?.launch {
-                sheetState?.hide()
-            }
-        }, content = {
-            if (sheetAction == "add") {
-                isEdit.value = false
-                ManagePaymentSheet(
-                    sharedViewModel = sharedViewModel,
-                    scope = scope,
-                    state = sheetState,
-                    isEdit = isEdit
-                )
-            }
-            if (sheetAction == "edit") {
-                isEdit.value = true
-                ManagePaymentSheet(
-                    sharedViewModel = sharedViewModel,
-                    scope = scope,
-                    state = sheetState,
-                    isEdit = isEdit
-                )
-            }
-        })
+        ModalBottomSheet(sheetState = sheetState!!, scrimColor = Color.Transparent,
+             dragHandle = null, shape = RoundedCornerShape(
+                bottomStart = 0.dp, bottomEnd = 0.dp, topStart = 12.dp, topEnd = 12.dp
+            ), onDismissRequest = {
+                scope?.launch {
+                    sheetState?.hide()
+                }
+            }, content = {
+                if (sheetAction == "add") {
+                    isEdit.value = false
+                    ManagePaymentSheet(
+                        sharedViewModel = sharedViewModel,
+                        scope = scope,
+                        state = sheetState,
+                        isEdit = isEdit
+                    )
+                }
+                if (sheetAction == "edit") {
+                    isEdit.value = true
+                    ManagePaymentSheet(
+                        sharedViewModel = sharedViewModel,
+                        scope = scope,
+                        state = sheetState,
+                        isEdit = isEdit
+                    )
+                }
+            })
     } else sharedViewModel.defineFABClicked(false)
     LaunchedEffect(key1 = sharedViewModel.paymentList.size) {
         updateValues(sharedViewModel)
@@ -309,13 +310,14 @@ private fun SwipeableBoxPreview(
     var isActive by rememberSaveable { mutableStateOf(false) }
 
     val remove = SwipeAction(
-        icon ={
+        icon = {
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "",
                 tint = Color(0xCCFFFFFF),
                 modifier = Modifier.scale(1f)
-            )},
+            )
+        },
         background = MaterialTheme.colorScheme.error,
         onSwipe = {
 //            deleteContract(contract.id.toInt())
@@ -547,10 +549,11 @@ fun ManagePaymentSheet(
         mutableStateOf(TextFieldValue(if (isEdit.value) paymentToEdit.ref.toString() else ""))
     }
     if (paymentToEdit.ref.toString() == "null")
-        refInput.value =  TextFieldValue("")
+        refInput.value = TextFieldValue("")
     Column() {
         Column(
             Modifier
+                .background(Color.White)
                 .fillMaxWidth()
                 .padding(10.dp)
         ) {

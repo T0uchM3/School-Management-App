@@ -130,6 +130,7 @@ fun InboxScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     if (sheetState?.isVisible == true) {
         ModalBottomSheet(
             sheetState = sheetState!!,
+            scrimColor = Color.Transparent,
             dragHandle = null,
             shape = RoundedCornerShape(
                 bottomStart = 0.dp,

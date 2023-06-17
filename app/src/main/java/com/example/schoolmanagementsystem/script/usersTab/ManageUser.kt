@@ -87,6 +87,8 @@ import com.example.schoolmanagementsystem.ui.theme.clearSearch
 import com.example.schoolmanagementsystem.ui.theme.isInitialFocus
 import com.example.schoolmanagementsystem.ui.theme.localUserList
 import com.example.schoolmanagementsystem.ui.theme.visible
+import com.google.accompanist.insets.imePadding
+import com.google.accompanist.insets.navigationBarsWithImePadding
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -224,8 +226,10 @@ fun ManageUser(
 
     Column(
         modifier = Modifier
+            .background(Color.White)
 //            .height(200.dp)
-
+//            .navigationBarsWithImePadding()
+//            .imePadding()
             .padding(horizontal = 15.dp)
 
     ) {
@@ -376,6 +380,7 @@ fun ManageUser(
                 onBankChosen = { bank.value = bankNames.indexOf(it) },
                 isNewUser = sharedViewModel.isNewUser
             )
+            Spacer(modifier = Modifier.height(100.dp))
 
         }
     }

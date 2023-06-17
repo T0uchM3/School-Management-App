@@ -114,7 +114,7 @@ fun AppTheme(
         SideEffect {
             systemUiController.setSystemBarsColor(
                 color = Color(0xfff2f2f2),
-                darkIcons = true
+                darkIcons = true,
             )
         }
     }

@@ -36,6 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.DrawerDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -66,13 +67,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
@@ -110,7 +114,6 @@ val focusRequester = FocusRequester()
 
 //val focusManager = LocalFocusManager
 var isInitialFocus by mutableStateOf(true)
-
 @OptIn(
     ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
 )
@@ -138,6 +141,8 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         ModalBottomSheet(
             sheetState = sheetState!!,
             dragHandle = null,
+//            tonalElevation = 50.dp,
+            scrimColor = Color.Transparent,
             shape = RoundedCornerShape(
                 bottomStart = 0.dp,
                 bottomEnd = 0.dp,
@@ -151,12 +156,12 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 }
             },
             content = {
-                ManageUser(
-                    sharedViewModel = sharedViewModel,
-                    scope = scope,
-                    state = sheetState,
-                    focusManager = focusManager
-                )
+                    ManageUser(
+                        sharedViewModel = sharedViewModel,
+                        scope = scope,
+                        state = sheetState,
+                        focusManager = focusManager
+                    )
             },
             modifier = Modifier.offset(y = 0.dp)
         )

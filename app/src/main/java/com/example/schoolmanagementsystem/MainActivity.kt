@@ -32,6 +32,8 @@ import com.example.schoolmanagementsystem.ui.theme.AppTheme
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.navigationBarsWithImePadding
+import com.google.accompanist.insets.systemBarsPadding
+import com.google.accompanist.insets.toPaddingValues
 import kotlinx.coroutines.delay
 import okhttp3.internal.wait
 
@@ -63,6 +65,7 @@ class MainActivity : ComponentActivity() {
                 var statusBarHeight = with(LocalDensity.current) {
                     insets.statusBars.top.toDp()
                 }
+                var statusBarHeight2 = insets.statusBars.top
                 // Doing it like this to fix a problem with status bar color problem
                 // when search bars are focused
                 val mod = if (!sharedViewModel.searchBarFocused)
@@ -88,7 +91,7 @@ class MainActivity : ComponentActivity() {
                                 .height(4.dp)
                                 .background(
                                     brush = Brush.horizontalGradient(
-                                            colors = if (sharedViewModel.fabClicked != null)
+                                        colors = if (sharedViewModel.fabClicked != null)
                                             listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
                                         else
                                             listOf(Color.Transparent, Color.Transparent)
@@ -96,26 +99,28 @@ class MainActivity : ComponentActivity() {
                                 )
                                 .fillMaxWidth()
                         ) {
-                            // This row will be changing height depends on the keyboard status (open or not)
-                            // and changing color depends if buttom sheet is up or not
-                            Row(
-                                Modifier
-                                    .height(if (isKeyboardOpen.value) ((statusBarHeight) / 2) - 3.dp else statusBarHeight + 1.dp)
-                                    .background(
-                                        brush = Brush.horizontalGradient(
-                                            colors = if (sharedViewModel.fabClicked == true)
-                                                listOf(Color(0xFF2B5484), Color(0xFF537DAC))
-                                            else if (sharedViewModel.fabClicked == false)
-                                                listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
-                                            else // when it's null, which will be set in the start of the loginscreen
-                                                listOf(
-                                                    MaterialTheme.colorScheme.surface,
-                                                    MaterialTheme.colorScheme.surface
-                                                )
-                                        )
-                                    )
-                                    .fillMaxWidth()
-                            ) {}
+//                            println("status bar height "+statusBarHeight2)
+//                            // This row will be changing height depends on the keyboard status (open or not)
+//                            // and changing color depends if buttom sheet is up or not
+//                            Row(
+//                                Modifier
+////                                    .height(if (isKeyboardOpen.value) ((statusBarHeight) / 2) - 3.dp else statusBarHeight + 1.dp)
+//                                    .height(if (sharedViewModel.usersFocus == true && isKeyboardOpen.value) ((statusBarHeight) / 2) else statusBarHeight + 1.dp)
+//                                    .background(
+//                                        brush = Brush.horizontalGradient(
+//                                            colors = if (sharedViewModel.fabClicked == true)
+//                                                listOf(Color(0xFF2B5484), Color(0xFF537DAC))
+//                                            else if (sharedViewModel.fabClicked == false)
+//                                                listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
+//                                            else // when it's null, which will be set in the start of the loginscreen
+//                                                listOf(
+//                                                    MaterialTheme.colorScheme.surface,
+//                                                    MaterialTheme.colorScheme.surface
+//                                                )
+//                                        )
+//                                    )
+//                                    .fillMaxWidth()
+//                            ) {}
                         }
                         val navController = rememberNavController()
                         // The actual app ui start here

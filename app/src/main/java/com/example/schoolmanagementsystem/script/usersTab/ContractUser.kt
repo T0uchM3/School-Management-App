@@ -134,6 +134,7 @@ fun ContractUser(
     if (sheetState?.isVisible == true) {
         ModalBottomSheet(
             sheetState = sheetState!!,
+            scrimColor = Color.Transparent,
             dragHandle = null,
             shape = RoundedCornerShape(
                 bottomStart = 0.dp,
@@ -632,6 +633,7 @@ fun AddContractSheet(
         Column() {
             Column(
                 Modifier
+                    .background(Color.White)
                     .fillMaxWidth()
                     .padding(10.dp)
             ) {
@@ -717,7 +719,7 @@ fun AddContractSheet(
                     min = ogSalary
                 )
             }
-            Spacer(modifier = Modifier.height(20.dp))
+//            Spacer(modifier = Modifier.height(100.dp))
 
         }
 }
@@ -753,6 +755,7 @@ fun EditContractSheet(
     Column() {
         Column(
             Modifier
+                .background(Color.White)
                 .fillMaxWidth()
                 .padding(10.dp)
         ) {
