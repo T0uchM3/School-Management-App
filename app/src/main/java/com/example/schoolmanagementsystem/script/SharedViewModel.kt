@@ -238,12 +238,7 @@ class SharedViewModel : ViewModel() {
         unseenMessages = msgToUpdate
     }
 
-    var oldMsgListSize by mutableStateOf<Int>(0)
-        private set
 
-    fun definedMsgListSize(newState: Int) {
-        oldMsgListSize = newState
-    }
     var spinSendBtn by mutableStateOf<Boolean>(false)
         private set
 
@@ -269,5 +264,19 @@ class SharedViewModel : ViewModel() {
 
     fun defineTempMsgSearchList(newList: List<Message>?) {
         tempMsgSearchList.addAll(newList!!)
+    }
+
+    var isRefreshing by mutableStateOf<Boolean>(false)
+        private set
+
+    fun defineIsRefreshing(newState: Boolean) {
+        isRefreshing = newState
+    }
+
+    var wrongCred by mutableStateOf<Boolean?>(null)
+        private set
+
+    fun defineWrongCred(newState: Boolean) {
+        wrongCred = newState
     }
 }

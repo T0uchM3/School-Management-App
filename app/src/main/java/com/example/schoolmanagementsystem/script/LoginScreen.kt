@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
@@ -74,6 +75,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 @Composable
 fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewModel? = null) {
     sharedViewModel?.defineWaiting(false)
+    sharedViewModel?.defineWrongCred(false)
     val systemUiController = rememberSystemUiController()
     systemUiController.setSystemBarsColor(
         color = Color(0xfff2f2f2),
@@ -81,14 +83,21 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
     )
 //    TransparentSystemBars()
     val text2 = remember {
-        mutableStateOf(TextFieldValue(BuildConfig.LoginMdp))
+        mutableStateOf(TextFieldValue(""))
     }
+    val emaiInput = remember {
+        mutableStateOf(TextFieldValue(""))
+    }
+//    val text2 = remember {
+//        mutableStateOf(TextFieldValue(BuildConfig.LoginMdp))
+//    }
+//    val emaiInput = remember {
+//        mutableStateOf(TextFieldValue(BuildConfig.LoginMail))
+//    }
     val passwordVisible: MutableState<Boolean> = remember {
         mutableStateOf(false)
     }
-    val emaiInput = remember {
-        mutableStateOf(TextFieldValue(BuildConfig.LoginMail))
-    }
+
     var isClicked by remember { mutableStateOf(false) }
     sharedViewModel?.defineFABClicked(null)
     // Manually handling backpress (to prevent going back inside the app)
@@ -210,14 +219,20 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                     isClicked = true
                 },
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFF3F7CC4), Color(0xFF60A9FD))
+
+                        ), shape = ButtonDefaults.shape
+                    ),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4884C9),
+                    containerColor = Color(0x4884C9),
                     contentColor = Color(0xfff2f2f2)
                 )
 
             ) {
-                if (isClicked) {
+                if (isClicked && sharedViewModel.wrongCred == false) {
                     LoadingIndicator()
                 } else
                     Text(
@@ -228,6 +243,7 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                         color = MaterialTheme.colorScheme.surface
                     )
             }
+
         }
 
     }
@@ -259,7 +275,7 @@ fun BackPressHandler(
 }
 
 @Composable
-fun LoadingIndicator(isDark : Boolean = false, small: Boolean =false) {
+fun LoadingIndicator(isDark: Boolean = false, small: Boolean = false) {
     val infiniteTransition = rememberInfiniteTransition()
 
     val angle by infiniteTransition.animateFloat(
@@ -275,9 +291,9 @@ fun LoadingIndicator(isDark : Boolean = false, small: Boolean =false) {
         progress = 0.7f,
         modifier = Modifier
             .padding(0.dp)
-            .scale(if(small )0.8f else 1f)
+            .scale(if (small) 0.8f else 1f)
             .rotate(angle),
-        color = Color(if(isDark) 0xFF4884C9 else 0xfff2f2f2),
+        color = Color(if (isDark) 0xFF4884C9 else 0xfff2f2f2),
         strokeWidth = 2.dp,
     )
 }

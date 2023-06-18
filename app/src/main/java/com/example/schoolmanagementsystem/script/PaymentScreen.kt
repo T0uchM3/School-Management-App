@@ -27,12 +27,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -91,7 +95,9 @@ var payments = SnapshotStateList<Payment>()
 var paymentToEdit = Payment()
 var amountLeft = mutableStateOf(0)
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterialApi::class
+)
 @SuppressLint("RememberReturnType")
 @Composable
 fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
@@ -109,7 +115,7 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     scope = rememberCoroutineScope()
     if (sheetState?.isVisible == true) {
         ModalBottomSheet(sheetState = sheetState!!, scrimColor = Color.Transparent,
-             dragHandle = null, shape = RoundedCornerShape(
+            dragHandle = null, shape = RoundedCornerShape(
                 bottomStart = 0.dp, bottomEnd = 0.dp, topStart = 12.dp, topEnd = 12.dp
             ), onDismissRequest = {
                 scope?.launch {
@@ -137,106 +143,134 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             })
     } else sharedViewModel.defineFABClicked(false)
     LaunchedEffect(key1 = sharedViewModel.paymentList.size) {
+        // Filling the list
         updateValues(sharedViewModel)
         userName.value =
             sharedViewModel.userList.find { it.id.toString() == sharedViewModel.selectedUserId }?.name.toString()
         //setting up fab
-        sharedViewModel.defineFabClick {
-            sheetAction = "add"
-            scope?.launch {
-                sheetState?.show()
+        if (sharedViewModel.user?.role == "admin")
+            sharedViewModel.defineFabClick {
+                sheetAction = "add"
+                scope?.launch {
+                    sheetState?.show()
+                }
             }
-        }
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
-                )
-            )
-            .padding(top = 5.dp)
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp, bottom = 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
 
-            ) {
-            IconButton(onClick = {
-                sharedViewModel.defineSelectedContract(null)
-                navCtr.popBackStack()
-            }) {
-                Icon(
-                    Icons.TwoTone.ArrowBack,
-                    "",
-                    tint = Color(0xCCFFFFFF),
-                    modifier = Modifier
-                        .scale(1.3f)
-                        .padding(end = 5.dp)
-                )
-            }
-            Text(
-                text = userName.value + " > " + sharedViewModel.selectedSalary + " (${amountLeft.value} left)",
-                color = Color(0xCCFFFFFF),
-                fontSize = 20.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Spacer(modifier = Modifier.weight(1f))
+    val pullRefreshState = rememberPullRefreshState(sharedViewModel.isRefreshing, {
+        sharedViewModel.userList.clear()
+        sharedViewModel.contractList.clear()
+        sharedViewModel.paymentList.clear()
+        usersAPI(sharedViewModel = sharedViewModel)
+        updateValues(sharedViewModel)
+    })
+    Box(
+        Modifier
+        .fillMaxSize()
+        .pullRefresh(pullRefreshState)) {
 
-        }
         Column(
-            Modifier
-                .clip(shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .fillMaxWidth()
-                .fillMaxHeight()
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
+                    )
+                )
+                .padding(top = 5.dp)
         ) {
-            /**
-             * setting up the list section
-             */
-            if (payments.isEmpty()) {
-                Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp, bottom = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+
                 ) {
-                    Text(
-                        text = "No payment has been made for this contract!",
-                        color = Color.Black,
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                IconButton(onClick = {
+                    sharedViewModel.defineSelectedContract(null)
+                    navCtr.popBackStack()
+                }) {
+                    Icon(
+                        Icons.TwoTone.ArrowBack,
+                        "",
+                        tint = Color(0xCCFFFFFF),
+                        modifier = Modifier
+                            .scale(1.3f)
+                            .padding(end = 5.dp)
                     )
                 }
-            } else {
+                Text(
+                    text = userName.value + " > " + sharedViewModel.selectedSalary + " (${amountLeft.value} left)",
+                    color = Color(0xCCFFFFFF),
+                    fontSize = 20.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(modifier = Modifier.weight(1f))
 
-                LazyColumn(
-                    state = rememberLazyListState(),
-                    modifier = Modifier
-                        .padding(bottom = 40.dp, top = 15.dp)
-                        .padding(horizontal = 7.dp)
+            }
+            Column(
+                Modifier
+                    .clip(shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+            ) {
+                /**
+                 * setting up the list section
+                 */
+                if (payments.isEmpty()) {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "No payment has been made for this contract!",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                } else {
 
-                ) {
-                    items(payments, key = { item -> item.id }) { payment ->
-                        Box(modifier = Modifier.animateItemPlacement()) {
-                            SwipeableBoxPreview(navCtr,
-                                Modifier.padding(),
-                                sharedViewModel,
-                                payment,
-                                onRemoveClicked = {
-                                    payments.remove(payment)
-                                    sharedViewModel.paymentList.remove(payment)
-                                })
+                    LazyColumn(
+                        state = rememberLazyListState(),
+                        modifier = Modifier
+                            .padding(bottom = 40.dp, top = 15.dp)
+                            .padding(horizontal = 7.dp)
+
+                    ) {
+                        items(payments, key = { item -> item.id }) { payment ->
+                            Box(modifier = Modifier.animateItemPlacement()) {
+                                if (sharedViewModel.user?.role == "admin")
+                                    SwipeableBoxPreview(navCtr,
+                                        Modifier.padding(),
+                                        sharedViewModel,
+                                        payment,
+                                        onRemoveClicked = {
+                                            payments.remove(payment)
+                                            sharedViewModel.paymentList.remove(payment)
+                                        })
+                                else
+                                    Card(
+                                        Modifier.fillMaxWidth(),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+
+                                    ) {
+                                        SwipeItem(
+                                            sharedViewModel, navCtr = navCtr, payment = payment
+                                        )
+                                    }
+                            }
+                            Spacer(Modifier.height(8.dp))
                         }
-                        Spacer(Modifier.height(8.dp))
                     }
                 }
             }
         }
+        PullRefreshIndicator(refreshing = sharedViewModel.isRefreshing, state = pullRefreshState,Modifier.align(Alignment.TopCenter))
     }
 }
 
@@ -391,20 +425,21 @@ private fun SwipeItem(
         /**
         setting the left vertical blue marker
          */
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .height(80.dp)
-                .wrapContentSize(Alignment.Center)
-        ) {
-            Box(
+        if (sharedViewModel.user?.role == "admin")
+            Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(8.dp)
-                    .height(20.dp)
-                    .background(MaterialTheme.colorScheme.inverseSurface)
-            )
-        }
+                    .height(80.dp)
+                    .wrapContentSize(Alignment.Center)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(8.dp)
+                        .height(20.dp)
+                        .background(MaterialTheme.colorScheme.inverseSurface)
+                )
+            }
         Column(
             Modifier
                 .fillMaxHeight()
@@ -461,31 +496,32 @@ private fun SwipeItem(
             Text(
                 text = payment.montant.toString(),
 //                color = Color.Black,
-                fontSize = 35.sp,
+                fontSize = 30.sp,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 40.dp)
+                    .padding(start = 10.dp)
             )
         }
         /**
         setting the right vertical red marker
          */
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .height(80.dp)
-                .wrapContentSize(Alignment.Center)
-        ) {
-            Box(
+        if (sharedViewModel.user?.role == "admin")
+            Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(8.dp)
-                    .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
-                    .height(20.dp)
-                    .background(Color(0x80FFD7D7))
-            )
-        }
+                    .height(80.dp)
+                    .wrapContentSize(Alignment.Center)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(8.dp)
+                        .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
+                        .height(20.dp)
+                        .background(Color(0x80FFD7D7))
+                )
+            }
     }
 }
 

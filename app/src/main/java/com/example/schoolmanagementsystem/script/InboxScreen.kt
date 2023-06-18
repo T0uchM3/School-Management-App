@@ -34,9 +34,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.ArrowBackIos
 import androidx.compose.material.icons.twotone.Delete
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -104,7 +108,9 @@ var userToMsg = User()
 var unseenNbr: MutableList<Int> = ArrayList()
 var unseenId: MutableList<String> = ArrayList()
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterialApi::class
+)
 @Composable
 fun InboxScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     sharedViewModel.defineUsersFocus(false)
@@ -199,9 +205,14 @@ fun InboxScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
             println(" stringId " + unbr)
         }
     }
+    val pullRefreshState = rememberPullRefreshState(sharedViewModel.isRefreshing, {
+        getMessages(sharedViewModel.user!!.id.toInt(), sharedViewModel)
+
+    })
     Box(
         Modifier
             .fillMaxSize()
+            .pullRefresh(pullRefreshState)
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
@@ -408,6 +419,7 @@ fun InboxScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                     }
             }
         }
+        PullRefreshIndicator(refreshing = sharedViewModel.isRefreshing, state = pullRefreshState,Modifier.align(Alignment.TopCenter))
     }
 }
 
@@ -850,15 +862,17 @@ private fun SwipeInboxItem(
             Row(Modifier.fillMaxWidth()) {
                 Text(
                     text = contactedUser?.name.toString(),
+                    modifier = Modifier.weight(0.7f),
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = Color.DarkGray,
-                        fontSize = 18.sp
+                        fontSize = 14.sp
                     )
                 )
-                Spacer(modifier = Modifier.weight(1f))
+//                Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = message.created_at.toString().substring(0, 10),
-                    style = MaterialTheme.typography.titleSmall.copy(color = Color(0xFF3C3C3C))
+                    modifier = Modifier.weight(0.3f),
+                    style = MaterialTheme.typography.titleSmall.copy(color = Color(0xFF3C3C3C), fontSize = 12.sp)
                 )
             }
             var unseenMessages by remember { mutableStateOf(0) }

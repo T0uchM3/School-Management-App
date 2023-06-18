@@ -37,6 +37,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.DrawerDefaults
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -44,6 +45,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -114,8 +118,10 @@ val focusRequester = FocusRequester()
 
 //val focusManager = LocalFocusManager
 var isInitialFocus by mutableStateOf(true)
+
 @OptIn(
     ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterialApi::class,
 )
 @Composable
 fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
@@ -156,12 +162,12 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 }
             },
             content = {
-                    ManageUser(
-                        sharedViewModel = sharedViewModel,
-                        scope = scope,
-                        state = sheetState,
-                        focusManager = focusManager
-                    )
+                ManageUser(
+                    sharedViewModel = sharedViewModel,
+                    scope = scope,
+                    state = sheetState,
+                    focusManager = focusManager
+                )
             },
             modifier = Modifier.offset(y = 0.dp)
         )
@@ -195,9 +201,16 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
 //    return
     val users = remember { sharedViewModel.userList }
+    val pullRefreshState = rememberPullRefreshState(sharedViewModel.isRefreshing, {
+        sharedViewModel.userList.clear()
+        sharedViewModel.contractList.clear()
+        sharedViewModel.paymentList.clear()
+        usersAPI(sharedViewModel = sharedViewModel)
+    })
     Box(
         Modifier
             .fillMaxSize()
+            .pullRefresh(pullRefreshState)
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
@@ -344,7 +357,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                                 when {
                                     (offsetX < 0F && Math.abs(offsetX) > minSwipeOffset) -> {
                                         println(" SwipeDirection.Left")
-                                        navCtr.navigate(Screen.Messages.route)
+                                        navCtr.navigate(Screen.Inbox.route)
                                     }
 
                                     (offsetX > 0 && Math.abs(offsetX) > minSwipeOffset) -> {
@@ -363,6 +376,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 /****************************************
                 users list
                  ***************************************/
+//                val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
                 if (localUserList.isEmpty() && !visible)
                     Box(
@@ -382,21 +396,38 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                         }
                         items(localUserList, key = { item -> item.id }) { user ->
                             Box(modifier = Modifier.animateItemPlacement()) {
-                                SwipeableBoxPreview(
-                                    navCtr,
-                                    Modifier.padding(),
-                                    sharedViewModel,
-                                    user,
-                                    onRemoveClicked = {
-                                        sharedViewModel.userList.remove(user)
-                                    },
-                                )
+                                if (sharedViewModel.user?.role == "admin")
+                                    SwipeableBoxPreview(
+                                        navCtr,
+                                        Modifier.padding(),
+                                        sharedViewModel,
+                                        user,
+                                        onRemoveClicked = {
+                                            sharedViewModel.userList.remove(user)
+                                        },
+                                    )
+                                else
+                                    Card(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .background(Color.White),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+                                    ) {
+                                        SwipeItem(
+                                            sharedViewModel = sharedViewModel,
+                                            navCtr = navCtr,
+                                            user = user
+                                        )
+                                    }
+
+
                             }
                             Spacer(Modifier.height(8.dp))
                         }
                     }
             }
         }
+        PullRefreshIndicator(refreshing = sharedViewModel.isRefreshing, state = pullRefreshState,Modifier.align(Alignment.TopCenter))
     }
 
 }
@@ -466,13 +497,14 @@ fun SwipeableBoxPreview(
     )
 
     val remove = SwipeAction(
-        icon ={
-        Icon(
-            imageVector = Icons.Default.Delete,
-            contentDescription = "",
-            tint = Color(0xCCFFFFFF),
-            modifier = Modifier.scale(1f)
-        )},
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "",
+                tint = Color(0xCCFFFFFF),
+                modifier = Modifier.scale(1f)
+            )
+        },
         background = MaterialTheme.colorScheme.error,
         onSwipe = {
             println("IDDDD" + user.id)
@@ -496,7 +528,6 @@ fun SwipeableBoxPreview(
             backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp),
         ) {
             SwipeItem(
-                isSnoozed = isSnoozed,
                 sharedViewModel = sharedViewModel,
                 navCtr = navCtr,
                 user = user
@@ -509,7 +540,6 @@ fun SwipeableBoxPreview(
 @Composable
 private fun SwipeItem(
     modifier: Modifier = Modifier,
-    isSnoozed: Boolean,
     sharedViewModel: SharedViewModel,
     navCtr: NavHostController,
     user: User
@@ -524,6 +554,7 @@ private fun SwipeItem(
      */
     Row(
         modifier = Modifier
+            .background(Color.Transparent)
             .clickable(
                 onClick = {
                     sharedViewModel.defineSelectedUserId(user.id.toString())
@@ -540,21 +571,22 @@ private fun SwipeItem(
 /*
                 setting the left vertical blue marker
  */
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .height(80.dp)
-                .wrapContentSize(Alignment.Center)
-        ) {
-            Box(
+        if (sharedViewModel.user?.role == "admin")
+            Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(8.dp)
+                    .height(80.dp)
+                    .wrapContentSize(Alignment.Center)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(8.dp)
 //                    .clip(shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
-                    .height(20.dp)
-                    .background(MaterialTheme.colorScheme.inverseSurface)
-            )
-        }
+                        .height(20.dp)
+                        .background(MaterialTheme.colorScheme.inverseSurface)
+                )
+            }
         /*
                     setting up the left image
          */
@@ -591,6 +623,7 @@ private fun SwipeItem(
         }
         Spacer(modifier = Modifier.weight(1f))
         //setting the right vertical red marker
+        if(sharedViewModel.user?.role=="admin")
         Column(
             modifier = Modifier
                 .fillMaxHeight()

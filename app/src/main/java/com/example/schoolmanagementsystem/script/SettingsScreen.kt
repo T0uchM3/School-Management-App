@@ -52,9 +52,6 @@ fun SettingsScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) 
         color = Color(0xfff2f2f2),
         darkIcons = true
     )
-    systemUiController.setSystemBarsColor(
-        color = Color.Transparent, darkIcons = true
-    )
     var text = remember { mutableStateOf("Hello, World!") }
     Column(
         modifier = Modifier

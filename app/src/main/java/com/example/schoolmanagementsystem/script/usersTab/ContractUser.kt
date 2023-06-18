@@ -41,6 +41,9 @@ import androidx.compose.material.icons.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Block
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -102,7 +105,9 @@ import java.util.Calendar
 var sheetAction = ""
 var contractHolder: Contract? = null
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterialApi::class
+)
 @Composable
 fun ContractUser(
     navCtr: NavHostController? = null,
@@ -185,97 +190,129 @@ fun ContractUser(
             }
 
         }
-
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
-                )
-            )
-            .padding(top = 5.dp)
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp, bottom = 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
-
-            ) {
-            IconButton(onClick = { navCtr?.popBackStack() }) {
-                Icon(
-                    Icons.TwoTone.ArrowBack,
-                    "",
-                    tint = Color(0xCCFFFFFF),
-                    modifier = Modifier
-                        .scale(1.3f)
-                        .padding(end = 5.dp)
-                )
+    val pullRefreshState = rememberPullRefreshState(sharedViewModel.isRefreshing, {
+        sharedViewModel.userList.clear()
+        sharedViewModel.contractList.clear()
+        sharedViewModel.paymentList.clear()
+        usersAPI(sharedViewModel = sharedViewModel)
+        contracts.clear()
+        for (contract in sharedViewModel!!.contractList) {
+            if (contract.user_id.toString() == sharedViewModel.selectedUserId) {
+                contracts.add(contract)
             }
-            Text(
-                text = userName.value.toString(),
-                color = Color(0xCCFFFFFF),
-                fontSize = 30.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Spacer(modifier = Modifier.weight(1f))
-
         }
+    })
+    Box(
+        Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
+    ) {
         Column(
-            Modifier
-                .clip(shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .fillMaxWidth()
-                .fillMaxHeight()
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
+                    )
+                )
+                .padding(top = 5.dp)
         ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp, bottom = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
 
-//        return
-            if (contracts.isEmpty()) {
-                Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text = "This employee has no contracts!",
-                        color = Color.Black,
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                IconButton(onClick = { navCtr?.popBackStack() }) {
+                    Icon(
+                        Icons.TwoTone.ArrowBack,
+                        "",
+                        tint = Color(0xCCFFFFFF),
+                        modifier = Modifier
+                            .scale(1.3f)
+                            .padding(end = 5.dp)
                     )
                 }
-            } else {
+                Text(
+                    text = userName.value.toString(),
+                    color = Color(0xCCFFFFFF),
+                    fontSize = 30.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(modifier = Modifier.weight(1f))
 
-                LazyColumn(
-                    state = rememberLazyListState(),
-                    modifier = Modifier
-                        .padding(bottom = 51.dp, top = 15.dp)
-                        .padding(horizontal = 7.dp)
+            }
+            Column(
+                Modifier
+                    .clip(shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+            ) {
 
-                ) {
-                    items(
-                        contracts.sortedByDescending { it.valide },
-                        key = { item -> item.id }) { contract ->
-                        Box(modifier = Modifier.animateItemPlacement()) {
-                            SwipeableBoxPreview(navCtr,
-                                Modifier.padding(),
-                                sharedViewModel,
-                                contract,
-                                onRemoveClicked = {
-                                    contracts.remove(contract)
-                                    sharedViewModel.contractList.remove(contract)
-                                })
+//        return
+                if (contracts.isEmpty()) {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "This employee has no contracts!",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                } else {
+
+                    LazyColumn(
+                        state = rememberLazyListState(),
+                        modifier = Modifier
+                            .padding(bottom = 51.dp, top = 15.dp)
+                            .padding(horizontal = 7.dp)
+
+                    ) {
+                        items(
+                            contracts.sortedByDescending { it.valide },
+                            key = { item -> item.id }) { contract ->
+                            Box(modifier = Modifier.animateItemPlacement()) {
+                                if (sharedViewModel.user?.role == "admin")
+                                    SwipeableBoxPreview(navCtr,
+                                        Modifier.padding(),
+                                        sharedViewModel,
+                                        contract,
+                                        onRemoveClicked = {
+                                            contracts.remove(contract)
+                                            sharedViewModel.contractList.remove(contract)
+                                        })
+                                else
+                                    Card(
+                                        Modifier.fillMaxWidth(),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+
+                                    ) {
+                                        SwipeItem(
+                                            sharedViewModel,
+                                            navCtr = navCtr,
+                                            contract = contract,
+                                            valid = contract.valide == "1"
+                                        )
+                                    }
+                            }
+                            contractHolder = contract
+                            Spacer(Modifier.height(8.dp))
                         }
-                        contractHolder = contract
-                        Spacer(Modifier.height(8.dp))
                     }
                 }
-            }
 
+            }
         }
+        PullRefreshIndicator(refreshing = sharedViewModel.isRefreshing, state = pullRefreshState,Modifier.align(Alignment.TopCenter))
     }
 
 }
@@ -400,21 +437,22 @@ private fun SwipeItem(
         /**
         setting the left vertical blue marker
          */
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .height(80.dp)
-                .wrapContentSize(Alignment.Center)
-        ) {
-            Box(
+        if (sharedViewModel.user?.role == "admin")
+            Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(8.dp)
+                    .height(80.dp)
+                    .wrapContentSize(Alignment.Center)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(8.dp)
 //                    .clip(shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
-                    .height(20.dp)
-                    .background(MaterialTheme.colorScheme.inverseSurface)
-            )
-        }
+                        .height(20.dp)
+                        .background(MaterialTheme.colorScheme.inverseSurface)
+                )
+            }
         /**
         setting up the left time image
          */
@@ -584,21 +622,22 @@ private fun SwipeItem(
         /**
         setting the right vertical red marker
          */
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .height(80.dp)
-                .wrapContentSize(Alignment.Center)
-        ) {
-            Box(
+        if (sharedViewModel.user?.role == "admin")
+            Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(8.dp)
-                    .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
-                    .height(20.dp)
-                    .background(Color(0x80FFD7D7))
-            )
-        }
+                    .height(80.dp)
+                    .wrapContentSize(Alignment.Center)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(8.dp)
+                        .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
+                        .height(20.dp)
+                        .background(Color(0x80FFD7D7))
+                )
+            }
     }
 }
 

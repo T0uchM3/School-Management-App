@@ -205,7 +205,9 @@ fun loginAPI(
     loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
 
     val usermodel = UserInfo("user1@gmail.com", "123123123")
-    val adminmodel = UserInfo("admin@gmail.com", "111111111")
+//    val adminmodel = UserInfo("admin@gmail.com", "111111111")
+    val adminmodel = UserInfo(mail, pass)
+//    val adminmodel = UserInfo("walid@gmail.com", "gina")
     CoroutineScope(Dispatchers.IO).launch {
         val response = backendApi.login(adminmodel)
         withContext(Dispatchers.Main) {
@@ -218,23 +220,13 @@ fun loginAPI(
                         if (user.role == "teacher") {
 
                             println("TEACHER ")
-                            navCtr?.currentBackStackEntry?.arguments?.apply {
-                                putString("name", user.name)
-                                putString("id", user.id.toString())
-                                putString(
-                                    "role", user.role
-                                )
-                            }
+                            navCtr?.popBackStack()
+                            navCtr?.navigate(Screen.NavBar.route)
                         }
                         if (user.role == "staff") {
                             println("STAFF")
-                            navCtr?.currentBackStackEntry?.arguments?.apply {
-                                putString("name", user.name)
-                                putString("id", user.id.toString())
-                                putString(
-                                    "role", user.role
-                                )
-                            }
+                            navCtr?.popBackStack()
+                            navCtr?.navigate(Screen.NavBar.route)
                         }
                         if (user.role == "admin") {
                             println("ADMIN")
@@ -245,7 +237,11 @@ fun loginAPI(
                     }
 
                 } else {
-                    println("Error: ${response.toString()}")
+                    if(response.code().toString() == "422"){
+                        println("Wrong credentials, try again.")
+                        sharedViewModel.defineWrongCred(true)
+                    }
+
                     println("Error2: ${response.errorBody().toString()}")
                 }
             } catch (e: HttpException) {

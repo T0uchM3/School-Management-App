@@ -85,7 +85,8 @@ fun BottomNav(
                     .height(60.0.dp)
             ) {
                 AnimatedVisibility(
-                    visible = sharedViewModel!!.fabVisible, enter = scaleIn(),
+                    visible = (sharedViewModel!!.fabVisible && sharedViewModel.user?.role=="admin") ||
+                            (sharedViewModel!!.fabVisible && sharedViewModel.user?.role!="admin" && sharedViewModel.isOnInbox), enter = scaleIn(),
                     exit = scaleOut(),
                 ) {
                     FloatingActionButton(
