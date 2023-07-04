@@ -1,8 +1,7 @@
-package com.example.schoolmanagementsystem.script
+package com.example.schoolmanagementsystem.script.homeTab
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,8 +30,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.twotone.ArrowBack
-import androidx.compose.material.icons.twotone.Delete
-import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -67,7 +64,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -79,6 +75,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.R
+import com.example.schoolmanagementsystem.script.SharedViewModel
+import com.example.schoolmanagementsystem.script.TextField
+import com.example.schoolmanagementsystem.script.addGroup
+import com.example.schoolmanagementsystem.script.addNiveau
+import com.example.schoolmanagementsystem.script.deleteGroup
+import com.example.schoolmanagementsystem.script.deleteNiveau
+import com.example.schoolmanagementsystem.script.getGroups
+import com.example.schoolmanagementsystem.script.getNiveau
+import com.example.schoolmanagementsystem.script.model.Contract
+import com.example.schoolmanagementsystem.script.model.Group
+import com.example.schoolmanagementsystem.script.model.Niveau
+import com.example.schoolmanagementsystem.script.sheetAction
+import com.example.schoolmanagementsystem.script.updateGroup
+import com.example.schoolmanagementsystem.script.updateNiveau
 import com.example.schoolmanagementsystem.ui.theme.focusRequester
 import com.example.schoolmanagementsystem.ui.theme.scope
 import com.example.schoolmanagementsystem.ui.theme.sheetState

@@ -10,7 +10,6 @@ import android.util.Log
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,7 +35,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -63,7 +61,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusManager
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -84,13 +81,10 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.R
+import com.example.schoolmanagementsystem.script.model.Student
+import com.example.schoolmanagementsystem.script.model.User
 import com.example.schoolmanagementsystem.ui.theme.clearSearch
-import com.example.schoolmanagementsystem.ui.theme.clearSearchStudent
-import com.example.schoolmanagementsystem.ui.theme.isInitialFocus
-import com.example.schoolmanagementsystem.ui.theme.localUserList
-import com.example.schoolmanagementsystem.ui.theme.visible
-import com.google.accompanist.insets.imePadding
-import com.google.accompanist.insets.navigationBarsWithImePadding
+import com.example.schoolmanagementsystem.script.homeTab.clearSearchStudent
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState

@@ -1,11 +1,6 @@
-package com.example.schoolmanagementsystem.script
+package com.example.schoolmanagementsystem.script.homeTab
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.Group
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.schoolmanagementsystem.R
 
 

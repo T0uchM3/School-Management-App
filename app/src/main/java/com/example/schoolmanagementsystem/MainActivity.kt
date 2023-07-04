@@ -44,11 +44,6 @@ import kotlinx.coroutines.delay
 import okhttp3.internal.wait
 import java.util.Locale
 
-sealed class Destination(val route: String) {
-    object LoginScreen : Destination("loginScreen")
-    object HomeScreen : Destination("homeScreen")
-    object StaffScreen : Destination("staffScreen")
-}
 
 val isKeyboardOpen: MutableState<Boolean> = mutableStateOf(false)
 
@@ -114,28 +109,6 @@ class MainActivity : ComponentActivity() {
                                 )
                                 .fillMaxWidth()
                         ) {
-//                            println("status bar height "+statusBarHeight2)
-//                            // This row will be changing height depends on the keyboard status (open or not)
-//                            // and changing color depends if buttom sheet is up or not
-//                            Row(
-//                                Modifier
-////                                    .height(if (isKeyboardOpen.value) ((statusBarHeight) / 2) - 3.dp else statusBarHeight + 1.dp)
-//                                    .height(if (sharedViewModel.usersFocus == true && isKeyboardOpen.value) ((statusBarHeight) / 2) else statusBarHeight + 1.dp)
-//                                    .background(
-//                                        brush = Brush.horizontalGradient(
-//                                            colors = if (sharedViewModel.fabClicked == true)
-//                                                listOf(Color(0xFF2B5484), Color(0xFF537DAC))
-//                                            else if (sharedViewModel.fabClicked == false)
-//                                                listOf(Color(0xFF3F7CC4), Color(0xFF7AB8FF))
-//                                            else // when it's null, which will be set in the start of the loginscreen
-//                                                listOf(
-//                                                    MaterialTheme.colorScheme.surface,
-//                                                    MaterialTheme.colorScheme.surface
-//                                                )
-//                                        )
-//                                    )
-//                                    .fillMaxWidth()
-//                            ) {}
                         }
                         val navController = rememberNavController()
                         // The actual app ui start here

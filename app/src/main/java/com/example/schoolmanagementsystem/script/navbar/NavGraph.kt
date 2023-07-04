@@ -17,18 +17,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import com.example.schoolmanagementsystem.script.ContractUser
-import com.example.schoolmanagementsystem.script.GroupScreen
+import com.example.schoolmanagementsystem.script.homeTab.GroupScreen
 import com.example.schoolmanagementsystem.script.SharedViewModel
-import com.example.schoolmanagementsystem.ui.theme.HomeScreen1
+import com.example.schoolmanagementsystem.script.homeTab.HomeScreen1
 import com.example.schoolmanagementsystem.ui.theme.UsersTab
 import com.example.schoolmanagementsystem.script.ManageUser
-import com.example.schoolmanagementsystem.script.LoginScreen
+import com.example.schoolmanagementsystem.script.homeTab.LoginScreen
 import com.example.schoolmanagementsystem.script.MessageScreen
 import com.example.schoolmanagementsystem.script.PaymentScreen
-import com.example.schoolmanagementsystem.script.ProfileScreen
-import com.example.schoolmanagementsystem.script.SettingsScreen
+import com.example.schoolmanagementsystem.script.homeTab.ProfileScreen
+import com.example.schoolmanagementsystem.script.homeTab.SettingsScreen
 import com.example.schoolmanagementsystem.ui.theme.InboxScreen
-import com.example.schoolmanagementsystem.ui.theme.StudentScreen
+import com.example.schoolmanagementsystem.script.homeTab.StudentScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable as c2
 

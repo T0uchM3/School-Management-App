@@ -4,14 +4,22 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.BuildConfig
+import com.example.schoolmanagementsystem.script.model.Contract
+import com.example.schoolmanagementsystem.script.model.ContractResults
+import com.example.schoolmanagementsystem.script.model.Group
+import com.example.schoolmanagementsystem.script.model.Message
+import com.example.schoolmanagementsystem.script.model.MessageToSend
+import com.example.schoolmanagementsystem.script.model.MessagesIds
+import com.example.schoolmanagementsystem.script.model.Niveau
+import com.example.schoolmanagementsystem.script.model.Payment
+import com.example.schoolmanagementsystem.script.model.PeriodHolder
+import com.example.schoolmanagementsystem.script.model.Student
+import com.example.schoolmanagementsystem.script.model.User
 import com.example.schoolmanagementsystem.script.navbar.Screen
-import com.example.schoolmanagementsystem.ui.theme.localStudentList
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
@@ -23,7 +31,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -41,7 +48,6 @@ import retrofit2.http.Headers
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
-import retrofit2.http.PartMap
 import retrofit2.http.Path
 import java.io.File
 import java.lang.Exception
@@ -294,16 +300,9 @@ fun loginAPI(
 
     loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
     sharedViewModel.defineWrongCred(false)
-    val usermodel = UserInfo("user1@gmail.com", "123123123")
-//    val adminmodel = UserInfo("admin@gmail.com", "111111111")
-//    val adminmodel = UserInfo(mail, pass)
-    //    val adminmodel = UserInfo("walid@gmail.com", "gina")
     val adminmodel =
         if (!BuildConfig.DEV.toBoolean()) UserInfo(BuildConfig.LoginMail, BuildConfig.LoginMdp) else
-//    UserInfo("houssem.hammami@bestsol.tn", "K64nGMpC")
             UserInfo("admin@gmail.com", "111111111")
-//            UserInfo("ahmed@gmail.com", "123456")
-//        UserInfo("benSalah@gmail.com", "123321")", "123321")
 //            UserInfo(mail, pass)
     CoroutineScope(Dispatchers.IO).launch {
         val response = backendApi.login(adminmodel)

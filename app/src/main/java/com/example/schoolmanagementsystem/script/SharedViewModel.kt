@@ -1,21 +1,23 @@
 package com.example.schoolmanagementsystem.script
 
-import android.os.Build
 import android.view.Window
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import com.example.schoolmanagementsystem.script.model.Contract
+import com.example.schoolmanagementsystem.script.model.Group
+import com.example.schoolmanagementsystem.script.model.Message
+import com.example.schoolmanagementsystem.script.model.MessagesIds
+import com.example.schoolmanagementsystem.script.model.Niveau
+import com.example.schoolmanagementsystem.script.model.Payment
+import com.example.schoolmanagementsystem.script.model.Student
+import com.example.schoolmanagementsystem.script.model.User
 
 class SharedViewModel : ViewModel() {
     var user by mutableStateOf<User?>(null)
