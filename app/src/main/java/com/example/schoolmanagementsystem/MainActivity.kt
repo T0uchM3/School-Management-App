@@ -1,5 +1,6 @@
 package com.example.schoolmanagementsystem
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
@@ -12,11 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
@@ -24,8 +27,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.schoolmanagementsystem.script.Notification
 import com.example.schoolmanagementsystem.script.SharedViewModel
+import com.example.schoolmanagementsystem.script.StoreData
 import com.example.schoolmanagementsystem.script.getMessages
+import com.example.schoolmanagementsystem.script.isInternetAvailable
 //import com.example.schoolmanagmentsystem.script.navbar.NavGraph
 import com.example.schoolmanagementsystem.script.navbar.RootNavGraph
 import com.example.schoolmanagementsystem.ui.theme.AppTheme
@@ -36,6 +42,7 @@ import com.google.accompanist.insets.systemBarsPadding
 import com.google.accompanist.insets.toPaddingValues
 import kotlinx.coroutines.delay
 import okhttp3.internal.wait
+import java.util.Locale
 
 sealed class Destination(val route: String) {
     object LoginScreen : Destination("loginScreen")
@@ -51,6 +58,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
         setContent {
             // This is one of the pillars holding the bottom bar up and preventing it
             // from going under system navigation bar
@@ -58,7 +66,6 @@ class MainActivity : ComponentActivity() {
             val isDarkTheme = remember { mutableStateOf(false) }
             val sharedViewModel: SharedViewModel = viewModel()
             sharedViewModel.setWindow2(window)
-
 
             ProvideWindowInsets {
                 val insets = LocalWindowInsets.current
@@ -74,6 +81,14 @@ class MainActivity : ComponentActivity() {
                 else
                     Modifier
 
+                var context = LocalContext.current
+                val store = StoreData(context)
+                val configuration = Configuration(resources.configuration)
+                val locale = Locale(store.getFromDataStore.collectAsState(initial = "").value)
+                configuration.setLocale(locale)
+                resources.updateConfiguration(configuration, resources.displayMetrics)
+
+
 
                 AppTheme(darkTheme = isDarkTheme.value, sharedViewModel) {
 
@@ -81,7 +96,7 @@ class MainActivity : ComponentActivity() {
                         modifier = mod
                             .fillMaxSize()
 //                            .background(MaterialTheme.colorScheme.surface)
-                            // Prevent the ui to be drawn under the system bottom bar, so we rised it
+                        // Prevent the ui to be drawn under the system bottom bar, so we rised it
                     ) {
                         // Some duct tape stuff going on here, to make sure the status bar facade is holding ;)
                         KeyboardStatus()
@@ -133,6 +148,15 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(key1 = sharedViewModel.waiting) {
                             while (sharedViewModel.waiting) {
                                 delay(5000)
+
+                                if (!isInternetAvailable(context)) {
+                                    if (sharedViewModel.notifEnabled) {
+                                        var notif = Notification(context)
+                                        notif.FireNotification()
+                                        return@LaunchedEffect
+                                    }
+                                }
+
                                 getMessages(sharedViewModel.user!!.id.toInt(), sharedViewModel)
                                 println("WAITED 5 SECS")
                             }

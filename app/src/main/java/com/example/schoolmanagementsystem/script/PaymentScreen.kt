@@ -72,6 +72,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -81,6 +82,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.example.schoolmanagementsystem.ui.theme.scope
 import com.example.schoolmanagementsystem.ui.theme.sheetState
@@ -95,7 +97,8 @@ var payments = SnapshotStateList<Payment>()
 var paymentToEdit = Payment()
 var amountLeft = mutableStateOf(0)
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+@OptIn(
+    ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class
 )
 @SuppressLint("RememberReturnType")
@@ -104,7 +107,10 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     val isEdit = remember { mutableStateOf(false) }
     payments = remember { SnapshotStateList<Payment>() }
     val userName = remember { mutableStateOf("") }
-
+    if (sharedViewModel.user?.role == "admin")
+        sharedViewModel.defineFabVisible(true)
+    else
+        sharedViewModel.defineFabVisible(false)
     BackPressHandlerP(navCtr = navCtr, sharedViewModel = sharedViewModel)
 
     sheetState = remember {
@@ -166,8 +172,9 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     })
     Box(
         Modifier
-        .fillMaxSize()
-        .pullRefresh(pullRefreshState)) {
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
+    ) {
 
         Column(
             modifier = Modifier
@@ -202,7 +209,7 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 Text(
                     text = userName.value + " > " + sharedViewModel.selectedSalary + " (${amountLeft.value} left)",
                     color = Color(0xCCFFFFFF),
-                    fontSize = 20.sp,
+                    fontSize = 16.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium,
@@ -226,7 +233,7 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "No payment has been made for this contract!",
+                            text = stringResource(R.string.no_payment_has_been_made_for_this_contract),
                             color = Color.Black,
                             fontSize = 20.sp,
                             textAlign = TextAlign.Center,
@@ -270,7 +277,11 @@ fun PaymentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 }
             }
         }
-        PullRefreshIndicator(refreshing = sharedViewModel.isRefreshing, state = pullRefreshState,Modifier.align(Alignment.TopCenter))
+        PullRefreshIndicator(
+            refreshing = sharedViewModel.isRefreshing,
+            state = pullRefreshState,
+            Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 
@@ -322,8 +333,11 @@ fun updateValues(sharedViewModel: SharedViewModel) {
         amountPaid += payment.montant!!.toInt()
     }
     amountLeft.value = sharedViewModel.selectedSalary.toInt() - amountPaid
-    if (amountPaid == sharedViewModel.selectedSalary.toInt()) sharedViewModel.defineFabVisible(false)
-    else sharedViewModel.defineFabVisible(true)
+    if (sharedViewModel.user?.role == "admin")
+        if (amountPaid == sharedViewModel.selectedSalary.toInt()) sharedViewModel.defineFabVisible(
+            false
+        )
+        else sharedViewModel.defineFabVisible(true)
 
 
 }
@@ -605,7 +619,7 @@ fun ManagePaymentSheet(
                 }
                 Spacer(Modifier.weight(1f))
                 Text(
-                    text = "New Payment",
+                    text = if (isEdit.value) "Edit Payment" else "New Payment",
                     fontSize = 20.sp,
                     color = Color.DarkGray,
                     style = MaterialTheme.typography.titleMedium,

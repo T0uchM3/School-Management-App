@@ -78,6 +78,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -91,6 +92,7 @@ import com.example.schoolmanagementsystem.script.Message
 import com.example.schoolmanagementsystem.script.Payment
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.script.User
+import com.example.schoolmanagementsystem.script.allUsersAPI
 import com.example.schoolmanagementsystem.script.getMessages
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.example.schoolmanagementsystem.script.payments
@@ -122,6 +124,8 @@ fun InboxScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         color = Color.Transparent,
         darkIcons = true
     )
+    // make sure the fab is visible in this screen
+    sharedViewModel?.defineFabVisible(true)
     // Setting up bottom sheet
     sheetState =
         remember {
@@ -271,7 +275,7 @@ fun InboxScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
                             if (textFieldValue.isEmpty()) {
                                 Text(
-                                    text = "Search users",
+                                    text = stringResource(R.string.search_users),
                                     color = Color.Gray,
                                     fontSize = 18.sp,
                                     modifier = Modifier
@@ -386,7 +390,7 @@ fun InboxScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                         Modifier.fillMaxSize(), contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "No messages here!",
+                            text = stringResource(R.string.no_conversations),
                             color = Color.DarkGray,
                             fontSize = 18.sp,
                             modifier = Modifier
@@ -508,8 +512,8 @@ fun SelectRecipient(
     LaunchedEffect(key1 = Unit) {
         sharedViewModel.defineFABClicked(true)
         if (sharedViewModel.userList.isEmpty())
-            usersAPI(sharedViewModel = sharedViewModel)
-
+//            usersAPI(sharedViewModel = sharedViewModel)
+            allUsersAPI(sharedViewModel=sharedViewModel)
     }
 
     Column(
@@ -537,13 +541,12 @@ fun SelectRecipient(
             }
 //            Spacer(Modifier.weight(1f))
             Text(
-                text = "Select recipient",
+                text = stringResource(R.string.select_recipient),
                 fontSize = 21.sp,
                 color = Color.DarkGray,
                 style = MaterialTheme.typography.titleMedium,
             )
         }
-        val density = LocalDensity.current
         var selectedIndex by remember { mutableStateOf(0) }
         val onItemClick = { index: Int -> selectedIndex = index }
         Box(modifier = Modifier.fillMaxSize()) {
@@ -556,7 +559,7 @@ fun SelectRecipient(
                 item(key = "0") {
                     Spacer(Modifier.height(5.dp)) // To add some padding on top of the list
                 }
-                items(sharedViewModel.userList, key = { item -> item.id }) { user ->
+                items(sharedViewModel.userList.filterNot { it.id == sharedViewModel.user?.id }, key = { item -> item.id }) { user ->
                     Spacer(Modifier.height(8.dp))
                     Box(modifier = Modifier.animateItemPlacement()) {
                         RecipientToSelect(
@@ -618,7 +621,7 @@ private fun SelectRecipientFAB(
             },
         ) {
             androidx.compose.material3.Text(
-                text = "Done",
+                text = stringResource(R.string.done),
                 fontSize = 17.sp,
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
@@ -713,7 +716,6 @@ fun RecipientToSelect(
 
             )
         }
-
     }
 }
 

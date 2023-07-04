@@ -12,6 +12,7 @@ import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -101,6 +102,8 @@ import java.util.Date
 fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
     val name = navCtr?.previousBackStackEntry?.arguments?.getString("name")
     val user = sharedViewModel?.user
+    // make sure the fab is hidden in this screen
+    sharedViewModel?.defineFabVisible(false)
     sharedViewModel?.defineWaiting(true)
     //resetting tab focus
     sharedViewModel?.defineUsersFocus(false)
@@ -190,15 +193,27 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                     modifier = Modifier
                         .weight(0.82f)
                         .padding(start = 0.dp)
+                        .clickable(onClick = {
+                            navCtr?.navigate(Screen.Profile.route)
+                        })
                 ) {
-                    Text(
-                        text = user?.name.toString(),
-                        color = Color(0xCCFFFFFF),
-                        fontSize = 35.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = user?.name.toString(),
+                            color = Color(0xCCFFFFFF),
+                            fontSize = 30.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Icon(
+                            painterResource(id = R.drawable.j),
+                            contentDescription = "",
+                            tint =  Color(0xCCFFFFFF),
+                            modifier = Modifier.size(40.dp).padding(start = 10.dp)
+                        )
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -268,15 +283,35 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                 .fillMaxHeight()
                 .weight(0.5f)
         ) {
+            val listOfItemForStudent = listOf(
+                HomeItems.note,
+                HomeItems.subscription,
+                HomeItems.attendance,
+                HomeItems.message,
+                HomeItems.setting,
+                HomeItems.student,
+//                HomeItems.contract
+            )
             val listOfItem = listOf(
                 HomeItems.note,
                 HomeItems.subscription,
                 HomeItems.attendance,
                 HomeItems.message,
-                HomeItems.setting
+                HomeItems.setting,
+                HomeItems.group,
+                HomeItems.student,
+//                HomeItems.contract
+            )
+            val listOfItemForStaff = listOf(
+                HomeItems.note,
+                HomeItems.subscription,
+                HomeItems.attendance,
+                HomeItems.message,
+                HomeItems.setting,
+//                HomeItems.contract
             )
             LazyVerticalGrid(columns = GridCells.Fixed(3), content = {
-                items(listOfItem.size) { item ->
+                items(count = if (sharedViewModel.user?.role == "student") listOfItemForStudent.size else if(sharedViewModel.user?.role == "staff") listOfItemForStaff.size else  listOfItem.size) { item ->
 
                     Button(
                         onClick = {
@@ -284,6 +319,10 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                                 navCtr?.navigate(Screen.Settings.route)
                             if (listOfItem[item].title == "Messages")
                                 navCtr?.navigate(Screen.Inbox.route)
+                            if (listOfItem[item].title == "Students")
+                                navCtr?.navigate(Screen.Students.route)
+                            if (listOfItem[item].title == "Groups")
+                                navCtr?.navigate(Screen.Groups.route)
                         },
                         colors = androidx.compose.material.ButtonDefaults.buttonColors(
                             contentColor = Color.Transparent, backgroundColor = Color.Transparent

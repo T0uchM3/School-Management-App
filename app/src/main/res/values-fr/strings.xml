@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BestSchool</string>
+    <string name="member_login">Connexion des membres</string>
+    <string name="forgot_password">Mot de passe oublié?</string>
+    <string name="your_password">Votre mot de passe</string>
+    <string name="your_email">Votre e-maill</string>
+    <string name="add_your_details_to_login">Ajoutez vos coordonnées pour vous connecter</string>
+    <string name="you_re_offline">Tu es hors ligne!</string>
+    <string name="wrong_credentials_try_again">Identifiants erronés, réessayez.</string>
+    <string name="settings">Paramètres</string>
+    <string name="set_language">Définir la langue</string>
+    <string name="allow_to_access">Autoriser l`\'accès</string>
+    <string name="clear_cache">Vider le cache</string>
+    <string name="account">Compte</string>
+    <string name="logout">Déconnexion</string>
+    <string name="search_users">Rechercher des utilisateurs</string>
+    <string name="cancel">Annuler</string>
+    <string name="new_user">Nouvel utilisateur</string>
+    <string name="create">Créer</string>
+    <string name="update">Mise à jour</string>
+    <string name="name">nom</string>
+    <string name="password">mot de passe</string>
+    <string name="woman">Femme</string>
+    <string name="man">Homme</string>
+    <string name="general_settings">Réglages généraux</string>
+    <string name="edit">modifier</string>
+    <string name="no_conversations">Commencer une conversation!</string>
+    <string name="select_recipient">Sélectionnez le destinataire</string>
+    <string name="done">Suivante</string>
+    <string name="enter_message">Entrez le message</string>
+    <string name="inbox">Courrier</string>
+    <string name="new_student">Nouvel étudiant</string>
+    <string name="edit_student">Modifier l élève</string>
+    <string name="gender">Genre</string>
+    <string name="date_of_birth">Date de naissance</string>
+    <string name="staff">Personnelle</string>
+    <string name="teacher">Professeure</string>
+    <string name="address">Adresse</string>
+    <string name="parent">Parent</string>
+    <string name="bank">Banque</string>
+    <string name="group">Groupe</string>
+    <string name="search_student">Rechercher un étudiant</string>
+    <string name="add_at_least_one_group_before_adding_new_students">Ajoutez au moins un groupe avant d ajouter de nouveaux élèves</string>
+    <string name="no_student_currently_registered">Aucun étudiant actuellement inscrit!</string>
+    <string name="students">Étudiants</string>
+    <string name="new_group">Nouveau groupe</string>
+    <string name="edit_group">Modifier groupe</string>
+    <string name="group_name">Nom de groupe</string>
+    <string name="select_a_niveau_to_add_a_group">Sélectionnez un niveau pour ajouter un groupe</string>
+    <string name="new_niveau_enter_name_here">Nouveau niveau? entrez le nom ici</string>
+    <string name="no_payment_has_been_made_for_this_contract">Aucun paiement n\'a été effectué pour ce contrat !</string>
+
+
+</resources>

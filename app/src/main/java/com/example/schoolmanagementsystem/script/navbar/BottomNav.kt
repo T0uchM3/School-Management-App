@@ -85,8 +85,9 @@ fun BottomNav(
                     .height(60.0.dp)
             ) {
                 AnimatedVisibility(
-                    visible = (sharedViewModel!!.fabVisible && sharedViewModel.user?.role=="admin") ||
-                            (sharedViewModel!!.fabVisible && sharedViewModel.user?.role!="admin" && sharedViewModel.isOnInbox), enter = scaleIn(),
+//                    visible = (sharedViewModel!!.fabVisible && sharedViewModel.user?.role=="admin") ||
+//                            (sharedViewModel!!.fabVisible && sharedViewModel.user?.role!="admin" && sharedViewModel.isOnInbox), enter = scaleIn(),
+                    visible = sharedViewModel!!.fabVisible,
                     exit = scaleOut(),
                 ) {
                     FloatingActionButton(
@@ -95,7 +96,7 @@ fun BottomNav(
                             .background(Color(0x00000000)),
                         contentColor = Color(0xFFF1F1F1),
                         containerColor = Color(0xFFF1F1F1),
-                        onClick = sharedViewModel.fabOnClick,
+                        onClick = sharedViewModel!!.fabOnClick,
                     ) {
                         Icon(
                             painterResource(id = R.drawable.z),
@@ -141,20 +142,35 @@ fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel
         Screen.Home,
         Screen.Users,
         Screen.Inbox,
-        Screen.Profile,
+        Screen.Settings
+    )
+    val screensForStudent = listOf(
+        Screen.Home,
+        Screen.Students,
+        Screen.Inbox,
+        Screen.Settings
     )
     //screens to show bottom bar in
     val navBarScreen = listOf(
         Screen.Home,
         Screen.Users,
         Screen.Inbox,
-        Screen.Profile,
+        Screen.Settings,
         Screen.Contract,
+    )
+    val navBarScreenForStudent = listOf(
+        Screen.Home,
+        Screen.Users,
+        Screen.Inbox,
+        Screen.Settings,
+        Screen.Contract,
+        Screen.Students
     )
     val navStackBackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navStackBackEntry?.destination
 
-    val bottomBarDestination = navBarScreen.any { it.route == currentDestination?.route }
+    val bottomBarDestination = if(sharedViewModel.user?.role == "student") navBarScreenForStudent.any { it.route == currentDestination?.route }
+    else navBarScreen.any { it.route == currentDestination?.route }
     //making sure no bottom bar in payment screen...
     if (bottomBarDestination)
         Row(
@@ -172,8 +188,8 @@ fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel
                     .padding(top = 10.dp, bottom = 6.dp)
 
             ) {
-
-                screens.forEach { screen ->
+                if(sharedViewModel.user?.role == "student")
+                screensForStudent.forEach { screen ->
                     AddItem(
                         screen = screen,
                         currentDestination = currentDestination,
@@ -181,6 +197,15 @@ fun BottomBar(navController: NavHostController, sharedViewModel: SharedViewModel
                         sharedViewModel
                     )
                 }
+                else
+                    screens.forEach { screen ->
+                        AddItem(
+                            screen = screen,
+                            currentDestination = currentDestination,
+                            navController = navController,
+                            sharedViewModel
+                        )
+                    }
             }
 
         }

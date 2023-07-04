@@ -69,6 +69,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
@@ -84,6 +85,7 @@ import coil.request.ImageRequest
 import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.ui.theme.clearSearch
+import com.example.schoolmanagementsystem.ui.theme.clearSearchStudent
 import com.example.schoolmanagementsystem.ui.theme.isInitialFocus
 import com.example.schoolmanagementsystem.ui.theme.localUserList
 import com.example.schoolmanagementsystem.ui.theme.visible
@@ -117,6 +119,9 @@ var userPhoto: MutableState<String>? = null
 
 var photoIsSelected = mutableStateOf(false)
 
+var parentInput: MutableState<TextFieldValue>? = null
+var remarkInput: MutableState<TextFieldValue>? = null
+
 var selectedSex: MutableState<Int>? = null
 var selectedRole: MutableState<Int>? = null
 
@@ -127,13 +132,14 @@ var month = mutableStateOf(Calendar.getInstance().get(Calendar.MONTH))
 var nbrDays = mutableStateOf(getDays(month.value))
 
 var bank = mutableStateOf(8)
+var group = mutableStateOf(0)
 var weGotPermission = mutableStateOf(false)
 
 @Composable
-fun stringToDate(date: String){
-     year =remember { mutableStateOf(date.substring(0, 4).toInt()) }
-     month =remember { mutableStateOf(date.substring(5, 7).toInt() - 1) }
-     day = remember { mutableStateOf(date.substring(8, 10).toInt()) }
+fun stringToDate(date: String) {
+    year = remember { mutableStateOf(date.substring(0, 4).toInt()) }
+    month = remember { mutableStateOf(date.substring(5, 7).toInt() - 1) }
+    day = remember { mutableStateOf(date.substring(8, 10).toInt()) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -143,7 +149,10 @@ fun ManageUser(
     sharedViewModel: SharedViewModel,
     scope: CoroutineScope? = null,
     state: SheetState? = null,
-    focusManager: FocusManager? = null
+    focusManager: FocusManager? = null,
+    isNewStudent: Boolean = false,
+    isEditStudent: Boolean = false,
+    student: Student? = null,
 ) {
     //searching through the users list for user that got selected in the previous (userTab)
 //     selectedUser: User? = null
@@ -153,19 +162,23 @@ fun ManageUser(
 //    println(sharedViewModel.isNewUser.toString() + "  USER ID!::: " + selectedUser?.id)
 
     nameInput = remember {
-        mutableStateOf(TextFieldValue(selectedUser?.name.toString()))
+        mutableStateOf(TextFieldValue(student?.user?.name ?: selectedUser?.name.toString()))
     }
     cinInput = remember {
-        mutableStateOf(TextFieldValue(selectedUser?.cin.toString()))
+        mutableStateOf(TextFieldValue(student?.user?.cin ?: selectedUser?.cin.toString()))
     }
     dnInput = remember {
-        mutableStateOf(TextFieldValue(selectedUser?.date_naiss.toString()))
+        mutableStateOf(
+            TextFieldValue(
+                student?.user?.date_naiss ?: selectedUser?.date_naiss.toString()
+            )
+        )
     }
     emailInput = remember {
-        mutableStateOf(TextFieldValue(selectedUser?.email.toString()))
+        mutableStateOf(TextFieldValue(student?.user?.email ?: selectedUser?.email.toString()))
     }
     passwordInput = remember {
-        mutableStateOf(TextFieldValue(selectedUser?.password.toString()))
+        mutableStateOf(TextFieldValue(student?.user?.password ?: selectedUser?.password.toString()))
     }
     positionInput = remember {
         mutableStateOf(TextFieldValue(selectedUser?.poste.toString()))
@@ -174,10 +187,10 @@ fun ManageUser(
         mutableStateOf(TextFieldValue(selectedUser?.rib.toString()))
     }
     phoneInput = remember {
-        mutableStateOf(TextFieldValue(selectedUser?.tel.toString()))
+        mutableStateOf(TextFieldValue(student?.user?.tel ?: selectedUser?.tel.toString()))
     }
     addressInput = remember {
-        mutableStateOf(TextFieldValue(selectedUser?.adresse.toString()))
+        mutableStateOf(TextFieldValue(student?.user?.adresse ?: selectedUser?.adresse.toString()))
     }
     selectedSex = remember {
         mutableStateOf(-1)
@@ -194,17 +207,26 @@ fun ManageUser(
     photoIsSelected = remember {
         mutableStateOf(false)
     }
+    parentInput = remember {
+        mutableStateOf(TextFieldValue(student?.parent.toString()))
+    }
+    remarkInput = remember {
+        mutableStateOf(TextFieldValue(student?.remarque.toString()))
+    }
     // Editing user
-    if (selectedUser?.date_naiss != null) {
+    if ((selectedUser?.date_naiss != null) || isEditStudent) {
         // Progressive app?!
         selectedSex = remember {
-            mutableStateOf(if (selectedUser?.sex == "man") 1 else if (selectedUser?.sex == "woman") 2 else -1)
+            mutableStateOf(if (selectedUser?.sex == "man" || student?.user?.sex == "man") 1 else if (selectedUser?.sex == "woman" || student?.user?.sex == "woman") 2 else -1)
         }
         selectedRole = remember {
             mutableStateOf(if (selectedUser?.role == "staff") 1 else if (selectedUser?.role == "teacher") 2 else 3)
         }
         //format 2023-05-27
-        stringToDate(selectedUser?.date_naiss!!)
+        if (isEditStudent && student?.user?.date_naiss != null)
+            stringToDate(student?.user?.date_naiss!!)
+        if (!sharedViewModel.isNewUser && !isNewStudent && !isEditStudent)
+            stringToDate(selectedUser?.date_naiss!!)
 
         bank = remember {
             mutableStateOf(
@@ -216,7 +238,7 @@ fun ManageUser(
     LaunchedEffect(key1 = Unit) {
         // For status bar shadow simulation
         sharedViewModel.defineFABClicked(true)
-        if (sharedViewModel.isNewUser) {
+        if (sharedViewModel.isNewUser || isNewStudent) {
             //this will get recomposed, so better to trigger it once per fap pres
 //            sharedViewModel.defineIsNewUser(false)
             resetAllFields()
@@ -247,22 +269,65 @@ fun ManageUser(
                 border = BorderStroke(1.dp, Color.Transparent),
             ) {
                 Text(
-                    text = "Cancel",
-                    fontSize = 17.sp,
+                    text = stringResource(R.string.cancel),
+                    fontSize = 16.sp,
                     color = Color.Red,
 //                    style = MaterialTheme.typography.titleSmall
                 )
             }
             Spacer(Modifier.weight(1f))
             Text(
-                text = "New User",
+                text = if (isNewStudent) stringResource(R.string.new_student) else if (isEditStudent) stringResource(
+                    R.string.edit_student
+                ) else if (sharedViewModel.isNewUser) stringResource(
+                    R.string.new_user
+                ) else "Edit User",
                 style = MaterialTheme.typography.titleMedium,
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 color = Color.DarkGray
             )
             Spacer(Modifier.weight(1f))
             Button(
                 onClick = {
+                    if (isNewStudent || isEditStudent) {
+                        val groupName = sharedViewModel.groupList.map { it.name }
+
+                        val _student = Student()
+                        _student.name = nameInput!!.value.text
+                        _student.cin = cinInput!!.value.text
+                        _student.date_naiss = "${year.value}-${month.value + 1}-${day.value}"
+                        _student.email = emailInput!!.value.text
+                        _student.sex =
+                            if (selectedSex!!.value == 1) "man" else if (selectedSex!!.value == 2) "woman" else null
+                        _student.tel = phoneInput!!.value.text
+                        _student.adresse = addressInput!!.value.text
+                        _student.password = passwordInput!!.value.text
+                        var groupIndex =
+                            if (sharedViewModel.groupList.isEmpty()) "" else groupName.elementAt(
+                                group.value
+                            )
+                        _student.groupe_id =
+                            sharedViewModel.groupList.find { it.name == groupIndex }?.id.toString()
+                        _student.remarque = remarkInput!!.value.text
+                        _student.parent = parentInput!!.value.text
+
+                        // Adding new student
+                        if (isNewStudent) {
+                            clearSearchStudent(sharedViewModel, focusManager!!)
+                            addStudent(_student, sharedViewModel, selectedPhoto, true)
+                            sharedViewModel.defineFABClicked(false)
+                            scope?.launch { state?.hide() }
+                        }
+                        // Updating student
+                        else {
+                            _student.id = student!!.id
+                            clearSearchStudent(sharedViewModel, focusManager!!)
+                            editStudent(_student, sharedViewModel, selectedPhoto, true)
+                            sharedViewModel.defineFABClicked(false)
+                            scope?.launch { state?.hide() }
+                        }
+                        return@Button
+                    }
                     val user = User()
 
                     user.name = nameInput!!.value.text
@@ -311,17 +376,20 @@ fun ManageUser(
                     disabledContentColor = Color.Gray,
                     contentColor = MaterialTheme.colorScheme.inverseSurface
                 ),
-                enabled = !(selectedRole!!.value == -1 || selectedSex!!.value == -1 || nameInput!!.value.text.isEmpty() ||
+                enabled = if (!isNewStudent && !isEditStudent) !(selectedRole!!.value == -1 || selectedSex!!.value == -1 || nameInput!!.value.text.isEmpty() ||
                         emailInput!!.value.text.isEmpty() || bankNames.elementAt(bank.value) == "Choose a bank")
+                else true
             ) {
-                if (sharedViewModel.isNewUser) Text(
-                    text = "Create",
-                    fontSize = 17.sp,
-                )
-                else Text(
-                    text = "Update",
-                    fontSize = 17.sp,
-                )
+                if (sharedViewModel.isNewUser || isNewStudent)
+                    Text(
+                        text = stringResource(R.string.create),
+                        fontSize = 16.sp,
+                    )
+                else
+                    Text(
+                        text = stringResource(R.string.update),
+                        fontSize = 16.sp,
+                    )
             }
         }
         Column(
@@ -335,24 +403,33 @@ fun ManageUser(
             ImageSelection(LocalContext.current, userPhoto!!)
 
 
-            TextField(sharedViewModel = sharedViewModel, nameInput!!, "name")
+            TextField(sharedViewModel = sharedViewModel, nameInput!!, stringResource(R.string.name))
             TextField(sharedViewModel = sharedViewModel, cinInput!!, "cin")
             TextField(sharedViewModel = sharedViewModel, emailInput!!, "email")
-            TextField(sharedViewModel = sharedViewModel, passwordInput!!, "password")
-
-            Text(
-                text = "Role",
-                modifier = Modifier.padding(
-                    top = 5.dp,
-                    start = 15.dp,
-                ),
-                style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
+            TextField(
+                sharedViewModel = sharedViewModel,
+                passwordInput!!,
+                stringResource(R.string.password)
             )
-            SegmentedButtonsRole(selectedRole!!, "Staff", "Teacher", "Admin")
-            TextField(sharedViewModel = sharedViewModel, positionInput!!, "poste")
+            if (!isEditStudent && !isNewStudent) {
+                Text(
+                    text = "Role",
+                    modifier = Modifier.padding(
+                        top = 5.dp,
+                        start = 15.dp,
+                    ),
+                    style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
+                )
 
+                    SegmentedButtonsRole(
+                        selectedRole!!, stringResource(R.string.staff), stringResource(
+                            R.string.teacher
+                        ), "Admin"
+                    )
+                TextField(sharedViewModel = sharedViewModel, positionInput!!, "poste")
+            }
             Text(
-                text = "Date of birth",
+                text = stringResource(R.string.date_of_birth),
                 modifier = Modifier.padding(
                     top = 5.dp,
                     start = 15.dp,
@@ -361,25 +438,57 @@ fun ManageUser(
             )
             DatePickerUI(sharedViewModel, year, month, day)
 
-            TextField(sharedViewModel = sharedViewModel, addressInput!!, "address")
+            TextField(
+                sharedViewModel = sharedViewModel,
+                addressInput!!,
+                stringResource(R.string.address)
+            )
 
             Text(
-                text = "Gender",
+                text = stringResource(R.string.gender),
                 modifier = Modifier.padding(top = 5.dp, start = 15.dp),
                 style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
             )
             SegmentedButtons(selectedSex!!)
-            TextField(sharedViewModel = sharedViewModel, ribInput!!, "rib")
-            TextField(sharedViewModel = sharedViewModel, phoneInput!!, "phone")
-            Text(
-                text = "Bank",
-                modifier = Modifier.padding(top = 5.dp, start = 15.dp),
-                style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
-            )
-            BanksScroll(
-                onBankChosen = { bank.value = bankNames.indexOf(it) },
-                isNewUser = sharedViewModel.isNewUser
-            )
+            if (!isEditStudent && !isNewStudent)
+                TextField(sharedViewModel = sharedViewModel, ribInput!!, "Rib")
+            else {
+                TextField(
+                    sharedViewModel = sharedViewModel,
+                    parentInput!!,
+                    stringResource(R.string.parent)
+                )
+                TextField(sharedViewModel = sharedViewModel, remarkInput!!, "Remark")
+
+            }
+            TextField(sharedViewModel = sharedViewModel, phoneInput!!, "Phone")
+
+            if (!isEditStudent && !isNewStudent) {
+                Text(
+                    text = stringResource(R.string.bank),
+                    modifier = Modifier.padding(top = 5.dp, start = 15.dp),
+                    style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
+                )
+                BanksScroll(
+                    onBankChosen = { bank.value = bankNames.indexOf(it) },
+                    isNewUser = sharedViewModel.isNewUser
+                )
+            } else {
+                if (sharedViewModel.groupList.isNotEmpty()) {
+                    Text(
+                        text = stringResource(R.string.group),
+                        modifier = Modifier.padding(top = 5.dp, start = 15.dp),
+                        style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray)
+                    )
+                    val groupName = sharedViewModel.groupList.map { it.name }
+                    GroupScroll(
+                        onGroupChosen = { group.value = groupName.indexOf(it) },
+                        isNewStudent = isNewStudent, sharedViewModel
+                    )
+                }
+
+            }
+
             Spacer(modifier = Modifier.height(50.dp))
 
         }
@@ -388,19 +497,22 @@ fun ManageUser(
 
 fun resetAllFields() {
     //resets all fields
-    nameInput?.value = TextFieldValue("elmo")
-    cinInput?.value = TextFieldValue("010010110")
+    nameInput?.value = TextFieldValue("")
+    cinInput?.value = TextFieldValue("")
     dnInput?.value = TextFieldValue("")
-    emailInput?.value = TextFieldValue("elmo@gmail.com")
-    phoneInput?.value = TextFieldValue("21547856")
-    passwordInput?.value = TextFieldValue("gina")
-    addressInput?.value = TextFieldValue("sesame street")
-    ribInput?.value = TextFieldValue("3")
-    positionInput?.value = TextFieldValue("position")
+    emailInput?.value = TextFieldValue("")
+    phoneInput?.value = TextFieldValue("")
+    passwordInput?.value = TextFieldValue("")
+    addressInput?.value = TextFieldValue("")
+    ribInput?.value = TextFieldValue("")
+    positionInput?.value = TextFieldValue("")
 //    selectedBank?
     selectedSex?.value = -1
     selectedRole?.value = -1
     userPhoto?.value = ""
+
+    remarkInput?.value = TextFieldValue("")
+    parentInput?.value = TextFieldValue("")
 }
 
 @Composable
@@ -488,7 +600,7 @@ fun SegmentedButtons(selectedButton: MutableState<Int>) {
                 .weight(1f)
         ) {
             Text(
-                "Man",
+                stringResource(R.string.man),
                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                 fontSize = 16.sp,
             )
@@ -508,7 +620,7 @@ fun SegmentedButtons(selectedButton: MutableState<Int>) {
 
         ) {
             Text(
-                "Woman",
+                stringResource(R.string.woman),
                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                 fontSize = 16.sp
 //                style = MaterialTheme.typography.titleMedium.copy(
@@ -551,8 +663,8 @@ fun SegmentedButtonsRole(
         ) {
             Text(
                 left,
-                modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
-                fontSize = 15.sp,
+                modifier = Modifier.padding(horizontal = 0.dp, vertical = 2.dp),
+                fontSize = 12.sp,
             )
         }
         OutlinedButton(
@@ -572,8 +684,8 @@ fun SegmentedButtonsRole(
         ) {
             Text(
                 middle,
-                modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
-                fontSize = 15.sp,
+                modifier = Modifier.padding(horizontal = 0.dp, vertical = 2.dp),
+                fontSize = 12.sp,
             )
         }
         OutlinedButton(
@@ -593,7 +705,7 @@ fun SegmentedButtonsRole(
             Text(
                 right,
                 modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
-                fontSize = 15.sp
+                fontSize = 12.sp
             )
         }
     }
@@ -637,7 +749,6 @@ fun DatePickerUI(
 }
 
 fun getDays(monthToFix: Int): Int {
-    println("MONTH ?? "+monthToFix)
 
     val number = when (monthToFix) {
         0 -> 31
@@ -728,12 +839,30 @@ fun BanksScroll(
 }
 
 @Composable
+fun GroupScroll(
+    onGroupChosen: (String) -> Unit, isNewStudent: (Boolean), sharedViewModel: SharedViewModel
+) {
+    val groupName = sharedViewModel.groupList.map { it.name }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        InfiniteItemsPicker(
+            items = groupName as List<String>,
+            firstIndex = if (!isNewStudent) Int.MAX_VALUE / 2 + group.value + 8
+            else Int.MAX_VALUE / 2 + 8,
+            onItemSelected = onGroupChosen,
+            isForGroup = true
+        )
+    }
+    Spacer(modifier = Modifier.height(100.dp))
+}
+
+@Composable
 fun InfiniteItemsPicker(
     modifier: Modifier = Modifier,
     items: List<String>,
     firstIndex: Int,
     onItemSelected: (String) -> Unit,
-    isForBank: Boolean,
+    isForBank: Boolean = false,
+    isForGroup: Boolean = false
 ) {
     val listState = rememberLazyListState(firstIndex)
     val currentValue = remember { mutableStateOf("") }
@@ -741,7 +870,7 @@ fun InfiniteItemsPicker(
         onItemSelected(currentValue.value)
         listState.animateScrollToItem(index = listState.firstVisibleItemIndex)
     }
-    var mod = if (isForBank) Modifier.fillMaxWidth()
+    var mod = if (isForBank || isForGroup) Modifier.fillMaxWidth()
     else Modifier.width(100.dp)
 
     Box(
@@ -819,7 +948,6 @@ val bankNames = listOf(
     "Union Internationale de Banque",
     "Autre",
 )
-
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

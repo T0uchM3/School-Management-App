@@ -40,4 +40,19 @@ sealed class HomeItems(
         icon = R.drawable.w,
         color =  Color(0xFF02C40B)
     )
+    object group : HomeItems(
+        title = "Groups",
+        icon = R.drawable.g,
+        color =  Color(0xFFD4E157)
+    )
+    object student : HomeItems(
+        title = "Students",
+        icon = R.drawable.d,
+        color =  Color(0xFF048FDB)
+    )
+    object contract : HomeItems(
+        title = "Contract",
+        icon = R.drawable.n,
+        color =  Color(0xFFFF7043)
+    )
 }

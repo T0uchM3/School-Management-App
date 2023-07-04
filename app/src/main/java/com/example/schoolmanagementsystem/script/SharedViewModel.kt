@@ -273,10 +273,49 @@ class SharedViewModel : ViewModel() {
         isRefreshing = newState
     }
 
-    var wrongCred by mutableStateOf<Boolean?>(null)
+    var wrongCred by mutableStateOf<Boolean>(false)
         private set
-
     fun defineWrongCred(newState: Boolean) {
         wrongCred = newState
     }
+
+    var studentList = SnapshotStateList<Student>()
+        private set
+
+    fun defineStudentList(newList: List<Student>?) {
+        studentList.addAll(newList!!)
+    }
+
+    var selectedStudentId by mutableStateOf<String>("")
+        private set
+
+    fun defineSelectedStudentId(id: String) {
+        selectedStudentId = id
+    }
+    var groupList = SnapshotStateList<Group>()
+        private set
+
+    fun defineGroupList(newList: List<Group>?) {
+        groupList.addAll(newList!!)
+    }
+
+    var niveauList = SnapshotStateList<Niveau>()
+        private set
+
+    fun defineNiveauList(newList: List<Niveau>?) {
+        niveauList.addAll(newList!!)
+    }
+
+    var studentConnected by mutableStateOf<Student?>(null)
+        private set
+
+    fun defineStudentConnected(student: Student) {
+        studentConnected = student
+    }
+    var notifEnabled by mutableStateOf<Boolean>(true)
+        private set
+    fun defineNotifEnabled(newState: Boolean) {
+        notifEnabled = newState
+    }
+
 }

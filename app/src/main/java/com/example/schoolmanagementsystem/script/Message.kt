@@ -17,6 +17,7 @@ class Message(
     var to_user: User?=null
 ) : Parcelable
 
+
 @Parcelize
 class MessageToSend(
     var id: Long = -1,

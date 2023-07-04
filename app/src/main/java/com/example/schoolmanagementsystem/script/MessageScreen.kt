@@ -78,6 +78,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -136,6 +137,8 @@ fun MessageScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         color = Color.Transparent,
         darkIcons = true
     )
+    // make sure the fab is hidden in this screen
+    sharedViewModel?.defineFabVisible(false)
     sheetState = remember {
         SheetState(
             skipHiddenState = false, skipPartiallyExpanded = true, initialValue = SheetValue.Hidden
@@ -355,7 +358,7 @@ fun MessageScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
                             if (textFieldValue.isEmpty()) {
                                 androidx.compose.material.Text(
-                                    text = "Enter message",
+                                    text = stringResource(R.string.enter_message),
                                     color = Color.Gray,
                                     fontSize = 17.sp,
                                     modifier = Modifier
@@ -463,67 +466,81 @@ fun MessageScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
 
 @Composable
-fun GetImage(user: User, smallSize: Boolean = false) {
-    var painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(
-
-                if (user.photo == null) {
-                    if (user.role == "teacher" && user.sex == "woman") R.drawable.teacherw
-                    else if (user.role == "teacher" && user.sex == "man") R.drawable.teacherm
-                    else if (user.role == "staff" && user.sex == "woman") R.drawable.staffw
-                    else if (user.role == "staff" && user.sex == "man") R.drawable.staffm
-                    else if (user.role == "admin" && user.sex == "woman") R.drawable.adminw
-                    else R.drawable.adminm
-                } else {
-                    val host2 =
-                        if (BuildConfig.DEV.toBoolean()) {
-                            if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.5:8000/"
-                        } else
-                            BuildConfig.Host
-                    host2 + user.photo
-                }
-            )
-            .size(Size(width = 80, height = 80))
-//                    .memoryCachePolicy(CachePolicy.DISABLED)
-            .setHeader("User-Agent", "Mozilla/5.0")
-            .transformations(
-                CircleCropTransformation()
-            )
-            .build()
-    )
-    val painterState = painter.state
-
-    if (painterState is AsyncImagePainter.State.Success) {
-        Image(
-            painter = painter,
-            modifier = Modifier
-                .size(if (smallSize) 40.dp else 50.dp),
-            contentDescription = null
-        )
-    }
-    var show by remember { mutableStateOf(false) }
-
-    if (painterState is AsyncImagePainter.State.Error) {
-        // Fallback to local images when loading url fail
+fun GetImage(user: User?, smallSize: Boolean = false) {
+    if(user==null){
         Image(
             painter = rememberAsyncImagePainter(
-                if (user.role == "teacher" && user.sex == "woman") R.drawable.teacherw
-                else if (user.role == "teacher" && user.sex == "man") R.drawable.teacherm
-                else if (user.role == "staff" && user.sex == "woman") R.drawable.staffw
-                else if (user.role == "staff" && user.sex == "man") R.drawable.staffm
-                else if (user.role == "admin" && user.sex == "woman") R.drawable.adminw
+                 if ( user?.sex == "woman") R.drawable.adminw
                 else R.drawable.adminm
             ),
             modifier = Modifier
                 .size(50.dp),
             contentDescription = null
         )
+    }
+    else{
+        var painter = rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(
+
+                    if (user.photo == null) {
+                        if (user.role == "teacher" && user.sex == "woman") R.drawable.teacherw
+                        else if (user.role == "teacher" && user.sex == "man") R.drawable.teacherm
+                        else if (user.role == "staff" && user.sex == "woman") R.drawable.staffw
+                        else if (user.role == "staff" && user.sex == "man") R.drawable.staffm
+                        else if (user.role == "admin" && user.sex == "woman") R.drawable.adminw
+                        else R.drawable.adminm
+                    } else {
+                        val host2 =
+                            if (BuildConfig.DEV.toBoolean()) {
+                                if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.59:8000/"
+                            } else
+                                BuildConfig.Host
+                        host2 + user.photo
+                    }
+                )
+                .size(Size(width = 80, height = 80))
+//                    .memoryCachePolicy(CachePolicy.DISABLED)
+                .setHeader("User-Agent", "Mozilla/5.0")
+                .transformations(
+                    CircleCropTransformation()
+                )
+                .build()
+        )
+        val painterState = painter.state
+
+        if (painterState is AsyncImagePainter.State.Success) {
+            Image(
+                painter = painter,
+                modifier = Modifier
+                    .size(if (smallSize) 40.dp else 50.dp),
+                contentDescription = null
+            )
+        }
+        var show by remember { mutableStateOf(false) }
+
+        if (painterState is AsyncImagePainter.State.Error) {
+            // Fallback to local images when loading url fail
+            Image(
+                painter = rememberAsyncImagePainter(
+                    if (user.role == "teacher" && user.sex == "woman") R.drawable.teacherw
+                    else if (user.role == "teacher" && user.sex == "man") R.drawable.teacherm
+                    else if (user.role == "staff" && user.sex == "woman") R.drawable.staffw
+                    else if (user.role == "staff" && user.sex == "man") R.drawable.staffm
+                    else if (user.role == "admin" && user.sex == "woman") R.drawable.adminw
+                    else R.drawable.adminm
+                ),
+                modifier = Modifier
+                    .size(50.dp),
+                contentDescription = null
+            )
 //                LoadingAnimation()
+        }
+        if (painterState is AsyncImagePainter.State.Loading) {
+            LoadingAnimation()
+        }
     }
-    if (painterState is AsyncImagePainter.State.Loading) {
-        LoadingAnimation()
-    }
+
 }
 
 // Handling the fab position when going back without the top arrow
@@ -647,7 +664,6 @@ private fun MessageBox(
                 modifier = Modifier
                     .padding(horizontal = 13.dp)
             )
-
         }
     }
 }

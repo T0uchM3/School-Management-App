@@ -83,8 +83,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -95,9 +97,11 @@ import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.GetImage
 import com.example.schoolmanagementsystem.script.LoadingIndicator
 import com.example.schoolmanagementsystem.script.ManageUser
+import com.example.schoolmanagementsystem.script.Notification
 import com.example.schoolmanagementsystem.script.SharedViewModel
 import com.example.schoolmanagementsystem.script.User
 import com.example.schoolmanagementsystem.script.deleteUserAPI
+import com.example.schoolmanagementsystem.script.isInternetAvailable
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.example.schoolmanagementsystem.script.usersAPI
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -133,6 +137,12 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
         color = Color.Transparent,
         darkIcons = true
     )
+    if (sharedViewModel.user?.role == "admin")
+    // make sure the fab is visible in this screen for this role
+        sharedViewModel.defineFabVisible(true)
+    else
+        sharedViewModel.defineFabVisible(false)
+
     // Setting up bottom sheet
     sheetState =
         remember {
@@ -174,10 +184,9 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
     } else
         sharedViewModel.defineFABClicked(false)
 
-
+    var context = LocalContext.current
     LaunchedEffect(key1 = Unit) {
         sharedViewModel.defineIsOnBox(false)
-        sharedViewModel.defineFabVisible(true)
         clearSearch(sharedViewModel, focusManager)
         //setting up fab in user tab
         sharedViewModel.defineFabClick {
@@ -186,6 +195,11 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                 sheetState?.show()
 
             }
+        }
+        if (!isInternetAvailable(context)) {
+            var notif = Notification(context)
+            notif.FireNotification()
+            return@LaunchedEffect
         }
         sharedViewModel.userList.clear()
         sharedViewModel.contractList.clear()
@@ -271,9 +285,9 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
                             if (textFieldValue.isEmpty()) {
                                 Text(
-                                    text = "Search users",
+                                    text = stringResource(R.string.search_users),
                                     color = Color.Gray,
-                                    fontSize = 18.sp,
+                                    fontSize = 16.sp,
                                     modifier = Modifier
                                         .padding(start = 35.dp)
                                         .padding(vertical = 0.dp)
@@ -315,7 +329,7 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
 
                     ) {
                         Text(
-                            text = "Cancel",
+                            text = stringResource(R.string.cancel),
                             fontSize = 15.sp,
                             maxLines = 1,
                             color = MaterialTheme.colorScheme.inverseSurface,
@@ -384,7 +398,8 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                     ) {
                         LoadingIndicator(true)
                     }
-                else
+                else {
+//                    localUserList.filter { it.id == sharedViewModel.user?.id }
                     LazyColumn(
                         state = rememberLazyListState(),
                         modifier = Modifier
@@ -394,7 +409,11 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                         item(key = "0") {
                             Spacer(Modifier.height(20.dp)) // To add some padding on top of the list
                         }
-                        items(localUserList, key = { item -> item.id }) { user ->
+                        items(
+                            items = if (sharedViewModel.user?.role != "admin") localUserList.filter { it.id == sharedViewModel.user?.id }
+                            else localUserList,
+                            key = { item -> item.id }) { user ->
+
                             Box(modifier = Modifier.animateItemPlacement()) {
                                 if (sharedViewModel.user?.role == "admin")
                                     SwipeableBoxPreview(
@@ -425,9 +444,14 @@ fun UsersTab(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                             Spacer(Modifier.height(8.dp))
                         }
                     }
+                }
             }
         }
-        PullRefreshIndicator(refreshing = sharedViewModel.isRefreshing, state = pullRefreshState,Modifier.align(Alignment.TopCenter))
+        PullRefreshIndicator(
+            refreshing = sharedViewModel.isRefreshing,
+            state = pullRefreshState,
+            Modifier.align(Alignment.TopCenter)
+        )
     }
 
 }
@@ -438,7 +462,8 @@ fun clearSearch(sharedViewModel: SharedViewModel, focusManager: FocusManager) {
     visible = false
     isInitialFocus = true
     focusManager.clearFocus()
-    sharedViewModel.defineFabVisible(true)
+    if (sharedViewModel?.user?.role == "admin")
+        sharedViewModel.defineFabVisible(true)
     sharedViewModel.userList.forEach { user ->
         localUserList.add(
             user
@@ -599,7 +624,6 @@ private fun SwipeItem(
             Arrangement.Center,
             Alignment.CenterVertically
         ) {
-
             // Handling user photo whether it's from url or it doesn't exist
             GetImage(user = user)
         }
@@ -619,28 +643,26 @@ private fun SwipeItem(
                 modifier = Modifier.padding(top = 4.dp),
                 text = "CIN: ${user.cin} \nRole: ${user.role} | Contracts: $nbrContracts"
             )
-
         }
         Spacer(modifier = Modifier.weight(1f))
         //setting the right vertical red marker
-        if(sharedViewModel.user?.role=="admin")
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .height(80.dp)
-                .wrapContentSize(Alignment.Center)
-        ) {
-            Box(
+        if (sharedViewModel.user?.role == "admin")
+            Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(8.dp)
-                    .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
-                    .height(20.dp)
+                    .height(80.dp)
+                    .wrapContentSize(Alignment.Center)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(8.dp)
+                        .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
+                        .height(20.dp)
 //                    .onGloballyPositioned { coo -> size = coo.size.toSize() }
-                    .background(Color(0x80FFD7D7))
-            )
-        }
-
+                        .background(Color(0x80FFD7D7))
+                )
+            }
     }
 }
 

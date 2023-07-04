@@ -122,7 +122,11 @@ fun ContractUser(
         color = Color.Transparent,
         darkIcons = true
     )
-
+    // make sure fab is only visible for users with this role only
+    if (sharedViewModel.user?.role == "admin")
+        sharedViewModel.defineFabVisible(true)
+    else
+        sharedViewModel.defineFabVisible(false)
     val fabClicked = remember { mutableStateOf(false) }
     val contracts = remember { SnapshotStateList<Contract>() }
     val userName = remember { mutableStateOf("") }
@@ -177,7 +181,7 @@ fun ContractUser(
             }
         }
         //show fab incase it's invisible
-        sharedViewModel.defineFabVisible(true)
+//        sharedViewModel.defineFabVisible(true)
         userName.value =
             sharedViewModel.userList.find { it.id.toString() == sharedViewModel.selectedUserId }?.name.toString()
         //setting up fab
@@ -238,7 +242,7 @@ fun ContractUser(
                 Text(
                     text = userName.value.toString(),
                     color = Color(0xCCFFFFFF),
-                    fontSize = 30.sp,
+                    fontSize = 26.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium,

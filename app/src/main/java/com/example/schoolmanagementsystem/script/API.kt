@@ -1,12 +1,17 @@
 package com.example.schoolmanagementsystem.script
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.script.navbar.Screen
+import com.example.schoolmanagementsystem.ui.theme.localStudentList
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
@@ -62,7 +67,8 @@ val retrofit: Retrofit = Retrofit.Builder()
     //check if running on emulator or not and on local server or not
     .baseUrl(
         if (BuildConfig.DEV.toBoolean()) {
-            if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else "http://192.168.1.5:8000"
+            if (Build.HARDWARE == "ranchu") "http://10.0.2.2:8000/" else
+                "http://192.168.1.7:8000"
         } else
             BuildConfig.Host
     )
@@ -80,6 +86,8 @@ interface APIService {
     @GET("/api/users")
     suspend fun getUsers(): Response<List<User>>
 
+    @GET("/api/allUsers")
+    suspend fun getAllUsers(): Response<List<User>>
 
     @Headers("Accept: application/json")
     @Multipart
@@ -193,6 +201,87 @@ interface APIService {
     suspend fun deleteFromOtherSide(
         @Path("id") id: Int
     ): Response<String>
+
+    @Headers("Accept: application/json")
+    @GET("/api/getStudents")
+    suspend fun getStudents(): Response<List<Student>>
+
+
+    @Headers("Accept: application/json")
+    @Multipart
+    @POST("/api/addStudent")
+    suspend fun addStudent(
+        @Part("name") name: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("cin") cin: RequestBody,
+        @Part("date_naiss") date_naiss: RequestBody,
+        @Part("sex") sex: RequestBody,
+        @Part("tel") tel: RequestBody,
+        @Part("adresse") adresse: RequestBody,
+        @Part("password") password: RequestBody,
+        @Part("groupe_id") groupe_id: RequestBody,
+        @Part("remarque") remarque: RequestBody,
+        @Part("user_id") user_id: RequestBody,
+        @Part("parent") parent: RequestBody,
+        @Part photo: MultipartBody.Part
+    ): Response<Student>
+
+    @Headers("Accept: application/json")
+    @Multipart
+    @POST("/api/updateStudent/{id}")
+    suspend fun updateStudent(
+        @Path("id") id: Int,
+        @Part("name") name: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("cin") cin: RequestBody,
+        @Part("date_naiss") date_naiss: RequestBody,
+        @Part("sex") sex: RequestBody,
+        @Part("tel") tel: RequestBody,
+        @Part("adresse") adresse: RequestBody,
+        @Part("password") password: RequestBody,
+        @Part("groupe_id") groupe_id: RequestBody,
+        @Part("remarque") remarque: RequestBody,
+        @Part("user_id") user_id: RequestBody,
+        @Part("parent") parent: RequestBody,
+        @Part photo: MultipartBody.Part
+    ): Response<Student>
+
+    @Headers("Accept: application/json")
+    @GET("/api/getGroups")
+    suspend fun getGroups(): Response<List<Group>>
+
+
+    @Headers("Accept: application/json")
+    @POST("/api/deleteGroupe/{id}")
+    suspend fun deleteGroup(@Path("id") id: Int): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/updateGroupe/{id}")
+    suspend fun updateGroup(@Path("id") id: Int, @Body params: Group): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/deleteStudent/{id}")
+    suspend fun deleteStudent(@Path("id") id: Int): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/addGroupe")
+    suspend fun addGroup(@Body params: Group): Response<Group>
+
+    @Headers("Accept: application/json")
+    @GET("/api/getNiveau")
+    suspend fun getNiveau(): Response<List<Niveau>>
+
+    @Headers("Accept: application/json")
+    @POST("/api/addNiveau")
+    suspend fun addNiveau(@Body params: Niveau): Response<Niveau>
+
+    @Headers("Accept: application/json")
+    @POST("/api/deleteNiveau/{id}")
+    suspend fun deleteNiveau(@Path("id") id: Int): Response<String>
+
+    @Headers("Accept: application/json")
+    @POST("/api/updateNiveau/{id}")
+    suspend fun updateNiveau(@Path("id") id: Int, @Body params: Niveau): Response<String>
 }
 
 
@@ -202,12 +291,20 @@ fun loginAPI(
     mail: String,
     pass: String
 ) {
-    loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
 
+    loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
+    sharedViewModel.defineWrongCred(false)
     val usermodel = UserInfo("user1@gmail.com", "123123123")
 //    val adminmodel = UserInfo("admin@gmail.com", "111111111")
-    val adminmodel = UserInfo(mail, pass)
-//    val adminmodel = UserInfo("walid@gmail.com", "gina")
+//    val adminmodel = UserInfo(mail, pass)
+    //    val adminmodel = UserInfo("walid@gmail.com", "gina")
+    val adminmodel =
+        if (!BuildConfig.DEV.toBoolean()) UserInfo(BuildConfig.LoginMail, BuildConfig.LoginMdp) else
+//    UserInfo("houssem.hammami@bestsol.tn", "K64nGMpC")
+            UserInfo("admin@gmail.com", "111111111")
+//            UserInfo("ahmed@gmail.com", "123456")
+//        UserInfo("benSalah@gmail.com", "123321")", "123321")
+//            UserInfo(mail, pass)
     CoroutineScope(Dispatchers.IO).launch {
         val response = backendApi.login(adminmodel)
         withContext(Dispatchers.Main) {
@@ -229,17 +326,23 @@ fun loginAPI(
                             navCtr?.navigate(Screen.NavBar.route)
                         }
                         if (user.role == "admin") {
-                            println("ADMIN")
-                            println("name= " + user.name)
                             navCtr?.popBackStack()
                             navCtr?.navigate(Screen.NavBar.route)
+                        }
+                        if (user.role == "student") {
+
+
+                            navCtr?.popBackStack()
+                            navCtr?.navigate(Screen.NavBar.route)
+                            getStudent(sharedViewModel = sharedViewModel)
+
                         }
                     }
 
                 } else {
-                    if(response.code().toString() == "422"){
-                        println("Wrong credentials, try again.")
+                    if (response.code().toString() == "422") {
                         sharedViewModel.defineWrongCred(true)
+                        println("Wrong credentials, try again.")
                     }
 
                     println("Error2: ${response.errorBody().toString()}")
@@ -252,13 +355,30 @@ fun loginAPI(
 
         }
     }
-//    }
 
 }
 
 fun usersAPI(sharedViewModel: SharedViewModel) {
     CoroutineScope(Dispatchers.IO).launch {
         val result = async { backendApi.getUsers() }
+        val response = result.await()
+        if (response.isSuccessful) {
+            val users = response.body()
+            sharedViewModel.defineUserList(users)
+            sharedViewModel.defineUser(sharedViewModel.userList.filter { it.id == sharedViewModel.user!!.id }[0])
+
+            users?.forEach { user ->
+
+                println(user.name)
+            }
+            getContractAndPayment(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+fun allUsersAPI(sharedViewModel: SharedViewModel) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.getAllUsers() }
         val response = result.await()
         if (response.isSuccessful) {
             val users = response.body()
@@ -605,6 +725,7 @@ fun deleteOtherMsg(
         }
     }
 }
+
 fun deleteThisMsg(
     id: Int, sharedViewModel: SharedViewModel,
     triggerSecondCall: Boolean? = false
@@ -622,3 +743,245 @@ fun deleteThisMsg(
     }
 }
 
+fun isInternetAvailable(context: Context): Boolean {
+    var result = false
+    val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val networkCapabilities = connectivityManager.activeNetwork ?: return false
+        val actNw = connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
+        result = when {
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+            else -> false
+        }
+    } else {
+        connectivityManager.run {
+            connectivityManager.activeNetworkInfo?.run {
+                result = when (type) {
+                    ConnectivityManager.TYPE_WIFI -> true
+                    ConnectivityManager.TYPE_MOBILE -> true
+                    ConnectivityManager.TYPE_ETHERNET -> true
+                    else -> false
+                }
+            }
+        }
+    }
+    return result
+}
+
+fun getStudent(sharedViewModel: SharedViewModel) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.getStudents() }
+        val response = result.await()
+        if (response.isSuccessful) {
+            val students = response.body()
+            sharedViewModel.studentList.clear()
+            sharedViewModel.defineStudentList(students)
+            if (sharedViewModel.user?.role == "student")
+                sharedViewModel.defineUser(sharedViewModel.studentList.filter { it.user?.id == sharedViewModel.user!!.id }[0].user!!)
+            getGroups(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+fun addStudent(
+    student: Student,
+    sharedViewModel: SharedViewModel,
+    file: MutableState<File>?,
+    triggerSecondCall: Boolean? = false
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+
+        var rBodyFile = getRequestBody("")
+        if (file?.value!!.exists()) {
+            rBodyFile = file.value.asRequestBody("multipart/form-data".toMediaTypeOrNull())
+        }
+        val mpb = MultipartBody.Part.createFormData("photo", file.value.name, rBodyFile)
+
+        val result = async {
+            backendApi.addStudent(
+                getRequestBody(student.name!!),
+                getRequestBody(student.email!!),
+                getRequestBody(student.cin!!),
+                getRequestBody(student.date_naiss!!),
+                getRequestBody(student.sex!!),
+                getRequestBody(student.tel!!),
+                getRequestBody(student.adresse!!),
+                getRequestBody(student.password!!),
+                getRequestBody(student.groupe_id!!),
+                getRequestBody(student.remarque!!),
+                getRequestBody(student.user_id!!),
+                getRequestBody(student.parent!!),
+                mpb
+
+            )
+        }
+        val response = result.await()
+        println("STUDENT ADDED111  " + response.message())
+        if (response.isSuccessful) {
+            println("STUDENT ADDED")
+            if (triggerSecondCall == true)
+                getStudent(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+fun editStudent(
+    student: Student,
+    sharedViewModel: SharedViewModel,
+    file: MutableState<File>?,
+    triggerSecondCall: Boolean? = false
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+
+        var rBodyFile = getRequestBody("")
+        if (file?.value!!.exists()) {
+            rBodyFile = file.value.asRequestBody("multipart/form-data".toMediaTypeOrNull())
+        }
+        val mpb = MultipartBody.Part.createFormData("photo", file.value.name, rBodyFile)
+
+        val result = async {
+            backendApi.updateStudent(
+                student.id.toInt(),
+                getRequestBody(student.name!!),
+                getRequestBody(student.email!!),
+                getRequestBody(student.cin!!),
+                getRequestBody(student.date_naiss!!),
+                getRequestBody(student.sex!!),
+                getRequestBody(student.tel!!),
+                getRequestBody(student.adresse!!),
+                getRequestBody(student.password!!),
+                getRequestBody(student.groupe_id!!),
+                getRequestBody(student.remarque!!),
+                getRequestBody(student.user_id!!),
+                getRequestBody(student.parent!!),
+                mpb
+
+            )
+        }
+        val response = result.await()
+        println("STUDENT updated  " + response.message())
+        if (response.isSuccessful) {
+            println("STUDENT updated")
+            if (triggerSecondCall == true)
+                getStudent(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+
+fun getGroups(sharedViewModel: SharedViewModel) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.getGroups() }
+        val response = result.await()
+        if (response.isSuccessful) {
+            val groups = response.body()
+            sharedViewModel.groupList.clear()
+            sharedViewModel.defineGroupList(groups)
+            getNiveau(sharedViewModel)
+        }
+    }
+}
+
+fun deleteGroup(id: Int) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.deleteGroup(id)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("group DELETED")
+            }
+        }
+    }
+}
+
+fun deleteStudent(id: Int) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.deleteStudent(id)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("student DELETED")
+            }
+        }
+    }
+}
+
+fun addGroup(
+    group: Group, sharedViewModel: SharedViewModel,
+    triggerSecondCall: Boolean? = false
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.addGroup(group) }
+        val response = result.await()
+        if (response.isSuccessful) {
+            println("group ADDED")
+            if (triggerSecondCall == true)
+                getGroups(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+fun addNiveau(
+    nivName: String, sharedViewModel: SharedViewModel,
+    triggerSecondCall: Boolean? = false
+) {
+    var niv = Niveau()
+    niv.name = nivName
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.addNiveau(niv) }
+        val response = result.await()
+        if (response.isSuccessful) {
+            println("niveau ADDED")
+            if (triggerSecondCall == true)
+                getNiveau(sharedViewModel = sharedViewModel)
+        }
+    }
+}
+
+fun getNiveau(sharedViewModel: SharedViewModel) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = async { backendApi.getNiveau() }
+        val response = result.await()
+        if (response.isSuccessful) {
+            sharedViewModel.niveauList.clear()
+            val niveaux = response.body()
+            sharedViewModel.defineNiveauList(niveaux)
+        }
+    }
+}
+
+fun deleteNiveau(id: Int) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.deleteNiveau(id)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("niveau DELETED")
+            }
+        }
+    }
+}
+
+fun updateNiveau(id: Int, niveau: Niveau, sharedViewModel: SharedViewModel) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.updateNiveau(id, niveau)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("niveau updated")
+                getNiveau(sharedViewModel = sharedViewModel)
+            }
+        }
+    }
+}
+
+fun updateGroup(id: Int, group: Group, sharedViewModel: SharedViewModel) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val response = backendApi.updateGroup(id, group)
+        withContext(Dispatchers.Main) {
+            if (response.isSuccessful) {
+                println("group updated")
+                getGroups(sharedViewModel = sharedViewModel)
+            }
+        }
+    }
+}

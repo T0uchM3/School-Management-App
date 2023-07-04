@@ -25,6 +25,7 @@ sealed class Screen(
     object Users : Screen(
         route = "Users",
         title = "Users",
+//        icon = R.drawable.d,
         icon = R.drawable.g,
         icon_focused = null,
     )
@@ -43,7 +44,7 @@ sealed class Screen(
     object Students : Screen(
         route = "Students",
         title = "Students",
-        icon = R.drawable.e,
+        icon = R.drawable.d,
         icon_focused = null,
     )
 
@@ -90,8 +91,14 @@ sealed class Screen(
     )
     object Settings : Screen(
         route = "Settings",
-        title = "",
-        icon = 0,
+        title = "Settings",
+        icon = R.drawable.u,
+        icon_focused = null,
+    )
+    object Groups : Screen(
+        route = "Groups",
+        title = "Groups",
+        icon = R.drawable.u,
         icon_focused = null,
     )
 }

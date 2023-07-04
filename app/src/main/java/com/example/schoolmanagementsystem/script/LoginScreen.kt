@@ -1,6 +1,10 @@
 package com.example.schoolmanagementsystem.script
 
 import android.app.Activity
+import android.content.Context
+import android.content.res.Configuration
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
@@ -43,6 +47,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +60,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
@@ -63,6 +69,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.navigation.NavHostController
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
@@ -71,17 +78,19 @@ import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.navbar.Screen
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 @Composable
 fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewModel? = null) {
     sharedViewModel?.defineWaiting(false)
-    sharedViewModel?.defineWrongCred(false)
     val systemUiController = rememberSystemUiController()
     systemUiController.setSystemBarsColor(
         color = Color(0xfff2f2f2),
         darkIcons = true
     )
-//    TransparentSystemBars()
     val text2 = remember {
         mutableStateOf(TextFieldValue(""))
     }
@@ -97,7 +106,6 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
     val passwordVisible: MutableState<Boolean> = remember {
         mutableStateOf(false)
     }
-
     var isClicked by remember { mutableStateOf(false) }
     sharedViewModel?.defineFABClicked(null)
     // Manually handling backpress (to prevent going back inside the app)
@@ -137,7 +145,7 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                 )
             }
             Text(
-                text = "Member Login",
+                text = stringResource(R.string.member_login),
                 Modifier.fillMaxWidth(),
                 color = Color(0xFF386BA5),
                 textAlign = TextAlign.Center,
@@ -145,7 +153,7 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "Add your details to login",
+                text = stringResource(R.string.add_your_details_to_login),
                 Modifier.fillMaxWidth(),
                 color = Color.DarkGray,
                 textAlign = TextAlign.Center,
@@ -162,12 +170,18 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                 .padding(horizontal = 50.dp)
                 .padding(top = 50.dp)
         ) {
+//            Text(
+//                if(
+//                    isInternetAvailable(LocalContext.current)
+//                ) "Connected"
+//                else "Disconnected"
+//            )
             OutlinedTextField(
                 value = emaiInput.value,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 onValueChange = { emaiInput.value = it },
                 singleLine = true,
-                label = { Text("Your email") },
+                label = { Text(stringResource(R.string.your_email)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 30.dp),
@@ -180,7 +194,7 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
             OutlinedTextField(
                 value = text2.value,
                 onValueChange = { text2.value = it },
-                label = { Text("Your password") },
+                label = { Text(stringResource(R.string.your_password)) },
                 visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
@@ -203,7 +217,7 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                 textStyle = MaterialTheme.typography.titleSmall
             )
             Text(
-                text = "Forgot password?",
+                text = stringResource(R.string.forgot_password),
                 Modifier
                     .fillMaxWidth()
                     .padding(bottom = 70.dp),
@@ -212,9 +226,14 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                 style = MaterialTheme.typography.titleSmall
 
             )
+
+
             Button(
                 shape = RoundedCornerShape(30),
                 onClick = {
+
+                    if (!isInternetAvailable(context))
+                        return@Button
                     loginAPI(navCtr, sharedViewModel!!, emaiInput.value.text, text2.value.text)
                     isClicked = true
                 },
@@ -227,7 +246,7 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                         ), shape = ButtonDefaults.shape
                     ),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0x4884C9),
+                    containerColor = Color(0xff4884C9),
                     contentColor = Color(0xfff2f2f2)
                 )
 
@@ -242,8 +261,20 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.surface
                     )
-            }
 
+            }
+            Text(
+                text = if (sharedViewModel?.wrongCred == true) stringResource(R.string.wrong_credentials_try_again)
+                else if (!isInternetAvailable(context)) stringResource(R.string.you_re_offline) else "",
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(vertical = 2.dp)
+                    .fillMaxWidth(),
+                style = MaterialTheme.typography.titleSmall,
+                color = Color.Red
+            )
+//            )
         }
 
     }
