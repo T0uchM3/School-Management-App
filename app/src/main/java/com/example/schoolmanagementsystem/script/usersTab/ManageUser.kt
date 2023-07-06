@@ -382,7 +382,7 @@ fun ManageUser(
                 else
                     Text(
                         text = stringResource(R.string.update),
-                        fontSize = 16.sp,
+                        fontSize = 15.sp,
                     )
             }
         }

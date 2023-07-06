@@ -301,9 +301,12 @@ fun loginAPI(
     loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
     sharedViewModel.defineWrongCred(false)
     val adminmodel =
-        if (!BuildConfig.DEV.toBoolean()) UserInfo(BuildConfig.LoginMail, BuildConfig.LoginMdp) else
+        if (!BuildConfig.DEV.toBoolean())
+//            UserInfo(BuildConfig.LoginMail, BuildConfig.LoginMdp) else
+//
+            UserInfo(mail, pass)
+    else
             UserInfo("admin@gmail.com", "111111111")
-//            UserInfo(mail, pass)
     CoroutineScope(Dispatchers.IO).launch {
         val response = backendApi.login(adminmodel)
         withContext(Dispatchers.Main) {

@@ -74,6 +74,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -439,7 +440,7 @@ fun StudentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                         Box(
                             Modifier.fillMaxSize(), contentAlignment = Alignment.Center,
                         ) {
-                            Text(text = stringResource(R.string.add_at_least_one_group_before_adding_new_students))
+                            Text(text = stringResource(R.string.add_at_least_one_group_before_adding_new_students), textAlign = TextAlign.Center)
                             sharedViewModel.defineFabVisible(false)
                         }
                     else if (localStudentList.isEmpty() && !visible)
@@ -459,7 +460,9 @@ fun StudentScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) {
                         LazyColumn(
                             state = rememberLazyListState(),
                             modifier = Modifier
-                                .padding(bottom = 45.dp, top = 8.dp)
+                                .padding(bottom =
+                                if (sharedViewModel.user?.role == "admin" || sharedViewModel.user?.role == "teacher") 0.dp
+                                    else 45.dp, top = 8.dp)
                                 .padding(horizontal = 7.dp)
                         ) {
                             item(key = "0") {
