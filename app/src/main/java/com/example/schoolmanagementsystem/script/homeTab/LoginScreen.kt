@@ -58,9 +58,13 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.SharedViewModel
+import com.example.schoolmanagementsystem.script.StoreData
 import com.example.schoolmanagementsystem.script.isInternetAvailable
 import com.example.schoolmanagementsystem.script.loginAPI
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewModel? = null) {
@@ -213,7 +217,7 @@ fun LoginScreen(navCtr: NavHostController? = null, sharedViewModel: SharedViewMo
 
                     if (!isInternetAvailable(context))
                         return@Button
-                    loginAPI(navCtr, sharedViewModel!!, emaiInput.value.text, text2.value.text)
+                    loginAPI(navCtr, sharedViewModel!!, emaiInput.value.text, text2.value.text,context)
                     isClicked = true
                 },
                 modifier = Modifier

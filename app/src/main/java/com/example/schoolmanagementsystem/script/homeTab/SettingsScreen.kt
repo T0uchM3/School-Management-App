@@ -305,7 +305,11 @@ fun SettingsScreen(navCtr: NavHostController, sharedViewModel: SharedViewModel) 
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = { navCtr?.navigate(Screen.Login.route) })
+                    .clickable(onClick = {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            store.saveNewLoginState(newState = "loggedout")
+                        }
+                        navCtr?.navigate(Screen.Login.route) })
                     .padding(vertical = 15.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

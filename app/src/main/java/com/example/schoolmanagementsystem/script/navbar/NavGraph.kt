@@ -9,6 +9,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavGraphBuilder
@@ -17,20 +19,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import com.example.schoolmanagementsystem.script.ContractUser
-import com.example.schoolmanagementsystem.script.homeTab.GroupScreen
-import com.example.schoolmanagementsystem.script.SharedViewModel
-import com.example.schoolmanagementsystem.script.homeTab.HomeScreen1
-import com.example.schoolmanagementsystem.ui.theme.UsersTab
 import com.example.schoolmanagementsystem.script.ManageUser
-import com.example.schoolmanagementsystem.script.homeTab.LoginScreen
 import com.example.schoolmanagementsystem.script.MessageScreen
 import com.example.schoolmanagementsystem.script.PaymentScreen
+import com.example.schoolmanagementsystem.script.SharedViewModel
+import com.example.schoolmanagementsystem.script.StoreData
+import com.example.schoolmanagementsystem.script.homeTab.GroupScreen
+import com.example.schoolmanagementsystem.script.homeTab.HomeScreen1
+import com.example.schoolmanagementsystem.script.homeTab.LoginScreen
 import com.example.schoolmanagementsystem.script.homeTab.ProfileScreen
 import com.example.schoolmanagementsystem.script.homeTab.SettingsScreen
-import com.example.schoolmanagementsystem.ui.theme.InboxScreen
 import com.example.schoolmanagementsystem.script.homeTab.StudentScreen
+import com.example.schoolmanagementsystem.ui.theme.InboxScreen
+import com.example.schoolmanagementsystem.ui.theme.UsersTab
 import com.google.accompanist.navigation.animation.AnimatedNavHost
+import java.util.Locale
 import com.google.accompanist.navigation.animation.composable as c2
+
+
 
 //import com.google.accompanist.navigation.animation.composable
 @Composable
@@ -39,16 +45,41 @@ fun RootNavGraph(
     sharedViewModel: SharedViewModel,
     statusBarHeight: Dp
 ) {
+    var context = LocalContext.current
+    val store = StoreData(context)
+    val locale = Locale(store.getLoginState.collectAsState(initial = "").value)
+
     NavHost(
-        navController = navController, route = Graph.ROOT, startDestination = Graph.AUTHENTICATION
+        navController = navController,
+        route = Graph.ROOT,
+        startDestination = if (byteArrayToString(locale.toString()) == "loggedIN") Screen.NavBar.route
+        else Graph.AUTHENTICATION
     ) {
         authNavGraph(navController = navController, sharedViewModel = sharedViewModel)
         composable(route = Screen.NavBar.route) {
-            BottomNav(navController = navController, sharedViewModel = sharedViewModel,statusBarHeight)
+            BottomNav(
+                navController = navController,
+                sharedViewModel = sharedViewModel,
+                statusBarHeight
+            )
         }
     }
 }
+// used in conjunction with datastore to be able to decode
+// byteArray value, which is mainly used for saving and retrieving
+// passwords when they got uppercase and lowercase characters.
+// since normal save and load will save the password as lowercase.
+fun byteArrayToString(incVal : String): String {
+    var finalStr = ""
+    var split: List<String>? = null
+    if (incVal.isNotEmpty())
+        split =incVal.substring(1, incVal.length-1).split(", ")
 
+    split?.forEach { str ->
+        finalStr += str.toInt().toChar()
+    }
+    return finalStr
+}
 fun NavGraphBuilder.authNavGraph(
     navController: NavHostController, sharedViewModel: SharedViewModel
 ) {
@@ -77,7 +108,12 @@ fun AnimatedGraph(
     AnimatedNavHost(navController, startDestination = Screen.Home.route) {
         c2(Screen.Home.route)
         { HomeScreen1(navCtr = navController, sharedViewModel = sharedViewModel) }
-        c2(Screen.Users.route) { UsersTab(navCtr = navController, sharedViewModel = sharedViewModel) }
+        c2(Screen.Users.route) {
+            UsersTab(
+                navCtr = navController,
+                sharedViewModel = sharedViewModel
+            )
+        }
         c2(Screen.ManageUser.route) { ManageUser(navController, sharedViewModel) }
         c2(Screen.Contract.route, enterTransition = {
             slideIntoContainer(

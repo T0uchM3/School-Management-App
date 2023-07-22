@@ -32,6 +32,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,11 +59,15 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.script.SharedViewModel
+import com.example.schoolmanagementsystem.script.StoreData
+import com.example.schoolmanagementsystem.script.loginAPI
 import com.example.schoolmanagementsystem.script.navbar.Screen
+import com.example.schoolmanagementsystem.script.navbar.byteArrayToString
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.mrerror.singleRowCalendar.SingleRowCalendar
 import java.lang.Math.abs
 import java.util.Date
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
@@ -83,8 +89,19 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
         color = Color.Transparent,
         darkIcons = true
     )
-
+    val loginDone = remember { mutableStateOf(false) }
+    var context = LocalContext.current
+    val store = StoreData(context)
+    val locale = Locale(store.getLoginState.collectAsState(initial = "").value)
+    val localeMail = Locale(store.getMail.collectAsState(initial = "").value)
+    val localeMdp = Locale(store.getMdp.collectAsState(initial = "").value)
     BackPressHandler(navCtr = navCtr, sharedViewModel = sharedViewModel!!)
+    if (byteArrayToString(locale.toString()) == "loggedIN" && !loginDone.value) {
+        loginAPI(navCtr, sharedViewModel!!, localeMail.toString(),
+            byteArrayToString(localeMdp.toString()),context)
+        loginDone.value = true
+    }
+
     LaunchedEffect(key1 = user) {
         sharedViewModel.defineFabVisible(false)
     }
@@ -165,7 +182,8 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                             navCtr?.navigate(Screen.Profile.route)
                         })
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = user?.name.toString(),
@@ -178,8 +196,10 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
                         Icon(
                             painterResource(id = R.drawable.j),
                             contentDescription = "",
-                            tint =  Color(0xCCFFFFFF),
-                            modifier = Modifier.size(40.dp).padding(start = 10.dp)
+                            tint = Color(0xCCFFFFFF),
+                            modifier = Modifier
+                                .size(40.dp)
+                                .padding(start = 10.dp)
                         )
                     }
                     Row(
@@ -220,7 +240,8 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
         Divider(
             Modifier
                 .padding(horizontal = 15.dp)
-                .background(Color(0xFF79B6FD)))
+                .background(Color(0xFF79B6FD))
+        )
 
         var day = remember { mutableStateOf(Date()) }
         SingleRowCalendar(
@@ -279,7 +300,7 @@ fun HomeScreen1(navCtr: NavHostController?, sharedViewModel: SharedViewModel?) {
 //                HomeItems.contract
             )
             LazyVerticalGrid(columns = GridCells.Fixed(3), content = {
-                items(count = if (sharedViewModel.user?.role == "student") listOfItemForStudent.size else if(sharedViewModel.user?.role == "staff") listOfItemForStaff.size else  listOfItem.size) { item ->
+                items(count = if (sharedViewModel.user?.role == "student") listOfItemForStudent.size else if (sharedViewModel.user?.role == "staff") listOfItemForStaff.size else listOfItem.size) { item ->
 
                     Button(
                         onClick = {

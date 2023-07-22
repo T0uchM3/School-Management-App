@@ -6,6 +6,7 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.example.schoolmanagementsystem.BuildConfig
 import com.example.schoolmanagementsystem.script.model.Contract
@@ -295,7 +296,8 @@ fun loginAPI(
     navCtr: NavHostController?,
     sharedViewModel: SharedViewModel,
     mail: String,
-    pass: String
+    pass: String,
+    context:Context
 ) {
 
     loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
@@ -319,25 +321,30 @@ fun loginAPI(
                         if (user.role == "teacher") {
 
                             println("TEACHER ")
-                            navCtr?.popBackStack()
+//                            navCtr?.popBackStack()
                             navCtr?.navigate(Screen.NavBar.route)
                         }
                         if (user.role == "staff") {
                             println("STAFF")
-                            navCtr?.popBackStack()
+//                            navCtr?.popBackStack()
                             navCtr?.navigate(Screen.NavBar.route)
                         }
                         if (user.role == "admin") {
-                            navCtr?.popBackStack()
+//                            navCtr?.popBackStack()
                             navCtr?.navigate(Screen.NavBar.route)
                         }
                         if (user.role == "student") {
-
-
-                            navCtr?.popBackStack()
+//                            navCtr?.popBackStack()
                             navCtr?.navigate(Screen.NavBar.route)
                             getStudent(sharedViewModel = sharedViewModel)
 
+                        }
+                        val store = StoreData(context)
+
+                        CoroutineScope(Dispatchers.IO).launch {
+                            store.saveNewLoginState(newState = "loggedIN")
+                            store.saveMail(newVal =mail)
+                            store.saveMdp(newVal = pass)
                         }
                     }
 
